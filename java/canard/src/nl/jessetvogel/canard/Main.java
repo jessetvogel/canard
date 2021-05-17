@@ -9,8 +9,8 @@ public class Main {
         Session session = new Session();
 
         Parser parser = new Parser(System.in, System.out, session);
-        parser.parse();
-
+        while(true)
+            parser.parse();
 
 //        List<Function> empty = Collections.emptyList();
 //

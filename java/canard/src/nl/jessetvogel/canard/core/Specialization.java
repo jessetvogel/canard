@@ -8,14 +8,14 @@ public class Specialization extends Function {
     private final Function base;
     private final List<Function> arguments;
 
-    Specialization(Function base, List<Function> arguments, Function type, List<Function> dependencies) {
+    Specialization(Function base, List<Function> arguments, Function type, List<Dependency> dependencies) {
         super(type, dependencies);
 
         this.base = base;
         this.arguments = arguments;
 
         assert(base.getBase() == base); // Make sure the contraction of a contraction is simplified!
-        assert(arguments.size() == base.getDependencies().size()); // Number of arguments should equal the number of dependencies of the base function
+        assert(arguments.size() == base.getExplicitDependencies().size()); // Number of arguments should equal the number of dependencies of the base function
     }
 
     @Override
@@ -38,7 +38,7 @@ public class Specialization extends Function {
                 strArgument = "(" + strArgument + ")";
             sj.add(strArgument);
         }
-        return getBase().toString() + sj.toString();
+        return getBase().toString() + sj;
     }
 
 }

@@ -1,33 +1,38 @@
 package nl.jessetvogel.canard.core;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Function {
 
     private String label = "?";
 
     private final Function type;
-    private final List<Function> dependencies;
+    private final List<Dependency> dependencies;
 
-    Function(Function type, List<Function> dependencies) {
+    Function(Function type, List<Dependency> dependencies) {
         this.type = (type != null ? type : this);
         this.dependencies = dependencies;
-    }
-
-    public Function getType() {
-        return type;
     }
 
     public Function getBase() {
         return this;
     }
 
-    public List<Function> getDependencies() {
+    public Function getType() {
+        return type;
+    }
+
+    public List<Dependency> getDependencies() {
         return dependencies;
     }
 
+    public List<Function> getExplicitDependencies() {
+        return dependencies.stream().filter(d -> d.explicit).map(d -> d.function).collect(Collectors.toUnmodifiableList());
+    }
+
     public List<Function> getArguments() {
-        return dependencies;
+        return getExplicitDependencies();
     }
 
     public void setLabel(String label) {
@@ -47,7 +52,7 @@ public class Function {
         Function other = (Function) obj;
         if (other.getBase() != getBase()) return false;
 
-        List<Function> thisDependencies = getDependencies(), otherDependencies = other.getDependencies();
+        List<Dependency> thisDependencies = getDependencies(), otherDependencies = other.getDependencies();
         int n = thisDependencies.size();
         if (n != otherDependencies.size())
             return false;
@@ -55,22 +60,37 @@ public class Function {
         // If there are no dependencies, check equality on the arguments
         if (n == 0) {
             List<Function> thisArguments = getArguments(), otherArguments = other.getArguments();
-            int m = thisArguments.size();
-            for (int i = 0; i < m; ++i)
+            int l = thisArguments.size();
+            for (int i = 0; i < l; ++i)
                 if (!thisArguments.get(i).equals(otherArguments.get(i)))
                     return false;
             return true;
         }
 
         // If there are dependencies, we need a Matcher
-        Matcher matcher = new Matcher(thisDependencies);
-        for(int i = 0;i < n; i++) {
-            if(!matcher.matches(thisDependencies.get(i), otherDependencies.get(i)))
+        Matcher matcher = new Matcher(dependencies.stream().map(d -> d.function).collect(Collectors.toUnmodifiableList()));
+        for (int i = 0; i < n; i++) {
+            Dependency thisDep = thisDependencies.get(i), otherDep = otherDependencies.get(i);
+            if (thisDep.explicit != otherDep.explicit) // explicitness must match
+                return false;
+            if (!matcher.matches(thisDep.function, thisDep.function))
                 return false;
         }
 
         // Now just let the matcher do its work
         return matcher.matches(this, other);
+    }
+
+    public static class Dependency {
+
+        public final Function function;
+        public final boolean explicit;
+
+        public Dependency(Function function, boolean explicit) {
+            this.function = function;
+            this.explicit = explicit;
+        }
+
     }
 
 }

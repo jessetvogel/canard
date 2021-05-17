@@ -8,7 +8,6 @@ public class Session {
     public final Context mainContext;
 
     public final Function TYPE;
-//    public final Function PLACEHOLDER; // TODO: looks nice, but is there an ACTUAL use for this guy?
 
     public Session() {
         // Create main context
@@ -17,22 +16,19 @@ public class Session {
         // Create an instance of TYPE
         TYPE = new Function(null, Collections.emptyList());
         mainContext.putFunction("Type", TYPE);
-
-        // PLACEHOLDER
-//        PLACEHOLDER = new Function(null, Collections.emptyList());
-//        PLACEHOLDER.setLabel("_");
+        mainContext.putFunction("Prop", TYPE);
     }
 
-    public Function createFunction(Function type, List<Function> dependencies) {
+    public Function createFunction(Function type, List<Function.Dependency> dependencies) {
         // TODO: if we ever need to deallocate, we can store them in some private list in Session
         return new Function(type, dependencies);
     }
 
-    public Function specialize(Function parent, List<Function> arguments, List<Function> dependencies) throws SpecializationException {
+    public Function specialize(Function parent, List<Function> arguments, List<Function.Dependency> dependencies) throws SpecializationException {
         // Make some assertions: arguments must match the dependencies of the base
         int n = arguments.size();
-        List<Function> parentDependencies = parent.getDependencies();
-        assert(n == parentDependencies.size());
+        List<Function> parentExplicitDependencies = parent.getExplicitDependencies();
+        assert(n == parentExplicitDependencies.size());
 
         // Base case: if there are no arguments, immediately return
         if(n == 0)
@@ -46,7 +42,7 @@ public class Session {
             List<Function> baseArguments = new ArrayList<>();
             for(Function f : parent.getArguments()) {
                 // When f is itself a dependency of parent, return the corresponding argument
-                int i = parentDependencies.indexOf(f);
+                int i = parentExplicitDependencies.indexOf(f);
                 if(i >= 0) {
                     baseArguments.add(arguments.get(i));
                     continue;
@@ -56,14 +52,14 @@ public class Session {
                 // - The arguments applied to f is the sublist of 'arguments' corresponding to
                 //   the dependencies of f which is (by assertion) a sublist of the dependencies of parent
                 List<Function> subArguments = f.getDependencies().stream().map(g -> {
-                    int j = parentDependencies.indexOf(g);
+                    int j = parentExplicitDependencies.indexOf(g.function);
                     assert(j >= 0);
                     return arguments.get(j);
                 }).collect(Collectors.toUnmodifiableList());
 
                 // - The dependencies of the specialization of f are the sublist of 'dependencies'
                 //   that appear in the dependencies of the arguments (TODO: we must be careful here ? there might be a problem)
-                List<Function> subDependencies = dependencies.stream().filter(g -> {
+                List<Function.Dependency> subDependencies = dependencies.stream().filter(g -> {
                     for(Function h : subArguments) {
                         if(h.getDependencies().contains(g))
                             return true;
@@ -78,15 +74,15 @@ public class Session {
 
         // Now we deal with the case where parent is a base function:
         // Check if the type of the given arguments match the dependencies
-        Matcher matcher = new Matcher(parentDependencies);
+        Matcher matcher = new Matcher(parent.getDependencies().stream().map(d -> d.function).collect(Collectors.toUnmodifiableList()));
         for(int i = 0;i < n; ++i) {
-            Function dependency = parentDependencies.get(i);
+            Function dependency = parentExplicitDependencies.get(i);
             Function argument = arguments.get(i);
             if(!matcher.matches(dependency, argument)) {
                 StringJoiner sj = new StringJoiner(", ", " where ", "");
                 sj.setEmptyValue("");
                 for(int j = 0;j < i; ++j)
-                    sj.add(parentDependencies.get(j) + " = " + arguments.get(j));
+                    sj.add(parentExplicitDependencies.get(j) + " = " + arguments.get(j));
                 throw new SpecializationException("argument '" + argument + "' does not match '" + toFullString(dependency) + "'" + sj);
             }
         }
@@ -104,14 +100,14 @@ public class Session {
     public String toFullString(Function f) {
         StringBuilder sb = new StringBuilder();
         sb.append(f);
-        for(Function g : f.getDependencies())
-            sb.append(" (").append(toFullString(g)).append(")");
+        for(Function.Dependency d : f.getDependencies())
+            sb.append(d.explicit ? " (" : " {").append(toFullString(d.function)).append(d.explicit ? ")" : "}");
         sb.append(" : ");
         sb.append(f.getType());
         return sb.toString();
     }
 
-    public class SpecializationException extends Exception {
+    public static class SpecializationException extends Exception {
 
         public SpecializationException(String message) {
             super(message);

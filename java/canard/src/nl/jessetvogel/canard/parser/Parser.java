@@ -2,6 +2,7 @@ package nl.jessetvogel.canard.parser;
 
 import nl.jessetvogel.canard.core.Context;
 import nl.jessetvogel.canard.core.Function;
+import nl.jessetvogel.canard.core.Matcher;
 import nl.jessetvogel.canard.core.Session;
 
 import java.io.*;
@@ -9,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Parser {
     private final OutputStream out;
@@ -77,41 +79,43 @@ public class Parser {
                 parseStatement();
             consume(Token.Type.EOF);
         } catch (ParserException e) {
-            output("Parsing error: " + e.getMessage());
+            output("⚠️ Parsing error: " + e.getMessage());
         } catch (Lexer.LexerException e) {
-            output("Lexing error: " + (filename.equals("") ? "" : filename + ":") + e.getMessage());
+            output("⚠️ Lexing error: " + (filename.equals("") ? "" : filename + ":") + e.getMessage());
         } catch (IOException e) {
-            output("IOException: " + e.getMessage());
+            output("\uD83D\uDCDD IOException: " + e.getMessage());
         }
 
         return true;
     }
 
-    private void parseStatement()  throws ParserException, IOException, Lexer.LexerException {
+    private void parseStatement() throws ParserException, IOException, Lexer.LexerException {
         /* STATEMENT =
             ; | def | exit | check
          */
 
-        if(found(Token.Type.SEPARATOR, ";")) {
+        if (found(Token.Type.SEPARATOR, ";")) {
             consume();
             return;
         }
 
-        if(found(Token.Type.KEYWORD, "def")) {
+        if (found(Token.Type.KEYWORD, "def")) {
             parseDefinition();
             return;
         }
 
-        if(found(Token.Type.KEYWORD, "exit")) {
+        if (found(Token.Type.KEYWORD, "exit")) {
             consume();
             System.exit(0);
             return;
         }
 
-        if(found(Token.Type.KEYWORD, "check")) {
+        if (found(Token.Type.KEYWORD, "check")) {
             parseCheck();
             return;
         }
+
+        throw new ParserException(currentToken, "expected statement, got " + consume().data);
     }
 
     private void parseCheck() throws ParserException, IOException, Lexer.LexerException {
@@ -121,7 +125,7 @@ public class Parser {
 
         consume(Token.Type.KEYWORD, "check");
         Function f = parseExpression(session.mainContext);
-        output(session.toFullString(f));
+        output("\uD83E\uDD86 " + session.toFullString(f));
     }
 
     private void parseDefinition() throws ParserException, IOException, Lexer.LexerException {
@@ -141,34 +145,41 @@ public class Parser {
         List<String> identifiers = parseListOfIdentifiers();
 
         Context subContext;
-        List<Function> parameters;
-
-        if (found(Token.Type.SEPARATOR, "(") || found(Token.Type.SEPARATOR, "{")) {
+        List<Function.Dependency> dependencies;
+        if (found(Token.Type.SEPARATOR, "{") || found(Token.Type.SEPARATOR, "(")) {
             subContext = new Context(context);
-            parameters = new ArrayList<>();
+            dependencies = new ArrayList<>();
 
             boolean explicit;
             while ((explicit = found(Token.Type.SEPARATOR, "(")) || found(Token.Type.SEPARATOR, "{")) {
                 consume();
-                parameters.addAll(parseFunctions(subContext));
+                for (Function f : parseFunctions(subContext))
+                    dependencies.add(new Function.Dependency(f, explicit));
                 consume(Token.Type.SEPARATOR, explicit ? ")" : "}");
             }
         } else {
             subContext = context; // It is unnecessary to define subcontext without its own functions
-            parameters = Collections.emptyList();
+            dependencies = Collections.emptyList();
         }
 
         consume(Token.Type.SEPARATOR, ":");
         Function type = parseExpression(subContext);
-        if(type.getType() != session.TYPE)
+        if (type.getType() != session.TYPE)
             throw new ParserException(currentToken, "expected a type");
 
         List<Function> output = new ArrayList<>();
         for (String identifier : identifiers) {
-            Function f = session.createFunction(type, parameters);
+            Function f = session.createFunction(type, dependencies);
             context.putFunction(identifier, f);
             output.add(f);
         }
+
+        // Check if the implicits were actually used
+        for(Function.Dependency d : dependencies) {
+            if(!d.explicit && !subContext.isUsed(d.function))
+                throw new ParserException(currentToken, "implicit parameter " + d.function + " unused");
+        }
+
         return output;
     }
 
@@ -191,39 +202,27 @@ public class Parser {
         // Get a list of following terms
         List<Function> terms = new ArrayList<>();
         Function term;
-        while((term = parseTerm(context)) != null)
+        while ((term = parseTerm(context)) != null)
             terms.add(term);
 
         // If there are no terms
         int n = terms.size();
-        if(n == 0)
+        if (n == 0)
             throw new ParserException(currentToken, "expected expression but not found");
 
         // If there is only one term
-        if(n == 1)
+        if (n == 1)
             return terms.get(0);
 
         // If there is more than one term, specialize
         Function f = terms.get(0);
         terms.remove(0);
 
-        List<Function> fDependencies = f.getDependencies();
-        int m = fDependencies.size();
-        if(m != n - 1)
+        List<Function> fExplicitDependencies = f.getExplicitDependencies();
+        int m = fExplicitDependencies.size();
+        if (m != n - 1)
             throw new ParserException(currentToken, "expected " + m + " arguments for " + f + " but received " + (n - 1));
 
-//        // Replace placeholders by their original dependency
-//        List<Function> dependencies = new ArrayList<>();
-//        for(int i = 0;i < m; ++i) {
-//            Function argument = terms.get(i);
-//            if(argument.equals(session.PLACEHOLDER)) {
-//                Function g = fDependencies.get(i);
-//                // TODO: still need to specialize g to the values that have already been set!
-//                //  except if we just get rid of placeholders, because I see no use for them..
-//                terms.set(i, g);
-//                dependencies.add(g);
-//            }
-//        }
         try {
             return session.specialize(f, terms, Collections.emptyList());
         } catch (Session.SpecializationException e) {
@@ -236,11 +235,11 @@ public class Parser {
             IDENTIFIER | ( EXPRESSION ) | _
         */
 
-        if(found(Token.Type.IDENTIFIER)) {
+        if (found(Token.Type.IDENTIFIER)) {
             Token token = consume();
             String identifier = token.data;
             Function f = context.getFunction(identifier);
-            if(f == null)
+            if (f == null)
                 throw new ParserException(token, "unknown identifier " + identifier);
             return f;
         }
