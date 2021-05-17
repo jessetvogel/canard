@@ -1,0 +1,27 @@
+def Ring Scheme : Type
+def Module (R : Ring) : Type
+
+def flat (R : Ring) (M : Module R) : Type # change to Prop
+
+def ZZ : Ring
+def Z2Z : Module ZZ
+
+
+def Spec (R : Ring) : Scheme
+
+def HomSch (X Y : Scheme) : Type
+
+def id (X : Scheme) : HomSch X X
+
+def etale smooth unramified (X Y : Scheme) (f : HomSch X Y) : Type
+
+check ZZ;
+
+
+
+check etale (Spec ZZ) (Spec ZZ) (id (Spec ZZ));
+
+
+def kX : Ring
+
+check etale (Spec ZZ) (Spec kX) (id (Spec ZZ));
