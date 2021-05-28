@@ -43,4 +43,8 @@ public class Context {
         return usedFunctions.contains(f);
     }
 
+    public List<Function> getFunctions() {
+        return new ArrayList<>(labels.values());
+    }
+
 }

@@ -4,6 +4,8 @@ import nl.jessetvogel.canard.core.Context;
 import nl.jessetvogel.canard.core.Function;
 import nl.jessetvogel.canard.core.Matcher;
 import nl.jessetvogel.canard.core.Session;
+import nl.jessetvogel.canard.search.Query;
+import nl.jessetvogel.canard.search.Searcher;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -91,7 +93,7 @@ public class Parser {
 
     private void parseStatement() throws ParserException, IOException, Lexer.LexerException {
         /* STATEMENT =
-            ; | def | exit | check
+            ; | def | search | check | exit
          */
 
         if (found(Token.Type.SEPARATOR, ";")) {
@@ -104,18 +106,54 @@ public class Parser {
             return;
         }
 
+        if (found(Token.Type.KEYWORD, "check")) {
+            parseCheck();
+            return;
+        }
+
+        if (found(Token.Type.KEYWORD, "search")) {
+            parseSearch();
+            return;
+        }
+
         if (found(Token.Type.KEYWORD, "exit")) {
             consume();
             System.exit(0);
             return;
         }
 
-        if (found(Token.Type.KEYWORD, "check")) {
-            parseCheck();
-            return;
+        throw new ParserException(currentToken, "expected statement, got " + consume().data);
+    }
+
+    private void parseSearch() throws ParserException, IOException, Lexer.LexerException {
+        /*
+            search LIST_OF_PARAMETERS
+         */
+
+        consume(Token.Type.KEYWORD, "search");
+
+        // Parse indeterminates
+        List<Function> indeterminates = new ArrayList<>();
+        Context subContext = new Context(session.mainContext);
+        while(found(Token.Type.SEPARATOR, "(")) {
+            consume();
+            indeterminates.addAll(parseFunctions(subContext));
+            consume(Token.Type.SEPARATOR, ")");
         }
 
-        throw new ParserException(currentToken, "expected statement, got " + consume().data);
+        // Make a query and do a search
+        Searcher searcher = new Searcher(session);
+        Query query = new Query(session, indeterminates);
+        List<Function> solutions = searcher.search(query);
+
+        // Print the solutions
+        if(solutions == null) {
+            output("\uD83E\uDD7A no solutions found");
+            return;
+        }
+        int n = solutions.size();
+        for(int i = 0; i < n; ++i)
+            System.out.println("\uD83D\uDD0E " + indeterminates.get(i) + " = " + solutions.get(i));
     }
 
     private void parseCheck() throws ParserException, IOException, Lexer.LexerException {

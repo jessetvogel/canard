@@ -15,8 +15,8 @@ public class Session {
 
         // Create an instance of TYPE
         TYPE = new Function(null, Collections.emptyList());
-        mainContext.putFunction("Type", TYPE);
         mainContext.putFunction("Prop", TYPE);
+        mainContext.putFunction("Type", TYPE);
     }
 
     public Function createFunction(Function type, List<Function.Dependency> dependencies) {
@@ -74,7 +74,7 @@ public class Session {
 
         // Now we deal with the case where parent is a base function:
         // Check if the type of the given arguments match the dependencies
-        Matcher matcher = new Matcher(parent.getDependencies().stream().map(d -> d.function).collect(Collectors.toUnmodifiableList()));
+        Matcher matcher = new Matcher(parent.getDependenciesAsFunctions(), Collections.emptyList());
         for(int i = 0;i < n; ++i) {
             Function dependency = parentExplicitDependencies.get(i);
             Function argument = arguments.get(i);
@@ -91,7 +91,7 @@ public class Session {
 
         // At this point everything is verified.
         // The last thing to do is to construct the type of the specialization.
-        Function type = matcher.convertExpression(parent.getType());
+        Function type = matcher.convertFtoG(parent.getType());
 
         // Now create a new specialization with the right input
         return new Specialization(parent, arguments, type, dependencies);

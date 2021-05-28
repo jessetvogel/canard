@@ -8,7 +8,7 @@ public class Specialization extends Function {
     private final Function base;
     private final List<Function> arguments;
 
-    Specialization(Function base, List<Function> arguments, Function type, List<Dependency> dependencies) {
+    public Specialization(Function base, List<Function> arguments, Function type, List<Dependency> dependencies) {
         super(type, dependencies);
 
         this.base = base;

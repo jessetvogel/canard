@@ -29,9 +29,9 @@ def ZZ : Ring
 def aff_imp_qcomp {X : Scheme} (h : affine X) : quasi_compact X
 def reg_imp_lnoeth {X : Scheme} (h : regular X) : locally_noetherian X
 
-def int_imp_red {X : Scheme} (h : integral X) : reduced X
-def int_imp_irred {X : Scheme} (h : integral X) : irreducible X
-def red_irred_imp_int {X : Scheme} (h1 : reduced X) (h2 : irreducible X) : integral X
+def int_imp_red {U : Scheme} (h : integral U) : reduced U
+def int_imp_irred {V : Scheme} (h : integral V) : irreducible V
+def red_irred_imp_int {T : Scheme} (h1 : reduced T) (h2 : irreducible T) : integral T
 
 # ... and many more!
 

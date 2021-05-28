@@ -1,5 +1,6 @@
 package nl.jessetvogel.canard.core;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,7 +9,7 @@ public class Function {
     private String label = "?";
 
     private final Function type;
-    private final List<Dependency> dependencies;
+    private final List<Dependency> dependencies; // TODO: if empty, can set to null. Just have to change the get-functions
 
     Function(Function type, List<Dependency> dependencies) {
         this.type = (type != null ? type : this);
@@ -25,6 +26,10 @@ public class Function {
 
     public List<Dependency> getDependencies() {
         return dependencies;
+    }
+
+    public List<Function> getDependenciesAsFunctions() {
+        return getDependencies().stream().map(d -> d.function).collect(Collectors.toUnmodifiableList());
     }
 
     public List<Function> getExplicitDependencies() {
@@ -68,10 +73,10 @@ public class Function {
         }
 
         // If there are dependencies, we need a Matcher
-        Matcher matcher = new Matcher(dependencies.stream().map(d -> d.function).collect(Collectors.toUnmodifiableList()));
+        Matcher matcher = new Matcher(getDependenciesAsFunctions(), Collections.emptyList());
         for (int i = 0; i < n; i++) {
             Dependency thisDep = thisDependencies.get(i), otherDep = otherDependencies.get(i);
-            if (thisDep.explicit != otherDep.explicit) // explicitness must match
+            if (thisDep.explicit != otherDep.explicit) // Explicitness must match
                 return false;
             if (!matcher.matches(thisDep.function, thisDep.function))
                 return false;

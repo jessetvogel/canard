@@ -1,46 +1,74 @@
 package nl.jessetvogel.canard.core;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Matcher {
 
     final Matcher parent;
-    final List<Function> indeterminates;
-    final Map<Function, Function> map;
+    final List<Function> fIndeterminates, gIndeterminates;
+    final Map<Function, Function> fSolutions, gSolutions;
 
-    Matcher(List<Function> indeterminates) {
+    public Matcher(List<Function> fIndeterminates, List<Function> gIndeterminates) {
         parent = null;
-        this.indeterminates = indeterminates;
-        map = new HashMap<>();
+        this.fIndeterminates = fIndeterminates;
+        this.gIndeterminates = gIndeterminates;
+        fSolutions = new HashMap<>();
+        gSolutions = new HashMap<>();
     }
 
-    Matcher(Matcher parent, List<Function> indeterminates) {
+    Matcher(Matcher parent, List<Function> fIndeterminates, List<Function> gIndeterminates) {
         this.parent = parent;
-        this.indeterminates = indeterminates;
-        map = new HashMap<>();
+        this.fIndeterminates = fIndeterminates;
+        this.gIndeterminates = gIndeterminates;
+        fSolutions = new HashMap<>();
+        gSolutions = new HashMap<>();
     }
 
-    private boolean put(Function f, Function g) {
-        Function h = map.get(f);
+    private boolean putGSolution(Function g, Function f) {
+        Function h = gSolutions.get(g);
         if (h == null) {
-            map.put(f, g);
+            gSolutions.put(g, f);
             return true;
         }
-        return h.equals(g);
+        return h.equals(f);
     }
 
-    private Function map(Function f) {
-        Function g = map.get(f);
-        if (g != null)
-            return g;
+    private boolean putFSolution(Function f, Function g) {
+        Function h = fSolutions.get(f);
+        if (h == null) {
+            fSolutions.put(f, g);
+            return true;
+        }
+
+        if(!h.equals(g)) {
+            System.err.println("Hmm. Want to map " + f + " to " + g + ", but was already mapped to " + h);
+            return false;
+        }
+        return true;
+    }
+
+    public Function mapGSolution(Function g) {
+        Function f = gSolutions.get(g);
+        if (f != null)
+            return f;
         if (parent != null)
-            return parent.map(f);
+            return parent.mapGSolution(g);
         return null;
     }
 
-    // What does this function do?
-    boolean matches(Function f, Function g) {
+    public Function mapFSolution(Function f) {
+        Function g = fSolutions.get(f);
+        if (g != null)
+            return g;
+        if (parent != null)
+            return parent.mapFSolution(f);
+        return null;
+    }
+
+    // Checks if g can be applied to f. So 'g is the argument, f the dependency'
+    // Actually it checks if a specialization of g can be applied to f, where thmDependencies denote
+    // the arguments of the specialization
+    public boolean matches(Function f, Function g) {
         // If f equals g, there is obviously a match, and nothing more to do
         if (f == g)
             return true;
@@ -52,7 +80,11 @@ public class Matcher {
             return false;
 
         // Dependencies themselves should match
-        Matcher subMatcher = (n > 0) ? new Matcher(this, fDependencies.stream().map(d -> d.function).collect(Collectors.toUnmodifiableList())) : this; // Note: there is no need for a subMatcher if f has no dependencies
+        Matcher subMatcher = (n > 0) ? new Matcher(
+                this,
+                f.getDependenciesAsFunctions(),
+                Collections.emptyList() // One way matching is good enough here! TODO: don't know about this one ??
+        ) : this; // Note: there is no need for a subMatcher if f has no dependencies
         for (int i = 0; i < n; ++i) {
             Function.Dependency fDep = fDependencies.get(i);
             Function.Dependency gDep = gDependencies.get(i);
@@ -69,38 +101,75 @@ public class Matcher {
             return false;
 
         // At this point, f and g agree up to their signature, i.e. their dependencies and types match
-        // Now if f is a dependency, we can simply map f to g.
-        if (indeterminates.contains(f))
-            return put(f, g);
 
-        // Otherwise, we require a (more) strict match! (E.g. when comparing types)
+        // If f is a parameter of thm, fill in g as argument
+        if(gIndeterminates.contains(g))
+            return putGSolution(g, f);
 
-        // If f was already mapped, it should map to g (up to equality)
-        Function h = map(f);
-        if (h != null)
-            return h.equals(g);
+        // If g is an indeterminate, assign f to g
+        if(fIndeterminates.contains(f))
+            return putFSolution(f, g);
 
-        // Otherwise, the base of f and g should coincide (strict equality of Objects! Because no base function can be represented by two different Objects)
-        if (f.getBase() != g.getBase())
-            return false;
-
-        List<Function> fArguments = f.getArguments(), gArguments = g.getArguments();
-        int l = fArguments.size(); // Since the bases already agree, we know the number of arguments must agree as well
-        for (int i = 0; i < l; ++i) {
-            Function fArg = fArguments.get(i);
-            Function gArg = gArguments.get(i);
-            if (!matches(fArg, gArg))
-                return false;
+        // If the bases match, simply match the arguments (note: we check for a strict equality of Objects! Because no base function can be represented by two different Objects)
+        if(f.getBase() == g.getBase()) {
+            List<Function> fArguments = f.getArguments(), gArguments = g.getArguments();
+            int l = fArguments.size(); // Since the bases already agree, we know the number of arguments must agree as well
+            for (int i = 0; i < l; ++i) {
+                Function fArg = fArguments.get(i);
+                Function gArg = gArguments.get(i);
+                if (!matches(fArg, gArg))
+                    return false;
+            }
+            return true;
         }
 
-        // Note: I think we don't even care about checking anything about dependencies: for one we have already done it,
-        // and secondly, what the dependencies are is just a function of the base and its dependencies
-        return true;
+        // Last chance: the parent might let them match, because f might be an indeterminate of some (grand)parent instead!
+        if(parent != null)
+            return parent.matches(f, g); // TODO: this is necessary, but can it be simplified ?? If it only applies when f is an indeterminate, can check for that instead?
+        //  otherwise we must check all the above once again (e.g. types) which is totally unnecessary!
+
+//        System.out.println("Oops, " + f + " does not match " + g);
+        return false;
     }
 
-    public Function convertExpression(Function f) {
-        // If f is given as a dependency (possibly to a parent), we can simply map f
-        Function g = map(f);
+    public Function convertGtoF(Function g) {
+        // If g is given as an argument (possibly to a parent), we can simply map g
+        Function f = mapGSolution(g);
+        if (f != null)
+            return f;
+
+        Function base = g.getBase();
+        if (g == base) // Note that this is actually a special case of the next step!
+            return g;
+
+        // Otherwise, when g is a specialization, we convert each argument of g
+        boolean changes = false;
+        List<Function> convertedArguments = new ArrayList<>();
+        for(Function arg : g.getArguments()) {
+            Function convertedArg = convertGtoF(arg);
+            if (!convertedArg.equals(arg))
+                changes = true;
+            convertedArguments.add(convertedArg);
+        }
+
+        // If no actual changes were made to the arguments, we can simply return the original g
+        if(!changes)
+            return g;
+
+        // Now we must convert the type of g, this requires a subMatcher
+        List<Function> baseExplicitDependencies = base.getExplicitDependencies();
+        Matcher subMatcher = new Matcher(this, base.getDependenciesAsFunctions(), Collections.emptyList());
+        int n = baseExplicitDependencies.size();
+        for (int i = 0; i < n; ++i)
+            assert (subMatcher.matches(baseExplicitDependencies.get(i), convertedArguments.get(i)));
+
+        Function type = subMatcher.convertGtoF(g.getType());
+        return new Specialization(base, convertedArguments, type, Collections.emptyList());
+    }
+
+    public Function convertFtoG(Function f) {
+        // If f is given as an argument (possibly to a parent), we can simply map f
+        Function g = mapFSolution(f);
         if (g != null)
             return g;
 
@@ -108,29 +177,28 @@ public class Matcher {
         if (f == base) // Note that this is actually a special case of the next step!
             return f;
 
-        // Otherwise, when f is a specialization, we convert each argument of f
+        // Otherwise, when g is a specialization, we convert each argument of g
         boolean changes = false;
         List<Function> convertedArguments = new ArrayList<>();
         for(Function arg : f.getArguments()) {
-            Function convertedArg = convertExpression(arg);
+            Function convertedArg = convertFtoG(arg);
             if (!convertedArg.equals(arg))
                 changes = true;
             convertedArguments.add(convertedArg);
         }
 
-        // If no actual changes were made to the arguments, we can simply return the original f
+        // If no actual changes were made to the arguments, we can simply return the original g
         if(!changes)
             return f;
 
-        // Now we must convert the type of f, this requires a subMatcher
+        // Now we must convert the type of g, this requires a subMatcher
         List<Function> baseExplicitDependencies = base.getExplicitDependencies();
-        Matcher subMatcher = new Matcher(this, base.getDependencies().stream().map(d -> d.function).collect(Collectors.toUnmodifiableList()));
+        Matcher subMatcher = new Matcher(this, base.getDependenciesAsFunctions(), Collections.emptyList());
         int n = baseExplicitDependencies.size();
         for (int i = 0; i < n; ++i)
             assert (subMatcher.matches(baseExplicitDependencies.get(i), convertedArguments.get(i)));
 
-        Function type = subMatcher.convertExpression(f.getType());
+        Function type = subMatcher.convertFtoG(f.getType());
         return new Specialization(base, convertedArguments, type, Collections.emptyList());
     }
-
 }
