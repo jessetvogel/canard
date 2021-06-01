@@ -5,6 +5,7 @@ import nl.jessetvogel.canard.core.Matcher;
 import nl.jessetvogel.canard.core.Session;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Query {
 
@@ -33,91 +34,113 @@ public class Query {
 //        Function h = indeterminates.get(indeterminates.size() - 1);
 
         // Create matcher
-        List<Function> thmAllDependencies = thm.getDependenciesAsFunctions();
-        Matcher matcher = new Matcher(indeterminates, thmAllDependencies);
+        Matcher matcher = new Matcher(indeterminates, thm.getDependenciesAsFunctions());
 
         // Note that we do not match (h, thm) since they might not match!
-        // (E.g. when thm has parameters that require arguments, while h has not)
+        // (E.g. when thm has dependencies that require arguments, while h has not)
         // Therefore we just match the types of h and thm
         if (!matcher.matches(h.getType(), thm.getType()))
             return null;
 
 //        System.out.println("Valid reduction: solve for " + h + " with " + thm);
 
-        // Create the new subQuery, and keep track of the solution
-        List<Function> newIndeterminates = new ArrayList<>(), newIndeterminatesFromThm = new ArrayList<>();
+        // Create the new subQuery, and keep track of the solutions (for indeterminates) and the arguments (for thm)
+        // and the new indeterminates (for the subQuery)
+        List<Function> newIndeterminates = new ArrayList<>();
         Map<Function, Function> solutions = new HashMap<>();
+        Map<Function, Function> arguments = new HashMap<>();
 
-        // Go through the dependencies of thm (both implicit/explicit). If an argument is set by the matcher, use that argument.
-        // Otherwise, create a new argument that looks like the old argument
-        // h will be given the specialization of thm. Let's determine with which arguments
-        Matcher thmArgumentMatcher = new Matcher(thm.getDependenciesAsFunctions(), Collections.emptyList());
-        List<Function> thmArguments = new ArrayList<>();
-        for (Function.Dependency d : thm.getDependencies()) {
-            Function argument = matcher.mapGSolution(d.function);
-            if (argument == null) {
-                argument = session.createFunction(matcher.convertGtoF(d.function.getType()), Collections.emptyList());
-                argument.setLabel(d.function + "'");
-//                argument = d.function; // TODO: this may break at some point, maybe we should duplicate the argument ?
-                newIndeterminatesFromThm.add(argument);
-            }
+        List<Function> allIndeterminates = new ArrayList<>(indeterminates);
+        allIndeterminates.remove(h); // Note that h will be solved for, so will no longer be an indeterminate
+        allIndeterminates.addAll(thm.getDependenciesAsFunctions()); // All dependencies of thm will be indeterminates (unless they were given arguments of course)
+        Matcher queryToSubQuery = new Matcher(allIndeterminates, Collections.emptyList());
 
-            assert (thmArgumentMatcher.matches(d.function, argument));
-
-            // Only the explicit argument need to be provided to the thm
-            if (d.explicit)
-                thmArguments.add(argument);
-        }
-
-        // Go through the old indeterminates, store the solutions, and all that have no solution are new indeterminates,
-        // apart from h, that one will get a solution a bit later
-        // However, not that new indeterminates should be recreated, as their type can be altered/more specified!
-        for (Function f : indeterminates) {
-            if (f == h)
-                continue;
-
-            Function g = matcher.mapFSolution(f);
-            if (g != null) {
-                g = thmArgumentMatcher.convertFtoG(g); // Convert again since theorem may have gotten new arguments
-                solutions.put(f, g);
-            }
-            else {
-                Function convertedFType = thmArgumentMatcher.convertFtoG(matcher.convertFtoG(f.getType()));
-                if(convertedFType == f.getType()) { // Re-use arguments if allowed for (i.e. type did not change at all)
-                    newIndeterminates.add(f);
+        List<Function> unmapped = new ArrayList<>(allIndeterminates);
+        boolean changes = true;
+        while (changes && !unmapped.isEmpty()) {
+            changes = false;
+            for (ListIterator<Function> it = unmapped.listIterator(); it.hasNext(); ) {
+                Function f = it.next();
+                // When f is an indeterminate of this query
+                if (indeterminates.contains(f)) {
+                    Function solution = matcher.mapSolution(f, false);
+                    if (solution != null) {
+                        // If f has a solution, the solution must not depend on any unmapped indeterminate
+                        // And, in this case, we simply convert along the new matcher
+                        if (solution.dependsOn(unmapped))
+                            continue;
+                        solution = queryToSubQuery.convert(solution);
+//                        System.out.println("... so it was converted to " + solution);
+                    } else {
+                        // If f has no solution, this indeterminate remains an indeterminate.
+                        // Hence we duplicate it to the new query
+                        if (f.signatureDependsOn(unmapped))
+                            continue;
+                        solution = queryToSubQuery.duplicateDependency(f);
+                        solution.setLabel(f + "'"); // Not really needed, but is pretty
+                        newIndeterminates.add(solution);
+//                        System.out.println("No solution yet for " + f);
+                    }
+                    // Store the solution,  un-mark as unmapped, match, and indicate that changes are made
+                    solutions.put(f, solution);
+                    it.remove();
+                    assert (queryToSubQuery.matches(f, solution));
+                    changes = true;
+                    break;
                 }
+                // Otherwise it must be a dependency of thm
                 else {
-                    Function newF = session.createFunction(convertedFType, Collections.emptyList());
-                    newIndeterminates.add(newF);
-                    solutions.put(f, newF);
+                    Function argument = matcher.mapSolution(f, true);
+                    if (argument != null) {
+                        // If the argument is set, the argument must not depend on unmapped stuff
+                        // And, in that case, convert along the new matcher
+                        if (argument.dependsOn(unmapped))
+                            continue;
+                        argument = queryToSubQuery.convert(argument);
+                    } else {
+                        // If no argument is set, it becomes a new indeterminate
+                        // Hence we duplicate it to the new query
+                        if (f.signatureDependsOn(unmapped))
+                            continue;
+                        argument = queryToSubQuery.duplicateDependency(f);
+                        argument.setLabel(f + "'"); // Not really needed, but is pretty
+                        newIndeterminates.add(argument);
+//                        System.out.println("No argument yet for " + f + ", so we added " + argument + " as a new indeterminate");
+                    }
+                    // Store the argument, un-mark as unmapped, match, and indicate that changes are made
+                    arguments.put(f, argument);
+                    it.remove();
+                    assert (queryToSubQuery.matches(f, argument));
+                    changes = true;
+                    break;
                 }
             }
         }
 
-        // Set solution of h
+        // If there are still unmapped indeterminates, there must be some dependency loop, so we concede and say
+        // we cannot reduce to a subQuery
+        if (!unmapped.isEmpty())
+            return null;
+
+        // Finally, set solution of h, as specialization of thm
+        List<Function> thmArguments = thm.getExplicitDependencies().stream().map(arguments::get).collect(Collectors.toUnmodifiableList());
         try {
-            solutions.put(h, session.specialize(thm, thmArguments, Collections.emptyList())); // Note that this need not go through thmArgumentMatcher again, since we already give it the new thmArguments
+            solutions.put(h, session.specialize(thm, thmArguments, Collections.emptyList()));
         } catch (Session.SpecializationException e) {
             System.err.println("Ai ai ai! Not what was supposed to happen!");
             e.printStackTrace();
+            return null;
         }
-
-        // Add the new indeterminates coming from the theorem arguments at the END of the list of new indeterminates
-        newIndeterminates.addAll(newIndeterminatesFromThm);
 
         // Create the reduced query based on the solutions and new indeterminates
         return new Query(this, solutions, newIndeterminates);
-
-        // (Print solutions)
-//        for (Function f : solutions.keySet())
-//            System.out.println("Solution: " + f + " --> " + solutions.get(f));
     }
 
     List<Function> getUltimateSolutions(List<Function> list) {
         // Make a copy of the list, so that we do not alter the original list!
         list = new ArrayList<>(list);
 
-        // Get chain of solutions
+        // Get chain of subQueries with solutions
         List<Query> chain = new ArrayList<>();
         for (Query q = this; q.parent != null; q = q.parent)
             chain.add(q);
@@ -133,13 +156,15 @@ public class Query {
             assert (q.parent != null);
             Matcher matcher = new Matcher(q.parent.indeterminates, Collections.emptyList());
             assert (q.solutions != null);
-            for (Map.Entry<Function, Function> entry : q.solutions.entrySet())
+            for (Map.Entry<Function, Function> entry : q.solutions.entrySet()) {
+//                System.out.println("Want to map " + entry.getKey() + " to " + entry.getValue());
                 assert (matcher.matches(entry.getKey(), entry.getValue()));
+            }
 
             // Convert each Function in the given list
             for (int i = 0; i < n; ++i) {
                 Function original = list.get(i);
-                Function converted = matcher.convertFtoG(original);
+                Function converted = matcher.convert(original, false);
                 list.set(i, converted);
 //                System.out.println("Converted " + original + " to " + converted);
             }

@@ -91,7 +91,7 @@ public class Session {
 
         // At this point everything is verified.
         // The last thing to do is to construct the type of the specialization.
-        Function type = matcher.convertFtoG(parent.getType());
+        Function type = matcher.convert(parent.getType(), false);
 
         // Now create a new specialization with the right input
         return new Specialization(parent, arguments, type, dependencies);

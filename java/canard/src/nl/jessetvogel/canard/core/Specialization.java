@@ -29,6 +29,13 @@ public class Specialization extends Function {
     }
 
     @Override
+    public boolean dependsOn(List<Function> list) {
+        if(list.contains(this))
+            return true;
+        return arguments.stream().anyMatch(arg -> arg.dependsOn(list));
+    }
+
+    @Override
     public String toString() {
         StringJoiner sj = new StringJoiner(" ", " ", "");
         sj.setEmptyValue("");

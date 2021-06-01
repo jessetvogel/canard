@@ -1,25 +1,19 @@
-# Define some types
+# Type definitions
 def Ring : Type
-def Scheme : Type
 def Module (R : Ring) : Type
+def Scheme : Type
 
-def RingMorphism (X Y : Ring) : Type
-def SchemeMorphism (X Y : Scheme) : Type
-def ModuleMorphism {R : Ring} (M N : Module R) : Type
-
+def Morphism {T : Type} (X Y : T) : Type
 
 # Constructions
 def Spec (R : Ring) : Scheme
 def RingAsModule (R : Ring) : Module R
 
-def SchemeId (X : Scheme) : SchemeMorphism X X
-def RingId (R : Ring) : RingMorphism R R
-def ModuleId {R : Ring} (M : Module R) : ModuleMorphism M M
-
+def id {T : Type} (X : T) : Morphism X X
 
 # Scheme properties
 def affine quasi_compact regular noetherian locally_noetherian reduced irreducible cohen_macaulay excellent separated quasi_separated jacobson normal integral finite_dimensional connected (X : Scheme) : Prop
-def isomorphism formally_etale formally_unramified formally_smooth proper finite quasi_finite flat m_affine m_quasi_compact separated quasi_separated m_regular finite_presentation locally_finite_type locally_finite_presentation etale smooth unramified finite_type open universally_closed immersion open_immersion closed_immersion finite_fibers surjective zariski_cover etale_cover smooth_cover syntomic_cover fppf_cover fpqc_cover faithfully_flat {X Y : Scheme} (f : SchemeMorphism X Y) : Prop
+def isomorphism formally_etale formally_unramified formally_smooth proper finite quasi_finite flat m_affine m_quasi_compact separated quasi_separated m_regular finite_presentation locally_finite_type locally_finite_presentation etale smooth unramified finite_type open universally_closed immersion open_immersion closed_immersion finite_fibers surjective zariski_cover etale_cover smooth_cover syntomic_cover fppf_cover fpqc_cover faithfully_flat {X Y : Scheme} (f : Morphism X Y) : Prop
 
 
 # Examples
@@ -38,8 +32,8 @@ def red_irred_imp_int {T : Scheme} (h1 : reduced T) (h2 : irreducible T) : integ
 
 # Theorems on morphisms
 
-def lfp_imp_lft {X Y : Scheme} {f : SchemeMorphism X Y} (h : locally_finite_presentation f) : locally_finite_type f
-def fp_imp_ft {X Y : Scheme} {f : SchemeMorphism X Y} (h : finite_presentation f) : finite_type f
+def lfp_imp_lft {X Y : Scheme} {f : Morphism X Y} (h : locally_finite_presentation f) : locally_finite_type f
+def fp_imp_ft {X Y : Scheme} {f : Morphism X Y} (h : finite_presentation f) : finite_type f
 
 
 

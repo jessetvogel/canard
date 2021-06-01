@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 public class Function {
 
-    private String label = "?";
+    private String label = null;
 
     private final Function type;
     private final List<Dependency> dependencies; // TODO: if empty, can set to null. Just have to change the get-functions
@@ -46,7 +46,10 @@ public class Function {
 
     @Override
     public String toString() {
-        return label;
+        if (label == null)
+            return String.format("%04d", hashCode() % 10000);
+        else
+            return label;
     }
 
     @Override
@@ -84,6 +87,14 @@ public class Function {
 
         // Now just let the matcher do its work
         return matcher.matches(this, other);
+    }
+
+    public boolean dependsOn(List<Function> list) {
+        return list.contains(this);
+    }
+
+    public boolean signatureDependsOn(List<Function> list) {
+        return dependencies.stream().anyMatch(dep -> dep.function.signatureDependsOn(list)) || type.dependsOn(list);
     }
 
     public static class Dependency {

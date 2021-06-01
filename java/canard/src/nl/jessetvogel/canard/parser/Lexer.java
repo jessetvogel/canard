@@ -122,8 +122,11 @@ class Lexer {
     }
 
     private Token makeToken() throws LexerException {
-        if (currentToken == null)
-            throw new LexerException("Unknown token '" + sb + "'");
+        if (currentToken == null) {
+            String message = "Unknown token '" + sb + "'";
+            sb.setLength(0);
+            throw new LexerException(message);
+        }
 
         Token token = currentToken;
         currentToken = null;
