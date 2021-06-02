@@ -7,7 +7,7 @@ public class Session {
 
     public final Context mainContext;
 
-    public final Function TYPE;
+    public final Function TYPE, PROP;
 
     public Session() {
         // Create main context
@@ -15,7 +15,8 @@ public class Session {
 
         // Create an instance of TYPE
         TYPE = new Function(null, Collections.emptyList());
-        mainContext.putFunction("Prop", TYPE);
+        PROP = new Function(TYPE, Collections.emptyList());
+        mainContext.putFunction("Prop", PROP);
         mainContext.putFunction("Type", TYPE);
     }
 

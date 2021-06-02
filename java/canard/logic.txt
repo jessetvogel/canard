@@ -1,0 +1,2 @@
+def not (P : Prop) : Prop
+def modus_tollens {P Q : Prop} (i (p : P) : Q) (nq : not Q) : not P

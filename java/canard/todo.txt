@@ -1,0 +1,38 @@
+- Make Prop different from Type, but so that when P : Prop, we can still make things out of P, e.g. 'p : P'
+// Done.
+
+- How to prevent circular searching ?
+// Solution: introduce depth of queries
+
+- Set a maximum search depth!
+    - Measure depth differently! If it takes 5 depths to satisfy some proof, while the other proofs just carry over,
+    those other proofs have not really be attempted, so their depth doesn't really count!
+    Rather keep track of the depth of the indeterminants!
+// Done.
+
+- Re-use existing proofs
+
+- 'local_property'
+
+- Searching for indeterminants with dependencies.
+    - Could go with literal matches. Works in the easy cases
+    - Could go with a kind of subSearcher? I.e. we instantiate the dependencies and then search for the type.
+    If that succeeds, construct a lambda-thingy
+
+- 'not', and maybe further logic stuff
+
+- include files
+     - The obvious syntax is `include file`
+     - Or copy LEAN and use `import dir.subDir.file`
+     - Probably prevent double imports ?
+
+- namespaces
+    - `namespace NAMESPACE ... end`
+    - `open NAMESPACE`
+    - refer to definitions as NAMESPACE.object or something like that
+    - can namespaces be nested ?
+    - by what label are Function's now actually stored?
+
+- having multiple definitions have the same name/label ? (As long as their signature is not the same)
+    - Well LEAN does not support it, so why would we ?
+    - namespaces should suffice

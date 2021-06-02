@@ -2,7 +2,6 @@ package nl.jessetvogel.canard.parser;
 
 import nl.jessetvogel.canard.core.Context;
 import nl.jessetvogel.canard.core.Function;
-import nl.jessetvogel.canard.core.Matcher;
 import nl.jessetvogel.canard.core.Session;
 import nl.jessetvogel.canard.search.Query;
 import nl.jessetvogel.canard.search.Searcher;
@@ -12,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Parser {
     private final OutputStream out;
@@ -81,11 +79,14 @@ public class Parser {
                 parseStatement();
             consume(Token.Type.EOF);
         } catch (ParserException e) {
-            output("⚠️ Parsing error: " + e.getMessage());
+            output("⚠️ Parsing error in " + filename + " at " + e.token.line + ":" + e.token.position + ": " + e.getMessage());
+            return false;
         } catch (Lexer.LexerException e) {
-            output("⚠️ Lexing error: " + (filename.equals("") ? "" : filename + ":") + e.getMessage());
+            output("⚠️ Lexing error in " + filename + " at " + e.l + ":" + e.c +":" + e.getMessage());
+            return false;
         } catch (IOException e) {
             output("\uD83D\uDCDD IOException: " + e.getMessage());
+            return false;
         }
 
         return true;
@@ -144,7 +145,7 @@ public class Parser {
         // Make a query and do a search
         Searcher searcher = new Searcher(session);
         Query query = new Query(session, indeterminates);
-        List<Function> solutions = searcher.search(query);
+        List<Function> solutions = searcher.search(query, 10); // TODO: watch out, its a magic number! 🪄
 
         // Print the solutions
         if(solutions == null) {
@@ -182,8 +183,8 @@ public class Parser {
 
         List<String> identifiers = parseListOfIdentifiers();
 
-        Context subContext;
-        List<Function.Dependency> dependencies;
+        Context subContext = context;
+        List<Function.Dependency> dependencies = Collections.emptyList();
         if (found(Token.Type.SEPARATOR, "{") || found(Token.Type.SEPARATOR, "(")) {
             subContext = new Context(context);
             dependencies = new ArrayList<>();
@@ -195,27 +196,26 @@ public class Parser {
                     dependencies.add(new Function.Dependency(f, explicit));
                 consume(Token.Type.SEPARATOR, explicit ? ")" : "}");
             }
-        } else {
-            subContext = context; // It is unnecessary to define subcontext without its own functions
-            dependencies = Collections.emptyList();
-        }
-
-        consume(Token.Type.SEPARATOR, ":");
-        Function type = parseExpression(subContext);
-        if (type.getType() != session.TYPE)
-            throw new ParserException(currentToken, "expected a type");
-
-        List<Function> output = new ArrayList<>();
-        for (String identifier : identifiers) {
-            Function f = session.createFunction(type, dependencies);
-            context.putFunction(identifier, f);
-            output.add(f);
         }
 
         // Check if the implicits were actually used
         for(Function.Dependency d : dependencies) {
             if(!d.explicit && !subContext.isUsed(d.function))
                 throw new ParserException(currentToken, "implicit parameter " + d.function + " unused");
+        }
+
+        // Parse type
+        consume(Token.Type.SEPARATOR, ":");
+        Function type = parseExpression(subContext);
+        if (type.getType() != session.TYPE && type.getType() != session.PROP)
+            throw new ParserException(currentToken, "expected a Type or Prop");
+
+        // Actually create the functions
+        List<Function> output = new ArrayList<>();
+        for (String identifier : identifiers) {
+            Function f = session.createFunction(type, dependencies);
+            context.putFunction(identifier, f);
+            output.add(f);
         }
 
         return output;

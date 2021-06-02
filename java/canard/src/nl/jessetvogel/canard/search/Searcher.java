@@ -15,7 +15,7 @@ public class Searcher {
         this.session = session;
     }
 
-    public List<Function> search(Query query) {
+    public List<Function> search(Query query, int maxDepth) {
         // Create a queue of queries, and add the query we want to solve for
         Queue<Query> queue = new LinkedList<>();
         queue.add(query);
@@ -38,7 +38,9 @@ public class Searcher {
                         return subQuery.getUltimateSolutions(query.indeterminates);;
 
                     // Add all reductions to the end of the queue
-                    queue.add(subQuery);
+                    // but only if it does not exceed the search depth!
+                    if(subQuery.getDepth() < maxDepth)
+                        queue.add(subQuery);
                 }
             }
         }

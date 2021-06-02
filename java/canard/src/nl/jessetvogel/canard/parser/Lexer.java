@@ -136,7 +136,7 @@ class Lexer {
 
     class LexerException extends Exception {
 
-        private final int l, c;
+        final int l, c;
 
         LexerException(String message) {
             super(message);

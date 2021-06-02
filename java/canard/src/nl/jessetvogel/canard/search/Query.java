@@ -12,6 +12,7 @@ public class Query {
     private final Session session;
     private final Query parent;
     private final Map<Function, Function> solutions;
+    private final List<Integer> depths;
     final List<Function> indeterminates;
 
     public Query(Session session, List<Function> indeterminates) {
@@ -19,13 +20,15 @@ public class Query {
         this.solutions = null;
         this.session = session;
         this.indeterminates = indeterminates;
+        this.depths = indeterminates.stream().map(f -> 0).collect(Collectors.toUnmodifiableList());
     }
 
-    Query(Query parent, Map<Function, Function> solutions, List<Function> indeterminates) {
+    private Query(Query parent, Map<Function, Function> solutions, List<Function> indeterminates, List<Integer> depths) {
         this.session = parent.session;
         this.parent = parent;
         this.solutions = solutions;
         this.indeterminates = indeterminates;
+        this.depths = depths;
     }
 
     Query reduce(Function h, Function thm) {
@@ -49,6 +52,8 @@ public class Query {
         List<Function> newIndeterminates = new ArrayList<>();
         Map<Function, Function> solutions = new HashMap<>();
         Map<Function, Function> arguments = new HashMap<>();
+        List<Integer> newDepths = new ArrayList<>();
+        int hDepth = depths.get(indeterminates.indexOf(h));
 
         List<Function> allIndeterminates = new ArrayList<>(indeterminates);
         allIndeterminates.remove(h); // Note that h will be solved for, so will no longer be an indeterminate
@@ -79,6 +84,7 @@ public class Query {
                         solution = queryToSubQuery.duplicateDependency(f);
                         solution.setLabel(f + "'"); // Not really needed, but is pretty
                         newIndeterminates.add(solution);
+                        newDepths.add(depths.get(indeterminates.indexOf(f))); // The indeterminate has not changed, so its depth remains the same
 //                        System.out.println("No solution yet for " + f);
                     }
                     // Store the solution,  un-mark as unmapped, match, and indicate that changes are made
@@ -105,6 +111,7 @@ public class Query {
                         argument = queryToSubQuery.duplicateDependency(f);
                         argument.setLabel(f + "'"); // Not really needed, but is pretty
                         newIndeterminates.add(argument);
+                        newDepths.add(hDepth + 1); // This indeterminate was introduced because of h, so its depth is one more than that of h
 //                        System.out.println("No argument yet for " + f + ", so we added " + argument + " as a new indeterminate");
                     }
                     // Store the argument, un-mark as unmapped, match, and indicate that changes are made
@@ -133,7 +140,7 @@ public class Query {
         }
 
         // Create the reduced query based on the solutions and new indeterminates
-        return new Query(this, solutions, newIndeterminates);
+        return new Query(this, solutions, newIndeterminates, newDepths);
     }
 
     List<Function> getUltimateSolutions(List<Function> list) {
@@ -174,6 +181,10 @@ public class Query {
         return list;
     }
 
+    public int getDepth() {
+        return Collections.max(depths);
+    }
+
     @Override
     public String toString() {
         StringJoiner sj = new StringJoiner(" ", "Query ", "");
@@ -182,5 +193,4 @@ public class Query {
         }
         return sj.toString();
     }
-
 }
