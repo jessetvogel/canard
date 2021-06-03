@@ -47,7 +47,7 @@ public class Matcher {
             //noinspection SuspiciousNameCombination
             return putSolution(y, x, !reverse);
 
-        System.out.println("Nope, " + x + " will not map to " + y);
+//        System.out.println("Nope, " + x + " will not map to " + y);
         return false;
     }
 

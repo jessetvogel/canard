@@ -1,0 +1,15 @@
+def Morphism {T : Type} (X Y : T) : Type # maybe a bit too general
+def id {T : Type} (X : T) : Morphism X X
+def comp {T : Type} {X Y Z : T} (g : Morphism Y Z) (f : Morphism X Y) : Morphism X Z
+
+import "commutative_algebra.txt"
+import "algebraic_geometry.txt"
+
+open commutative_algebra
+open algebraic_geometry
+
+# Checks
+check red_irred_imp_int (int_imp_red SpecZZIntegral) (int_imp_irred SpecZZIntegral) ;
+
+# close commutative_algebra
+# close algebraic_geometry

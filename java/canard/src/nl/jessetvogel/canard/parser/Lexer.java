@@ -6,8 +6,8 @@ import java.util.regex.Pattern;
 
 class Lexer {
 
-    private static final List<String> KEYWORDS = List.of("def", "check", "search", "exit");
-    private static final List<String> SEPARATORS = List.of(":", "(", ")", "{", "}", "_", ";");
+    private static final List<String> KEYWORDS = List.of("def", "check", "search", "import", "namespace", "end", "open", "close", "exit");
+    private static final List<String> SEPARATORS = List.of(":", "(", ")", "{", "}", "_", ";", ".");
     private static final Pattern PATTERN_NUMBERS = Pattern.compile("^\\d+$");
     private static final Pattern PATTERN_IDENTIFIERS = Pattern.compile("^\\w+$");
     private static final Pattern PATTERN_STRING = Pattern.compile("^\"[^\"]*\"$");
@@ -143,10 +143,5 @@ class Lexer {
             l = line;
             c = column;
         }
-
-        public String getMessage() {
-            return "" + l + ":" + c + ": " + super.getMessage();
-        }
-
     }
 }

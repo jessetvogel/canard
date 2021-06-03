@@ -23,9 +23,15 @@ public class Context {
         usedFunctions = new HashSet<>();
     }
 
-    public void putFunction(String label, Function f) {
+    public boolean putFunction(String label, Function f) {
+        // Not allowed to overwrite in the same context!
+        if(labels.containsKey(label))
+            return false;
+
+        // Set label of the function, and map label -> f
         f.setLabel(label);
         labels.put(label, f);
+        return true;
     }
 
     public Function getFunction(String label) {
@@ -47,4 +53,7 @@ public class Context {
         return new ArrayList<>(labels.values());
     }
 
+//    public boolean hasFunction(String label) {
+//        return labels.containsKey(label);
+//    }
 }

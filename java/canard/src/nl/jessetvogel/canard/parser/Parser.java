@@ -2,32 +2,35 @@ package nl.jessetvogel.canard.parser;
 
 import nl.jessetvogel.canard.core.Context;
 import nl.jessetvogel.canard.core.Function;
+import nl.jessetvogel.canard.core.Namespace;
 import nl.jessetvogel.canard.core.Session;
 import nl.jessetvogel.canard.search.Query;
 import nl.jessetvogel.canard.search.Searcher;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Parser {
     private final OutputStream out;
-    private final Session session;
-
     private final Lexer lexer;
     private String filename, directory;
     private Token currentToken;
 
+    private final Session session;
+    private Namespace currentNamespace;
+    private final Set<Namespace> openNamespaces;
+
     public Parser(InputStream in, OutputStream out, Session session) {
         this.out = out;
-        this.session = session;
-
         lexer = new Lexer(new Scanner(in));
         directory = "";
         filename = "";
         currentToken = null;
+
+        this.session = session;
+        this.currentNamespace = session.globalNamespace;
+        this.openNamespaces = new HashSet<>();
     }
 
     public void setLocation(String directory, String filename) {
@@ -67,7 +70,7 @@ public class Parser {
             currentToken = null;
             return token;
         } else {
-            throw new ParserException(currentToken, String.format("Expected %s (%s) but found %s (%s)", data != null ? data : "\b", type, currentToken.data != null ? currentToken.data : "\b", currentToken.type));
+            throw new ParserException(currentToken, String.format("expected %s (%s) but found %s (%s)", data != null ? data : "\b", type, currentToken.data != null ? currentToken.data : "\b", currentToken.type));
         }
     }
 
@@ -75,55 +78,146 @@ public class Parser {
 
     public boolean parse() {
         try {
-            while (!found(Token.Type.EOF))
-                parseStatement();
+            while (parseStatement()) ;
+            if (!found(Token.Type.EOF))
+                throw new ParserException(currentToken, "expected statement, got " + consume().data);
             consume(Token.Type.EOF);
+            return true;
         } catch (ParserException e) {
-            output("⚠️ Parsing error in " + filename + " at " + e.token.line + ":" + e.token.position + ": " + e.getMessage());
+            if(filename.equals(""))
+                output("⚠️ Parsing error: " + e.getMessage());
+            else
+                output("⚠️ Parsing error in " + filename + " at " + e.token.line + ":" + e.token.position + ": " + e.getMessage());
             return false;
         } catch (Lexer.LexerException e) {
-            output("⚠️ Lexing error in " + filename + " at " + e.l + ":" + e.c +":" + e.getMessage());
+            if(filename.equals(""))
+                output("⚠️ Lexing error: " + e.getMessage());
+            else
+                output("⚠️ Lexing error in " + filename + " at " + e.l + ":" + e.c + ": " + e.getMessage());
             return false;
         } catch (IOException e) {
             output("\uD83D\uDCDD IOException: " + e.getMessage());
             return false;
         }
-
-        return true;
     }
 
-    private void parseStatement() throws ParserException, IOException, Lexer.LexerException {
+    private boolean parseStatement() throws ParserException, IOException, Lexer.LexerException {
         /* STATEMENT =
             ; | def | search | check | exit
          */
 
         if (found(Token.Type.SEPARATOR, ";")) {
             consume();
-            return;
+            return true;
         }
 
         if (found(Token.Type.KEYWORD, "def")) {
             parseDefinition();
-            return;
+            return true;
         }
 
         if (found(Token.Type.KEYWORD, "check")) {
             parseCheck();
-            return;
+            return true;
         }
 
         if (found(Token.Type.KEYWORD, "search")) {
             parseSearch();
-            return;
+            return true;
+        }
+
+        if (found(Token.Type.KEYWORD, "import")) {
+            parseImport();
+            return true;
+        }
+
+        if (found(Token.Type.KEYWORD, "namespace")) {
+            parseNamespace();
+            return true;
+        }
+
+        if (found(Token.Type.KEYWORD, "open")) {
+            parseOpen();
+            return true;
+        }
+
+        if (found(Token.Type.KEYWORD, "close")) {
+            parseClose();
+            return true;
         }
 
         if (found(Token.Type.KEYWORD, "exit")) {
             consume();
             System.exit(0);
-            return;
+            return true;
         }
 
-        throw new ParserException(currentToken, "expected statement, got " + consume().data);
+        return false;
+    }
+
+    private void parseOpen() throws ParserException, IOException, Lexer.LexerException {
+        /*
+            open NAMESPACE
+         */
+
+        Token tOpen = consume(Token.Type.KEYWORD, "open");
+        String name = consume(Token.Type.IDENTIFIER).data;
+        Namespace space = session.globalNamespace.getNamespace(name);
+        if (space == null)
+            throw new ParserException(tOpen, "invalid namespace name '" + name + "'");
+        openNamespaces.add(space);
+    }
+
+    private void parseClose() throws ParserException, IOException, Lexer.LexerException {
+        /*
+            close NAMESPACE
+         */
+
+        Token tClose = consume(Token.Type.KEYWORD, "close");
+        String name = consume(Token.Type.IDENTIFIER).data;
+        Namespace space = session.globalNamespace.getNamespace(name);
+        if (space == null)
+            throw new ParserException(tClose, "invalid namespace name '" + name + "'");
+        openNamespaces.remove(space);
+    }
+
+    private void parseImport() throws ParserException, IOException, Lexer.LexerException {
+        /*
+            import PATH
+        */
+
+        Token tImport = consume(Token.Type.KEYWORD, "import");
+        String filename = consume(Token.Type.STRING).data;
+
+        // Check if absolute or relative path
+        File file = new File(filename);
+        if (!file.isAbsolute())
+            file = new File(directory + filename);
+        if (!file.isFile())
+            throw new ParserException(tImport, "file '" + filename + "' not found");
+
+        Parser subParser = new Parser(new FileInputStream(file), out, session);
+        subParser.setLocation(file.getAbsoluteFile().getParent() + File.separator, file.getName());
+        if (!subParser.parse())
+            throw new ParserException(tImport, "error in importing '" + filename + "'");
+    }
+
+    private void parseNamespace() throws ParserException, IOException, Lexer.LexerException {
+        /*
+            namespace IDENTIFIER
+                STATEMENT*
+            end
+        */
+
+        consume(Token.Type.KEYWORD, "namespace");
+        String name = consume(Token.Type.IDENTIFIER).data;
+        currentNamespace = new Namespace(currentNamespace, name);
+
+        while (parseStatement()) ;
+
+        consume(Token.Type.KEYWORD, "end");
+        consume(Token.Type.IDENTIFIER, name);
+        currentNamespace = currentNamespace.getParent();
     }
 
     private void parseSearch() throws ParserException, IOException, Lexer.LexerException {
@@ -135,26 +229,35 @@ public class Parser {
 
         // Parse indeterminates
         List<Function> indeterminates = new ArrayList<>();
-        Context subContext = new Context(session.mainContext);
-        while(found(Token.Type.SEPARATOR, "(")) {
+        Context subContext = new Context(currentNamespace.context);
+        while (found(Token.Type.SEPARATOR, "(")) {
             consume();
             indeterminates.addAll(parseFunctions(subContext));
             consume(Token.Type.SEPARATOR, ")");
         }
 
+        // Create searcher and specify the searching space
+        Searcher searcher = new Searcher();
+        for(Namespace space = currentNamespace; space != null; space = space.getParent())
+            searcher.addSearchSpace(space);
+        for(Namespace space : openNamespaces)
+            searcher.addSearchSpace(space);
+
         // Make a query and do a search
-        Searcher searcher = new Searcher(session);
         Query query = new Query(session, indeterminates);
-        List<Function> solutions = searcher.search(query, 10); // TODO: watch out, its a magic number! 🪄
+        List<Function> solutions = searcher.search(query, 5); // TODO: watch out, its a magic number! 🪄
 
         // Print the solutions
-        if(solutions == null) {
+        if (solutions == null) {
             output("\uD83E\uDD7A no solutions found");
             return;
         }
+
+        StringJoiner sj = new StringJoiner(", ");
         int n = solutions.size();
-        for(int i = 0; i < n; ++i)
-            System.out.println("\uD83D\uDD0E " + indeterminates.get(i) + " = " + solutions.get(i));
+        for (int i = 0; i < n; ++i)
+            sj.add(indeterminates.get(i) + " = " + solutions.get(i));
+        System.out.println("\uD83D\uDD0E " + sj);
     }
 
     private void parseCheck() throws ParserException, IOException, Lexer.LexerException {
@@ -163,7 +266,7 @@ public class Parser {
         */
 
         consume(Token.Type.KEYWORD, "check");
-        Function f = parseExpression(session.mainContext);
+        Function f = parseExpression(currentNamespace.context);
         output("\uD83E\uDD86 " + session.toFullString(f));
     }
 
@@ -173,7 +276,7 @@ public class Parser {
          */
 
         consume(Token.Type.KEYWORD, "def");
-        parseFunctions(session.mainContext);
+        parseFunctions(currentNamespace.context);
     }
 
     private List<Function> parseFunctions(Context context) throws IOException, Lexer.LexerException, ParserException {
@@ -199,22 +302,26 @@ public class Parser {
         }
 
         // Check if the implicits were actually used
-        for(Function.Dependency d : dependencies) {
-            if(!d.explicit && !subContext.isUsed(d.function))
+        for (Function.Dependency d : dependencies) {
+            if (!d.explicit && !subContext.isUsed(d.function))
                 throw new ParserException(currentToken, "implicit parameter " + d.function + " unused");
         }
 
         // Parse type
         consume(Token.Type.SEPARATOR, ":");
+        Token token = currentToken;
         Function type = parseExpression(subContext);
         if (type.getType() != session.TYPE && type.getType() != session.PROP)
-            throw new ParserException(currentToken, "expected a Type or Prop");
+            throw new ParserException(token, "expected a Type or Prop");
+        if(type.getDependencies().size() > 0)
+            throw new ParserException(token, "forgot arguments");
 
         // Actually create the functions
         List<Function> output = new ArrayList<>();
         for (String identifier : identifiers) {
             Function f = session.createFunction(type, dependencies);
-            context.putFunction(identifier, f);
+            if (!context.putFunction(identifier, f))
+                throw new ParserException(currentToken, "name " + identifier + " already used in this context");
             output.add(f);
         }
 
@@ -270,16 +377,39 @@ public class Parser {
 
     private Function parseTerm(Context context) throws ParserException, IOException, Lexer.LexerException {
         /* TERM =
-            IDENTIFIER | ( EXPRESSION ) | _
+            PATH | ( EXPRESSION )
         */
 
         if (found(Token.Type.IDENTIFIER)) {
-            Token token = consume();
-            String identifier = token.data;
-            Function f = context.getFunction(identifier);
-            if (f == null)
-                throw new ParserException(token, "unknown identifier " + identifier);
-            return f;
+            Token token = currentToken;
+            String path = parsePath();
+            // First look through the context
+            Function f = context.getFunction(path);
+            if (f != null)
+                return f;
+            // Then look through namespaces from the current one to the top
+            for (Namespace space = currentNamespace; space != null; space = space.getParent()) {
+                f = space.getFunction(path);
+                if (f != null)
+                    return f;
+            }
+            // If that failed, look through the other open namespaces
+            List<Function> candidates = new ArrayList<>();
+            for (Namespace space : openNamespaces) {
+                f = space.getFunction(path);
+                if (f != null)
+                    candidates.add(f);
+            }
+            // If there is a unique candidate, we are good
+            if(candidates.size() == 1)
+                return candidates.get(0);
+            // If more than one candidate, its ambiguous
+            if(candidates.size() > 1) {
+                // TODO: show what the options are, but then should remember the namespaces
+                throw new ParserException(token, "ambiguous identifier '" + path + "'");
+            }
+            // Otherwise, if no candidates, throw unknown
+            throw new ParserException(token, "unknown identifier '" + path + "'");
         }
 
         if (found(Token.Type.SEPARATOR, "(")) {
@@ -289,12 +419,21 @@ public class Parser {
             return expression;
         }
 
-//        if(found(Token.Type.SEPARATOR, "_")) {
-//            consume();
-//            return session.PLACEHOLDER;
-//        }
-
         return null;
+    }
+
+    private String parsePath() throws ParserException, IOException, Lexer.LexerException {
+        /*
+            PATH = IDENTIFIER ( . IDENTIFIER )*
+         */
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(consume(Token.Type.IDENTIFIER).data);
+        while (found(Token.Type.SEPARATOR, ".")) {
+            sb.append(consume().data);
+            sb.append(consume(Token.Type.IDENTIFIER).data);
+        }
+        return sb.toString();
     }
 
     // ---- Output method ----
@@ -316,13 +455,6 @@ public class Parser {
         public ParserException(Token token, String message) {
             super(message);
             this.token = token;
-        }
-
-        @Override
-        public String getMessage() {
-            if (!filename.equals(""))
-                return filename + ":" + token.line + ":" + token.position + ": " + super.getMessage();
-            return super.getMessage();
         }
     }
 

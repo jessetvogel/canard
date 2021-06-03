@@ -25,9 +25,10 @@
      - The obvious syntax is `include file`
      - Or copy LEAN and use `import dir.subDir.file`
      - Probably prevent double imports ?
+        - Where do we keep track of what files are imported already? subParsers?
 
 - namespaces
-    - `namespace NAMESPACE ... end`
+    - `namespace NAMESPACE ... end (NAMESPACE well, LEAN does it, so we probably do so as well?)`
     - `open NAMESPACE`
     - refer to definitions as NAMESPACE.object or something like that
     - can namespaces be nested ?
@@ -36,3 +37,7 @@
 - having multiple definitions have the same name/label ? (As long as their signature is not the same)
     - Well LEAN does not support it, so why would we ?
     - namespaces should suffice
+
+
+- variables like LEAN.  `variables {X Y : Scheme} {f : Morphism X Y}`. But seems quite difficult
+

@@ -1,18 +1,20 @@
 package nl.jessetvogel.canard.search;
 
 import nl.jessetvogel.canard.core.Function;
-import nl.jessetvogel.canard.core.Session;
+import nl.jessetvogel.canard.core.Namespace;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class Searcher {
 
-    private final Session session;
+    private final Set<Namespace> searchSpace;
 
-    public Searcher(Session session) {
-        this.session = session;
+    public Searcher() {
+        this.searchSpace = new LinkedHashSet<>(); // so that the iterating order is preserved
+    }
+
+    public void addSearchSpace(Namespace space) {
+        searchSpace.add(space);
     }
 
     public List<Function> search(Query query, int maxDepth) {
@@ -28,19 +30,23 @@ public class Searcher {
             Function h = q.indeterminates.get(q.indeterminates.size() - 1);
 
             // Search for a theorem/definition to fill it
-            for(Function thm : session.mainContext.getFunctions()) {
-                Query subQuery = q.reduce(h, thm);
-                if(subQuery != null) {
-//                    System.out.println("Reduced query: " + subQuery);
+            // For this, go through all the provided namespaces
+            for(Namespace space : searchSpace) {
+                for (Function thm : space.context.getFunctions()) {
+                    Query subQuery = q.reduce(h, thm);
+                    if (subQuery != null) {
+//                        System.out.println("Reduced query: " + subQuery);
 
-                    // If the subQuery is completely solved (i.e. no more indeterminates) we are done!
-                    if(subQuery.indeterminates.isEmpty())
-                        return subQuery.getUltimateSolutions(query.indeterminates);;
+                        // If the subQuery is completely solved (i.e. no more indeterminates) we are done!
+                        if (subQuery.indeterminates.isEmpty())
+                            return subQuery.getUltimateSolutions(query.indeterminates);
+                        ;
 
-                    // Add all reductions to the end of the queue
-                    // but only if it does not exceed the search depth!
-                    if(subQuery.getDepth() < maxDepth)
-                        queue.add(subQuery);
+                        // Add all reductions to the end of the queue
+                        // but only if it does not exceed the search depth!
+                        if (subQuery.getDepth() < maxDepth)
+                            queue.add(subQuery);
+                    }
                 }
             }
         }
