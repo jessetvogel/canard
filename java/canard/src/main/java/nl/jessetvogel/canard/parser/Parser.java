@@ -9,6 +9,8 @@ import nl.jessetvogel.canard.search.Searcher;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class Parser {
@@ -20,6 +22,7 @@ public class Parser {
     private final Session session;
     private Namespace currentNamespace;
     private final Set<Namespace> openNamespaces;
+    private List<String> importedFiles;
 
     public Parser(InputStream in, OutputStream out, Session session) {
         this.out = out;
@@ -31,6 +34,7 @@ public class Parser {
         this.session = session;
         this.currentNamespace = session.globalNamespace;
         this.openNamespaces = new HashSet<>();
+        this.importedFiles = new ArrayList<>();
     }
 
     public void setLocation(String directory, String filename) {
@@ -84,13 +88,13 @@ public class Parser {
             consume(Token.Type.EOF);
             return true;
         } catch (ParserException e) {
-            if(filename.equals(""))
+            if (filename.equals(""))
                 output("⚠️ Parsing error: " + e.getMessage());
             else
                 output("⚠️ Parsing error in " + filename + " at " + e.token.line + ":" + e.token.position + ": " + e.getMessage());
             return false;
         } catch (Lexer.LexerException e) {
-            if(filename.equals(""))
+            if (filename.equals(""))
                 output("⚠️ Lexing error: " + e.getMessage());
             else
                 output("⚠️ Lexing error in " + filename + " at " + e.l + ":" + e.c + ": " + e.getMessage());
@@ -108,6 +112,11 @@ public class Parser {
 
         if (found(Token.Type.SEPARATOR, ";")) {
             consume();
+            return true;
+        }
+
+        if (found(Token.Type.KEYWORD, "let")) {
+            parseDeclaration();
             return true;
         }
 
@@ -183,7 +192,7 @@ public class Parser {
 
     private void parseImport() throws ParserException, IOException, Lexer.LexerException {
         /*
-            import PATH
+            import "PATH"
         */
 
         Token tImport = consume(Token.Type.KEYWORD, "import");
@@ -196,7 +205,17 @@ public class Parser {
         if (!file.isFile())
             throw new ParserException(tImport, "file '" + filename + "' not found");
 
+        // Check if the file was already imported before, based on normalized absolute path of file
+        String normalizedPath = (Path.of(file.getAbsolutePath())).normalize().toString();
+        if (importedFiles.contains(normalizedPath))
+            return;
+
+        // Add the absolute path to list of imported files
+        importedFiles.add(normalizedPath);
+
+        // Create subParser to parse the file
         Parser subParser = new Parser(new FileInputStream(file), out, session);
+        subParser.importedFiles = importedFiles; // (please use my list of imported files)
         subParser.setLocation(file.getAbsoluteFile().getParent() + File.separator, file.getName());
         if (!subParser.parse())
             throw new ParserException(tImport, "error in importing '" + filename + "'");
@@ -211,7 +230,9 @@ public class Parser {
 
         consume(Token.Type.KEYWORD, "namespace");
         String name = consume(Token.Type.IDENTIFIER).data;
-        currentNamespace = new Namespace(currentNamespace, name);
+        // If namespace already exists, use that one. Otherwise, create a new one
+        Namespace space = currentNamespace.getNamespace(name);
+        currentNamespace = (space != null) ? space : new Namespace(currentNamespace, name);
 
         while (parseStatement()) ;
 
@@ -238,9 +259,9 @@ public class Parser {
 
         // Create searcher and specify the searching space
         Searcher searcher = new Searcher();
-        for(Namespace space = currentNamespace; space != null; space = space.getParent())
+        for (Namespace space = currentNamespace; space != null; space = space.getParent())
             searcher.addSearchSpace(space);
-        for(Namespace space : openNamespaces)
+        for (Namespace space : openNamespaces)
             searcher.addSearchSpace(space);
 
         // Make a query and do a search
@@ -267,31 +288,78 @@ public class Parser {
 
         consume(Token.Type.KEYWORD, "check");
         Function f = parseExpression(currentNamespace.context);
-        output("\uD83E\uDD86 " + session.toFullString(f));
+        output("\uD83E\uDD86 " + f.toFullString());
+    }
+
+    private void parseDeclaration() throws ParserException, IOException, Lexer.LexerException {
+        /*
+            let IDENTIFIER DEPENDENCIES : TYPE
+         */
+
+        consume(Token.Type.KEYWORD, "let");
+        parseFunctions(currentNamespace.context);
     }
 
     private void parseDefinition() throws ParserException, IOException, Lexer.LexerException {
         /*
-            def IDENTIFIER : DEPENDENCIES -> FUNCTION
+            def IDENTIFIER DEPENDENCIES := EXPRESSION
          */
 
         consume(Token.Type.KEYWORD, "def");
-        parseFunctions(currentNamespace.context);
+        String identifier = consume(Token.Type.IDENTIFIER).data;
+
+        // Parse dependencies
+        Context context = currentNamespace.context;
+        Context subContext = new Context(context);
+        List<Function.Dependency> dependencies = parseDependencies(subContext);
+        if (dependencies.isEmpty()) // (if there are no dependencies, don't need a subContext)
+            subContext = context;
+
+        consume(Token.Type.SEPARATOR, ":=");
+
+        Function f = parseExpression(subContext, dependencies);
+        if (!context.putFunction(identifier, f))
+            throw new ParserException(currentToken, "name " + identifier + " already used in this context");
     }
 
     private List<Function> parseFunctions(Context context) throws IOException, Lexer.LexerException, ParserException {
         /* FUNCTIONS =
-            LIST_OF_IDENTIFIERS ARGUMENTS : OUTPUT_TYPE
+            LIST_OF_IDENTIFIERS PARAMETERS : OUTPUT_TYPE
          */
 
         List<String> identifiers = parseListOfIdentifiers();
 
-        Context subContext = context;
+        // Parse dependencies
+        Context subContext = new Context(context);
+        List<Function.Dependency> dependencies = parseDependencies(subContext);
+        if (dependencies.isEmpty()) // (if there are no dependencies, don't need a subContext)
+            subContext = context;
+
+        // Parse type
+        consume(Token.Type.SEPARATOR, ":");
+        Token token = currentToken;
+        Function type = parseExpression(subContext);
+        if (type.getType() != session.TYPE && type.getType() != session.PROP)
+            throw new ParserException(token, "expected a Type or Prop");
+        if (type.getDependencies().size() > 0)
+            throw new ParserException(token, "forgot arguments");
+
+        // Actually create the functions
+        List<Function> output = new ArrayList<>();
+        for (String identifier : identifiers) {
+            Function f = session.createFunction(type, dependencies);
+            if (!context.putFunction(identifier, f))
+                throw new ParserException(currentToken, "name " + identifier + " already used in this context");
+            output.add(f);
+        }
+
+        return output;
+    }
+
+    private List<Function.Dependency> parseDependencies(Context subContext) throws ParserException, IOException, Lexer.LexerException {
         List<Function.Dependency> dependencies = Collections.emptyList();
         if (found(Token.Type.SEPARATOR, "{") || found(Token.Type.SEPARATOR, "(")) {
-            subContext = new Context(context);
             dependencies = new ArrayList<>();
-
             boolean explicit;
             while ((explicit = found(Token.Type.SEPARATOR, "(")) || found(Token.Type.SEPARATOR, "{")) {
                 consume();
@@ -307,25 +375,7 @@ public class Parser {
                 throw new ParserException(currentToken, "implicit parameter " + d.function + " unused");
         }
 
-        // Parse type
-        consume(Token.Type.SEPARATOR, ":");
-        Token token = currentToken;
-        Function type = parseExpression(subContext);
-        if (type.getType() != session.TYPE && type.getType() != session.PROP)
-            throw new ParserException(token, "expected a Type or Prop");
-        if(type.getDependencies().size() > 0)
-            throw new ParserException(token, "forgot arguments");
-
-        // Actually create the functions
-        List<Function> output = new ArrayList<>();
-        for (String identifier : identifiers) {
-            Function f = session.createFunction(type, dependencies);
-            if (!context.putFunction(identifier, f))
-                throw new ParserException(currentToken, "name " + identifier + " already used in this context");
-            output.add(f);
-        }
-
-        return output;
+        return dependencies;
     }
 
     private List<String> parseListOfIdentifiers() throws ParserException, IOException, Lexer.LexerException {
@@ -340,6 +390,10 @@ public class Parser {
     }
 
     private Function parseExpression(Context context) throws ParserException, IOException, Lexer.LexerException {
+        return parseExpression(context, Collections.emptyList());
+    }
+
+    private Function parseExpression(Context context, List<Function.Dependency> dependencies) throws ParserException, IOException, Lexer.LexerException {
         /* EXPRESSION =
             TERM | TERM TERM+
          */
@@ -355,22 +409,25 @@ public class Parser {
         if (n == 0)
             throw new ParserException(currentToken, "expected expression but not found");
 
-        // If there is only one term
-        if (n == 1)
-            return terms.get(0);
+        // If there is only one term and no dependencies, return that term
+        // If there are dependencies, specialize the term with its own arguments, but with dependencies!
+        if (n == 1) {
+            Function f = terms.get(0);
+            if(dependencies.isEmpty())
+                return f;
+            try {
+                return f.specialize(f.getArguments(), dependencies);
+            } catch (Function.SpecializationException e) {
+                throw new ParserException(currentToken, e.getMessage());
+            }
+        }
 
         // If there is more than one term, specialize
         Function f = terms.get(0);
         terms.remove(0);
-
-        List<Function> fExplicitDependencies = f.getExplicitDependencies();
-        int m = fExplicitDependencies.size();
-        if (m != n - 1)
-            throw new ParserException(currentToken, "expected " + m + " arguments for " + f + " but received " + (n - 1));
-
         try {
-            return session.specialize(f, terms, Collections.emptyList());
-        } catch (Session.SpecializationException e) {
+            return f.specialize(terms, dependencies);
+        } catch (Function.SpecializationException e) {
             throw new ParserException(currentToken, e.getMessage());
         }
     }
@@ -401,10 +458,10 @@ public class Parser {
                     candidates.add(f);
             }
             // If there is a unique candidate, we are good
-            if(candidates.size() == 1)
+            if (candidates.size() == 1)
                 return candidates.get(0);
             // If more than one candidate, its ambiguous
-            if(candidates.size() > 1) {
+            if (candidates.size() > 1) {
                 // TODO: show what the options are, but then should remember the namespaces
                 throw new ParserException(token, "ambiguous identifier '" + path + "'");
             }

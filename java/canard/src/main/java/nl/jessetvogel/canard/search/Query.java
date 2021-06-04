@@ -21,6 +21,7 @@ public class Query {
         this.session = session;
         this.indeterminates = indeterminates;
         this.depths = indeterminates.stream().map(f -> 0).collect(Collectors.toUnmodifiableList());
+//        this.depths = new ArrayList<>(Collections.nCopies(indeterminates.size(), 0));
     }
 
     private Query(Query parent, Map<Function, Function> solutions, List<Function> indeterminates, List<Integer> depths) {
@@ -131,9 +132,12 @@ public class Query {
 
         // Finally, set solution of h, as specialization of thm
         List<Function> thmArguments = thm.getExplicitDependencies().stream().map(arguments::get).collect(Collectors.toUnmodifiableList());
+//        List<Function> thmArguments = new ArrayList<>();
+//        for(Function f : thm.getExplicitDependencies())
+//            thmArguments.add(arguments.get(f));
         try {
-            solutions.put(h, session.specialize(thm, thmArguments, Collections.emptyList()));
-        } catch (Session.SpecializationException e) {
+            solutions.put(h, thm.specialize(thmArguments, Collections.emptyList()));
+        } catch (Function.SpecializationException e) {
             System.err.println("Ai ai ai! Not what was supposed to happen!");
             e.printStackTrace();
             return null;
@@ -187,10 +191,9 @@ public class Query {
 
     @Override
     public String toString() {
-        StringJoiner sj = new StringJoiner(" ", "Query ", "");
-        for (Function f : indeterminates) {
-            sj.add("(" + session.toFullString(f) + ")");
-        }
-        return sj.toString();
+        StringBuilder sb = new StringBuilder("Query");
+        for(Function f : indeterminates)
+            sb.append(" (").append(f.toFullString()).append(")");
+        return sb.toString();
     }
 }

@@ -1,7 +1,6 @@
 package nl.jessetvogel.canard.core;
 
 import java.util.List;
-import java.util.StringJoiner;
 
 public class Specialization extends Function {
 
@@ -30,22 +29,19 @@ public class Specialization extends Function {
 
     @Override
     public boolean dependsOn(List<Function> list) {
-        if(list.contains(this))
-            return true;
         return arguments.stream().anyMatch(arg -> arg.dependsOn(list));
     }
 
     @Override
     public String toString() {
-        StringJoiner sj = new StringJoiner(" ", " ", "");
-        sj.setEmptyValue("");
+        StringBuilder sb = new StringBuilder(label != null ? label : getBase().toString());
         for(Function f : arguments) {
             String strArgument = f.toString();
             if(strArgument.contains(" "))
                 strArgument = "(" + strArgument + ")";
-            sj.add(strArgument);
+            sb.append(" ").append(strArgument);
         }
-        return getBase().toString() + sj;
+        return sb.toString();
     }
 
 }

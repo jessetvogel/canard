@@ -53,7 +53,4 @@ public class Context {
         return new ArrayList<>(labels.values());
     }
 
-//    public boolean hasFunction(String label) {
-//        return labels.containsKey(label);
-//    }
 }

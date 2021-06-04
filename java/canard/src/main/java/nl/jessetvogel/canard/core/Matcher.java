@@ -207,9 +207,9 @@ public class Matcher {
     }
 
     public Function duplicateDependency(Function x, boolean reverse) {
-        assert (x == x.getBase()); // Since we only use this for duplicating dependencies, and dependencies are always their own base function!
+        // Since we only use this for duplicating dependencies, and dependencies are always their own base function!
+        assert (x == x.getBase());
         // TODO: does it make sense to duplicate a specialization ?
-
         // TODO: are there any shortcuts we can take so that we can simply immediately return x itself ?
 
         // Duplicate *its* dependencies

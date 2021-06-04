@@ -9,9 +9,9 @@ search (X Y : Scheme) (f : Morphism X Y);
 search (R : Ring) (M N : Module R) (f : Morphism M N);
 
 
-def U V W : Scheme
-def g : Morphism U V
-def h : Morphism V W
-def gProper : proper g
-def hProper : proper h
+let U V W : Scheme
+let g : Morphism U V
+let h : Morphism V W
+let gClosedImm : closed_immersion g
+let hClosedImm : closed_immersion h
 search (p : proper (comp h g))

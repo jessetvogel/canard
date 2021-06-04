@@ -12,8 +12,6 @@
 
 - Re-use existing proofs
 
-- 'local_property'
-
 - Searching for indeterminants with dependencies.
     - Could go with literal matches. Works in the easy cases
     - Could go with a kind of subSearcher? I.e. we instantiate the dependencies and then search for the type.
@@ -27,17 +25,20 @@
      - Probably prevent double imports ?
         - Where do we keep track of what files are imported already? subParsers?
 
-- namespaces
-    - `namespace NAMESPACE ... end (NAMESPACE well, LEAN does it, so we probably do so as well?)`
-    - `open NAMESPACE`
-    - refer to definitions as NAMESPACE.object or something like that
-    - can namespaces be nested ?
-    - by what label are Function's now actually stored?
+// - namespaces
+//    - `namespace NAMESPACE ... end (NAMESPACE well, LEAN does it, so we probably do so as well?)`
+//    - `open NAMESPACE`
+//    - refer to definitions as NAMESPACE.object or something like that
+//    - can namespaces be nested ?
+//    - by what label are Function's now actually stored?
 
-- having multiple definitions have the same name/label ? (As long as their signature is not the same)
-    - Well LEAN does not support it, so why would we ?
-    - namespaces should suffice
+// - having multiple definitions have the same name/label ? (As long as their signature is not the same)
+//    - Well LEAN does not support it, so why would we ?
+//    - namespaces should suffice
 
+- aliases of some sort
+    - alias/set/def ideal (R : Ring) := submodule (RingAsModule R)
+    - def makes sense, in relation to LEAN. What do we use for def instead? `let` / `axiom` ?
 
 - variables like LEAN.  `variables {X Y : Scheme} {f : Morphism X Y}`. But seems quite difficult
 

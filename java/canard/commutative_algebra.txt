@@ -1,23 +1,27 @@
 namespace commutative_algebra
 
 # Type definitions
-def Ring : Type
-def Module (R : Ring) : Type
+let Ring : Type
+let Module (R : Ring) : Type
 
 # Constructions
-def RingAsModule (R : Ring) : Module R
+let RingAsModule (R : Ring) : Module R
 
 # Ring properties
-def field artin r_noetherian r_local gorenstein euclidean r_reduced (R : Ring) : Prop
-def ideal (R : Ring) : Type
-def maximal_ideal prime_ideal radical_ideal {R : Ring} (I : ideal R) : Prop
-def nilradical zero_ideal unit_ideal jacobson_radical (R : Ring) : ideal R
+let domain field artin_ring noetherian_ring local_ring gorenstein euclidean reduced_ring (R : Ring) : Prop
+let ideal (R : Ring) : Type
+let maximal_ideal prime_ideal radical_ideal {R : Ring} (I : ideal R) : Prop
+let nilradical zero_ideal unit_ideal jacobson_radical (R : Ring) : ideal R
+
+# Theorems
+let field_is_domain {R : Ring} (h : field R) : domain R
+
 
 # Examples
-def ZZ QQ RR CC: Ring
+let ZZ QQ RR CC: Ring
 
-def QQIsField : field QQ
-def RRIsField : field RR
-def CCIsField : field CC
+let QQIsField : field QQ
+let RRIsField : field RR
+let CCIsField : field CC
 
 end commutative_algebra

@@ -1,19 +1,19 @@
-def local_property_sch_morph (P {X Y : Scheme} (f : Morphism X Y) : Prop) : Prop
+let local_property_sch_morph (P {X Y : Scheme} (f : Morphism X Y) : Prop) : Prop
 
 
-def locally_noetherian_is_local : local_property_scheme locally_noetherian
-def separated_is_local : local_property_scheme separated
+let locally_noetherian_is_local : local_property_scheme locally_noetherian
+let separated_is_local : local_property_scheme separated
 
 # Setup:
 
-def local_property_scheme (P (X : Scheme) : Prop) : Prop
-def reduced_is_local : local_property_scheme reduced
-def descent {U X : Scheme} {i : Morphism U X} (hi : open_immersion i) {P (S : Scheme) : Prop} (hX : P X) (hP : local_property_scheme P) : P U
+let local_property_scheme (P (X : Scheme) : Prop) : Prop
+let reduced_is_local : local_property_scheme reduced
+let descent {U X : Scheme} {i : Morphism U X} (hi : open_immersion i) {P (S : Scheme) : Prop} (hX : P X) (hP : local_property_scheme P) : P U
 
 
-def T S : Scheme                     # Let T and S be schemes
-def f : Morphism T S;                # Let f : T -> S be a morphism
-def S_reduced : reduced S;           # Assume S is reduced
-def f_open_imm : open_immersion f;   # Assume f is an open immersion
+let T S : Scheme                     # Let T and S be schemes
+let f : Morphism T S;                # Let f : T -> S be a morphism
+let S_reduced : reduced S;           # Assume S is reduced
+let f_open_imm : open_immersion f;   # Assume f is an open immersion
 
 search (h : reduced T);              # Find a proof that T is reduced as well
