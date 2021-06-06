@@ -10,7 +10,6 @@ import nl.jessetvogel.canard.search.Searcher;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class Parser {
@@ -161,7 +160,30 @@ public class Parser {
             return true;
         }
 
+        if (found(Token.Type.KEYWORD, "view")) {
+            parseView();
+            return true;
+        }
+
         return false;
+    }
+
+    private void parseView() throws ParserException, IOException, Lexer.LexerException {
+        /*
+            view
+        */
+
+        consume(Token.Type.KEYWORD, "view");
+
+        // Create a list of spaces, whose Functions will be printed
+        List<Namespace> spaces = new ArrayList<>(openNamespaces);
+        spaces.add(0, session.globalNamespace);
+
+        for(Namespace space : spaces) {
+            String spaceName = space.fullName();
+            for(Function f : space.context.getFunctions())
+                System.out.println(spaceName.isEmpty() ? f : spaceName + "." + f);
+        }
     }
 
     private void parseOpen() throws ParserException, IOException, Lexer.LexerException {
@@ -201,7 +223,7 @@ public class Parser {
         // Check if absolute or relative path
         File file = new File(filename);
         if (!file.isAbsolute())
-            file = new File(directory + filename);
+            file = new File(directory + File.separator + filename);
         if (!file.isFile())
             throw new ParserException(tImport, "file '" + filename + "' not found");
 
@@ -216,7 +238,7 @@ public class Parser {
         // Create subParser to parse the file
         Parser subParser = new Parser(new FileInputStream(file), out, session);
         subParser.importedFiles = importedFiles; // (please use my list of imported files)
-        subParser.setLocation(file.getAbsoluteFile().getParent() + File.separator, file.getName());
+        subParser.setLocation(file.getAbsoluteFile().getParent(), file.getName());
         if (!subParser.parse())
             throw new ParserException(tImport, "error in importing '" + filename + "'");
     }

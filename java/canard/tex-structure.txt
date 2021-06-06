@@ -16,3 +16,5 @@
 # Problem is that this requires TWO code places. Difficult to keep in sync
 # - Although the compiler can of course check if the definitions exist in the canard files.
 # - Also can scan for definitions which do not yet have documentation.
+
+- to reduce long names, could add \open{namespace} & \close{namespace}

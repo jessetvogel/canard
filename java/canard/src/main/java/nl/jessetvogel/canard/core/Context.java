@@ -12,14 +12,14 @@ public class Context {
     public Context(Context parent) {
         session = parent.session;
         this.parent = parent;
-        labels = new HashMap<>();
+        labels = new LinkedHashMap<>(); // to preserve the order when listing functions
         usedFunctions = new HashSet<>();
     }
 
     public Context(Session session) {
         this.session = session;
         parent = null;
-        labels = new HashMap<>();
+        labels = new LinkedHashMap<>(); // to preserve the order when listing functions
         usedFunctions = new HashSet<>();
     }
 

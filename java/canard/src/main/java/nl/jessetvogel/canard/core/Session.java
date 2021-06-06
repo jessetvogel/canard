@@ -14,8 +14,8 @@ public class Session {
         // Create an instance of Type and Prop
         TYPE = new Function(null, Collections.emptyList());
         PROP = new Function(TYPE, Collections.emptyList());
-        globalNamespace.context.putFunction("Prop", PROP);
         globalNamespace.context.putFunction("Type", TYPE);
+        globalNamespace.context.putFunction("Prop", PROP);
     }
 
     public Function createFunction(Function type, List<Function.Dependency> dependencies) {

@@ -1,0 +1,9 @@
+nl/jessetvogel/canard/Main.class
+nl/jessetvogel/canard/parser/Parser.class
+nl/jessetvogel/canard/parser/Lexer.class
+nl/jessetvogel/canard/parser/Token.class
+nl/jessetvogel/canard/core/Specialization.class
+nl/jessetvogel/canard/parser/Lexer$LexerException.class
+nl/jessetvogel/canard/parser/Token$Type.class
+nl/jessetvogel/canard/core/Matcher.class
+nl/jessetvogel/canard/parser/Scanner.class

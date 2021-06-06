@@ -54,3 +54,6 @@ hs_err_pid*
 .idea_modules/
 *.iws
 
+# Python
+__pycache__/
+*.ipynb_checkpoints

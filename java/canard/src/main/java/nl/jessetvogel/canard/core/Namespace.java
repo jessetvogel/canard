@@ -58,4 +58,13 @@ public class Namespace {
         Namespace subSpace = children.get(path.substring(0, i));
         return (subSpace == null) ? null : subSpace.getNamespace(path.substring(i + 1));
     }
+
+    public String fullName() {
+        if(parent == null)
+            return name;
+        String parentName = parent.fullName();
+        if(parentName.isEmpty())
+            return name;
+        return parentName + "." + name;
+    }
 }

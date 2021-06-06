@@ -10,16 +10,24 @@ import java.io.FileNotFoundException;
 public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
+        // Create session
         Session session = new Session();
 
-        // Parse main file
-        File mainFile = new File("main.txt");
-        Parser parserFile = new Parser(new FileInputStream(mainFile), System.out, session);
-        parserFile.setLocation("", "main.txt");
-        parserFile.parse();
+        // Parse any files given
+        for(String arg : args) {
+            File file = new File(arg);
+            if(!file.exists() || !file.isFile()) {
+                System.out.println("could not find file '" + arg + "'");
+                return;
+            }
+
+            Parser parserFile = new Parser(new FileInputStream(file), System.out, session);
+            parserFile.setLocation(file.getAbsoluteFile().getParent(), file.getName());
+            parserFile.parse();
+        }
 
         // Parse via System.in
         Parser parser = new Parser(System.in, System.out, session);
-        while (true) parser.parse();
+        parser.parse();
     }
 }
