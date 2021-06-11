@@ -1,13 +1,11 @@
 package nl.jessetvogel.canard.core;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Function {
 
-    protected String label = null;
+    public String label = null;
 
     private final Function type;
     private final List<Dependency> dependencies;
@@ -54,8 +52,8 @@ public class Function {
         this.label = label;
     }
 
-    public boolean dependsOn(List<Function> list) {
-        return list.contains(this);
+    public boolean dependsOn(Collection<Function> coll) {
+        return coll.contains(this);
     }
 
     public boolean signatureDependsOn(List<Function> list) {
@@ -117,7 +115,7 @@ public class Function {
         if (label == null)
             return String.format("%04d", hashCode() % 10000);
         else
-            return label;
+            return label; // + "[" + String.format("%04d", hashCode() % 10000) + "]";
     }
 
     public String toFullString() {

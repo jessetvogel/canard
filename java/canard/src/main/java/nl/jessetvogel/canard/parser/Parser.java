@@ -287,8 +287,8 @@ public class Parser {
             searcher.addSearchSpace(space);
 
         // Make a query and do a search
-        Query query = new Query(session, indeterminates);
-        List<Function> solutions = searcher.search(query, 5); // TODO: watch out, its a magic number! 🪄
+        Query query = new Query(indeterminates);
+        List<Function> solutions = searcher.search(query, 3); // TODO: watch out, its a magic number! 🪄
 
         // Print the solutions
         if (solutions == null) {

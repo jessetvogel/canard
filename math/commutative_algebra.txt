@@ -2,10 +2,13 @@ namespace commutative_algebra
 
 # Type definitions
 let Ring : Type
+let Algebra (R : Ring) : Type
 let Module (R : Ring) : Type
 
 # Constructions
-let RingAsModule (R : Ring) : Module R
+let algebra_self (R : Ring) : Algebra R
+let module_from_algebra {R : Ring} (A : Algebra R) : Module R
+def module_self (R : Ring) := module_from_algebra (algebra_self R)
 
 # Ring properties
 let domain field artin_ring noetherian_ring local_ring gorenstein euclidean reduced_ring (R : Ring) : Prop

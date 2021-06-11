@@ -1,12 +1,16 @@
 package nl.jessetvogel.canard.core;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Matcher {
 
     final Matcher parent;
     final List<Function> fIndeterminates, gIndeterminates;
     final Map<Function, Function> fSolutions, gSolutions;
+
+    private Set<Function> localVariables = null;
+    private Map<Function, Set<Function>> localAllowed = null;
 
     public Matcher(List<Function> fIndeterminates, List<Function> gIndeterminates) {
         parent = null;
@@ -32,9 +36,25 @@ public class Matcher {
         gSolutions = new HashMap<>();
     }
 
+    public void setLocalVariables(Set<Function> set, Map<Function, Set<Function>> map) {
+        localVariables = set;
+        localAllowed = map;
+    }
+
     private boolean putSolution(Function x, Function y, boolean reverse) {
         Function z = (reverse ? gSolutions : fSolutions).get(x);
         if (z == null) {
+            // If we are working with local variables, then it may be that y may not depend on some values.
+            // Check this.
+            if (localVariables != null) {
+                Set<Function> allowed = localAllowed.get(x);
+                Set<Function> disallowed = (allowed == null) ? localVariables : localVariables.stream().filter(f -> !allowed.contains(f)).collect(Collectors.toUnmodifiableSet());
+                if (y.dependsOn(disallowed)) {
+//                    System.out.println("Oops, wanted to map " + x + " to " + y + " but it allows on some disallowed value!");
+                    return false;
+                }
+            }
+            // If all is well, put x -> y.
             (reverse ? gSolutions : fSolutions).put(x, y);
             return true;
         }
@@ -47,7 +67,7 @@ public class Matcher {
             //noinspection SuspiciousNameCombination
             return putSolution(y, x, !reverse);
 
-//        System.out.println("Nope, " + x + " will not map to " + y);
+        System.out.println("Nope, " + x + " will not map to " + y);
         return false;
     }
 
@@ -112,6 +132,9 @@ public class Matcher {
         // Of course it can also be possible that fBase == gBase (this can be checked as Java Objects, since no base function
         // is represented by different Java Objects)
         Function fBase = f.getBase(), gBase = g.getBase();
+
+        // TODO: what if fBase/gBase is an indeterminate, but also it has dependencies ?
+
         if ((gIndeterminates.contains(gBase) && putSolution(gBase, fBase, true))
                 || (fIndeterminates.contains(fBase) && putSolution(fBase, gBase, false))
                 || fBase == gBase) {
@@ -135,6 +158,14 @@ public class Matcher {
 
     public boolean matches(Function f, Function g, boolean reverse) {
         return matches(reverse ? g : f, reverse ? f : g);
+    }
+
+    public void assertMatch(Function f, Function g) {
+        assert matches(f, g);
+    }
+
+    public void assertMatch(Function f, Function g, boolean reverse) {
+        assert matches(f, g, reverse);
     }
 
     public Function convert(Function x) {
@@ -165,7 +196,7 @@ public class Matcher {
         ) : this; // If x has no dependencies, no need to construct new dependencies. Duh!
         for (Function.Dependency xDep : xDependencies) {
             Function.Dependency dupDep = new Function.Dependency(subMatcher.duplicateDependency(xDep.function, reverse), xDep.explicit);
-            assert (subMatcher.matches(xDep.function, dupDep.function, reverse));
+            subMatcher.assertMatch(xDep.function, dupDep.function, reverse);
             convertedDependencies.add(dupDep);
         }
 
@@ -197,7 +228,7 @@ public class Matcher {
         Matcher subSubMatcher = new Matcher(subMatcher, base.getDependenciesAsFunctions(), Collections.emptyList(), reverse);
         int m = baseExplicitDependencies.size();
         for (int i = 0; i < m; ++i)
-            assert (subSubMatcher.matches(baseExplicitDependencies.get(i), convertedArguments.get(i), reverse));
+            subSubMatcher.assertMatch(baseExplicitDependencies.get(i), convertedArguments.get(i), reverse);
         Function convertedType = subSubMatcher.convert(x.getType(), reverse);
         return new Specialization(base, convertedArguments, convertedType, convertedDependencies);
     }
@@ -224,7 +255,7 @@ public class Matcher {
         ) : this;
         for (Function.Dependency xDep : xDependencies) {
             Function.Dependency dupDep = new Function.Dependency(subMatcher.duplicateDependency(xDep.function, reverse), xDep.explicit);
-            assert (subMatcher.matches(xDep.function, dupDep.function, reverse));
+            subMatcher.assertMatch(xDep.function, dupDep.function, reverse);
             convertedDependencies.add(dupDep);
         }
 
@@ -233,5 +264,15 @@ public class Matcher {
 
         // Create a new Function
         return new Function(convertedType, convertedDependencies);
+    }
+
+    @Override
+    public String toString() {
+        StringJoiner sj = new StringJoiner(", ");
+        for (Map.Entry<Function, Function> entry : fSolutions.entrySet())
+            sj.add(entry.getKey() + " => " + entry.getValue());
+        for (Map.Entry<Function, Function> entry : gSolutions.entrySet())
+            sj.add(entry.getValue() + " <= " + entry.getKey());
+        return sj.toString();
     }
 }

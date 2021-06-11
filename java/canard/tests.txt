@@ -1,0 +1,16 @@
+open algebraic_geometry;
+open commutative_algebra;
+search (P (X : Scheme) (h : affine X) : quasi_compact X)
+search (Q (X : Scheme) (h : affine X) : quasi_separated X);
+search (R (X : Scheme) (h : affine X) : m_affine (id X) );
+search (S (X : Scheme) (h : affine X) : m_quasi_compact (id X) );
+
+search (P {X Y : Scheme} {f : Morphism X Y} (h : closed_immersion f) : locally_finite_type f) ;
+
+open algebraic_geometry;
+open commutative_algebra;
+search (X : Scheme) (h : affine X);
+
+open algebraic_geometry;
+open commutative_algebra;
+search (X : Scheme) (h : affine X) (q : quasi_compact X);

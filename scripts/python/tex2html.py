@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
+# To add a new cell, type '# %%'
+# To add a new markdown cell, type '# %% [markdown]'
+# %%
 import re
 import os
 import hashlib
@@ -11,9 +8,7 @@ import subprocess
 import shutil
 
 
-# In[2]:
-
-
+# %%
 def tex2svg(tex_file, svg_dest):
     # Paths and filenames
     build_dir, filename = os.path.split(tex_file)
@@ -39,9 +34,7 @@ def tex2svg(tex_file, svg_dest):
     return True
 
 
-# In[3]:
-
-
+# %%
 class Scanner():
     
     def __init__(self, file):
@@ -60,9 +53,7 @@ class Scanner():
         return c
 
 
-# In[4]:
-
-
+# %%
 class Token:
 
     T_TEXT = 0
@@ -79,9 +70,7 @@ class Token:
         self.data = data
 
 
-# In[5]:
-
-
+# %%
 class Lexer():
     
     def __init__(self, scanner):
@@ -134,7 +123,7 @@ class Lexer():
                 
                 if self.tmp != '':
                     if not self.current_token:
-                        raise Exception('Unknown token \'{}\''.format(self.tmp))
+                        raise Exception('unknown token \'{}\''.format(self.tmp))
                     token = self.current_token
                 
                 while self.scanner.get() != '\n':
@@ -171,9 +160,7 @@ class Lexer():
             return token
 
 
-# In[6]:
-
-
+# %%
 class Parser:
     
     def __init__(self, output_dir):
@@ -202,24 +189,58 @@ class Parser:
             self.current_token = None
             return token
         else:
-            raise Exception('Expected \'{}\' but found \'{}\' [{}] (at line {} position {})'.format(data, self.current_token.data, self.current_token.type, self.current_token.line, self.current_token.position))
+            raise self.create_exception(self.current_token, 'expected \'{}\' but found \'{}\' [{}] (at line {} position {})'.format(data, self.current_token.data, self.current_token.type, self.current_token.line, self.current_token.position))
     
     def omit_whitespace(self, omit_newlines = True):
         while self.found(Token.T_WHITESPACE) or (omit_newlines and self.found(Token.T_NEWLINE)):
             self.consume()
     
-    def parse(self, tex_file):        
+    def parse(self, tex_file): 
         # Create Scanner & Lexer
         self.scanner = Scanner(open(tex_file, 'r'))
         self.lexer = Lexer(self.scanner)
         self.current_token = None
         
+        # Reset open namespaces
+        self.open_namespaces = set()
+
+        # Store filename
+        self.tex_file = tex_file
+
         # Keep parsing topics until end of file (ignoring newlines)
         self.omit_whitespace()
         while not self.found(Token.T_EOF):
+            # Open/close namespaces
+            if self.found(Token.T_COMMAND, '\\open'):
+                self.parse_open()
+                self.omit_whitespace()
+                continue
+            if self.found(Token.T_COMMAND, '\\close'):
+                self.parse_close()
+                self.omit_whitespace()
+                continue
+
+            # Otherwise, parse doc
             self.parse_doc()
             self.omit_whitespace()
     
+    def parse_open(self):
+        self.consume(Token.T_COMMAND, '\\open')
+        self.consume(Token.T_SEPARATOR, '{')
+        space = self.consume(Token.T_TEXT).data
+        self.open_namespaces.add(space)
+        self.consume(Token.T_SEPARATOR, '}')
+
+    def parse_close(self):
+        self.consume(Token.T_COMMAND, '\\close')
+        self.consume(Token.T_SEPARATOR, '{')
+        token = self.consume(Token.T_TEXT)
+        space = token.data
+        if space not in self.open_namespaces: # prevent duplicates
+            raise self.create_exception(token, 'tried to close [' + space + '], but was not open')
+        self.open_namespaces.remove(space)
+        self.consume(Token.T_SEPARATOR, '}')
+
     def parse_doc(self):
         # \begin{doc}[identifier] ... \end{doc}
         self.consume(Token.T_COMMAND, '\\begin')
@@ -227,19 +248,12 @@ class Parser:
         self.consume(Token.T_TEXT, 'doc')
         self.consume(Token.T_SEPARATOR, '}')
         self.consume(Token.T_SEPARATOR, '[')
-        identifier = self.consume(Token.T_TEXT).data
+        identifier = self.parse_full_identifier()
         self.consume(Token.T_SEPARATOR, ']')
         
         if identifier in self.identifiers:
-            raise Exception('identifier [' + identifier + '] already used')
-            
-        if identifier not in self.allowed_identifiers:
-            raise Exception('identifier [' + identifier + '] not allowed')
-        
-        if not re.match(r'^\w+(\.\w+)*$', identifier):
-            raise Exception('invalid identifier [' + identifier + ']')
-        
-        
+            raise self.create_exception(token, 'identifier [' + identifier + '] already used')
+                
         print('✅ [{}]'.format(identifier))
         self.identifiers.append(identifier)
         
@@ -336,7 +350,7 @@ class Parser:
         self.output.write('<span class="math inline">\\(' + s + '\\)</span>')
     
     def parse_display_math(self):
-        self.consume(Token.T_SEPARATOR, '\\[')
+        token = self.consume(Token.T_SEPARATOR, '\\[')
         s = ''
         while not self.found(Token.T_SEPARATOR, '\\]'):
             s += self.consume().data
@@ -347,7 +361,7 @@ class Parser:
         else:
             svg = self.math_to_svg(s)
             if svg == False:
-                raise Exception('failed to compile display math')
+                raise self.create_exception(token, 'failed to compile display math')
             self.output.write('<img class="display-math-svg" src="data/{}" alt />'.format(svg))
         
     def parse_textbf(self):
@@ -369,9 +383,7 @@ class Parser:
     def parse_ref(self):
         self.consume(Token.T_COMMAND, '\\ref')
         self.consume(Token.T_SEPARATOR, '[')
-        identifier = self.consume(Token.T_TEXT).data
-        if identifier not in self.allowed_identifiers:
-            raise Exception('unknown reference to [' + identifier + ']')
+        identifier = self.parse_full_identifier()
         self.consume(Token.T_SEPARATOR, ']')
         self.consume(Token.T_SEPARATOR, '{')
         self.output.write('<a href="#{}">'.format(identifier))
@@ -379,6 +391,27 @@ class Parser:
         self.output.write('</a>')
         self.consume(Token.T_SEPARATOR, '}')
     
+    def parse_full_identifier(self):
+        token = self.consume(Token.T_TEXT)
+        identifier = token.data
+
+        # If identifier itself, return it
+        if identifier in self.allowed_identifiers:
+            return identifier
+
+        # Find options from open namespaces
+        options = [ space + '.' + identifier for space in self.open_namespaces if space + '.' + identifier in self.allowed_identifiers ]
+
+        # Must be precisely one option, otherwise unknown or ambiguous
+        if not options:
+            raise self.create_exception(token, 'unknown identifier [' + identifier + ']')
+        if len(options) > 1:
+            raise self.create_exception(token, 'ambiguous identifier [' + identifier + '] could be ' + ', '.join([ '[' + option + ']' for option in options ]))
+        return options[0]
+
+    def create_exception(self, token, message):
+        return Exception('in file \'' + self.tex_file +  '\' at ' + str(token.line) + ':' + str(token.position) + ': ' + message)
+
     def special_chars(self, s):
         if '`' in s:
             s = s.replace('`', '‘')
@@ -424,10 +457,5 @@ class Parser:
             return svg_file_relative
         except:
             return False
-
-
-# In[ ]:
-
-
 
 

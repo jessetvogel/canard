@@ -1,0 +1,14 @@
+Valid reduction in query
+    Query
+        (X''[9391] : Scheme[5065])
+        (h''[9648] : affine[3501] X''[9391])
+        (h1'[4462] : locally_noetherian[2093] X''[9391])
+        (h2'[4081] : quasi_compact[0917] X''[9391])
+
+
+  solve for h2'[4081] with noeth_imp_qcomp[2158] (lnoeth_qcomp_imp_noeth[7920] h1'[4462] h2'[4081])
+
+
+🦆 noeth_imp_qcomp[9042] {X[0261] : Scheme[5065]} (h1[6574] : noetherian[8702] X[0261]) : quasi_compact[0917] X[0261]
+
+🦆 lnoeth_qcomp_imp_noeth[3384] {X[6207] : Scheme[5065]} (h1[7998] : locally_noetherian[2093] X[6207]) (h2[2464] : quasi_compact[0917] X[6207]) : noetherian[8702] X[6207]

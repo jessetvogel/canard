@@ -35,8 +35,14 @@ for f in os.listdir(tex_path):
     if not os.path.isfile(file_path): # skip directories / non-files
         continue
     
-    parser.parse(file_path)
+    try:
+        parser.parse(file_path)
+    except Exception as e:
+        print('An error occured ' + str(e))
+        exit(0)
 
+
+# %%
 
 # In[14]:
 
