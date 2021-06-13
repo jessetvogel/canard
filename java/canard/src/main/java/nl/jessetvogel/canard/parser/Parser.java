@@ -11,6 +11,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Parser {
     private final OutputStream out;
@@ -23,6 +24,9 @@ public class Parser {
     private final Set<Namespace> openNamespaces;
     private List<String> importedFiles;
 
+    public enum Format { PLAIN, JSON };
+    private Format format = Format.PLAIN;
+
     public Parser(InputStream in, OutputStream out, Session session) {
         this.out = out;
         lexer = new Lexer(new Scanner(in));
@@ -34,6 +38,10 @@ public class Parser {
         this.currentNamespace = session.globalNamespace;
         this.openNamespaces = new HashSet<>();
         this.importedFiles = new ArrayList<>();
+    }
+
+    public void setFormat(Format format) {
+        this.format = format;
     }
 
     public void setLocation(String directory, String filename) {
@@ -88,18 +96,18 @@ public class Parser {
             return true;
         } catch (ParserException e) {
             if (filename.equals(""))
-                output("⚠️ Parsing error: " + e.getMessage());
+                error("Parsing error: " + e.getMessage());
             else
-                output("⚠️ Parsing error in " + filename + " at " + e.token.line + ":" + e.token.position + ": " + e.getMessage());
+                error("Parsing error in " + filename + " at " + e.token.line + ":" + e.token.position + ": " + e.getMessage());
             return false;
         } catch (Lexer.LexerException e) {
             if (filename.equals(""))
-                output("⚠️ Lexing error: " + e.getMessage());
+                error("Lexing error: " + e.getMessage());
             else
-                output("⚠️ Lexing error in " + filename + " at " + e.l + ":" + e.c + ": " + e.getMessage());
+                error("Lexing error in " + filename + " at " + e.l + ":" + e.c + ": " + e.getMessage());
             return false;
         } catch (IOException e) {
-            output("\uD83D\uDCDD IOException: " + e.getMessage());
+            error("IOException: " + e.getMessage());
             return false;
         }
     }
@@ -160,30 +168,32 @@ public class Parser {
             return true;
         }
 
-        if (found(Token.Type.KEYWORD, "view")) {
-            parseView();
+        if (found(Token.Type.KEYWORD, "inspect")) {
+            parseInspect();
             return true;
         }
 
         return false;
     }
 
-    private void parseView() throws ParserException, IOException, Lexer.LexerException {
+    private void parseInspect() throws ParserException, IOException, Lexer.LexerException {
         /*
-            view
+            inspect NAMESPACE
         */
 
-        consume(Token.Type.KEYWORD, "view");
+        Token tInspect = consume(Token.Type.KEYWORD, "inspect");
 
-        // Create a list of spaces, whose Functions will be printed
-        List<Namespace> spaces = new ArrayList<>(openNamespaces);
-        spaces.add(0, session.globalNamespace);
+        // Get namespace
+        String path = parsePath();
+        Namespace space = session.globalNamespace.getNamespace(path);
+        if(space == null)
+            throw new ParserException(tInspect, "unknown namespace '" + path + "'");
 
-        for(Namespace space : spaces) {
-            String spaceName = space.fullName();
-            for(Function f : space.context.getFunctions())
-                System.out.println(spaceName.isEmpty() ? f : spaceName + "." + f);
-        }
+        if(format == Format.JSON)
+            output(Message.create(Message.Status.SUCCESS, space.context.getFunctions().stream().map(Function::toString).collect(Collectors.toUnmodifiableList())));
+        else
+            for (Function f : space.context.getFunctions())
+                output(f.toString());
     }
 
     private void parseOpen() throws ParserException, IOException, Lexer.LexerException {
@@ -279,28 +289,45 @@ public class Parser {
             consume(Token.Type.SEPARATOR, ")");
         }
 
+        // Number of results wanted
+        int N = found(Token.Type.NUMBER) ? Integer.parseInt(consume().data) : 1;
+
         // Create searcher and specify the searching space
-        Searcher searcher = new Searcher();
+        Set<Namespace> searchSpace = new HashSet<>(openNamespaces);
         for (Namespace space = currentNamespace; space != null; space = space.getParent())
-            searcher.addSearchSpace(space);
-        for (Namespace space : openNamespaces)
-            searcher.addSearchSpace(space);
+            searchSpace.add(space);
+        Searcher searcher = new Searcher(searchSpace, 5); // TODO: watch out, its a magic number! 🪄
 
         // Make a query and do a search
+        // Store the results in a list
+        List<List<Function>> results = new ArrayList<>();
         Query query = new Query(indeterminates);
-        List<Function> solutions = searcher.search(query, 3); // TODO: watch out, its a magic number! 🪄
-
-        // Print the solutions
-        if (solutions == null) {
-            output("\uD83E\uDD7A no solutions found");
-            return;
+        List<Function> solution = searcher.search(query);
+        if (solution != null)
+            results.add(solution);
+        for (int i = 1; i < N && solution != null; ++i) {
+            solution = searcher.next();
+            if (solution != null)
+                results.add(solution);
         }
 
-        StringJoiner sj = new StringJoiner(", ");
-        int n = solutions.size();
-        for (int i = 0; i < n; ++i)
-            sj.add(indeterminates.get(i) + " = " + solutions.get(i));
-        System.out.println("\uD83D\uDD0E " + sj);
+        // Print the solutions
+        if(format == Format.JSON)
+            output(Message.create(Message.Status.SUCCESS, indeterminates, results));
+        else {
+            if (results.isEmpty()) {
+                output("\uD83E\uDD7A no solutions found");
+                return;
+            }
+
+            for (List<Function> result : results) {
+                StringJoiner sj = new StringJoiner(", ");
+                int n = result.size();
+                for (int i = 0; i < n; ++i)
+                    sj.add(indeterminates.get(i) + " = " + result.get(i));
+                output("\uD83D\uDD0E " + sj);
+            }
+        }
     }
 
     private void parseCheck() throws ParserException, IOException, Lexer.LexerException {
@@ -310,7 +337,11 @@ public class Parser {
 
         consume(Token.Type.KEYWORD, "check");
         Function f = parseExpression(currentNamespace.context);
-        output("\uD83E\uDD86 " + f.toFullString());
+
+        if(format == Format.JSON)
+            output(Message.create(Message.Status.SUCCESS, f.toFullString()));
+        else
+            output("\uD83E\uDD86 " + f.toFullString());
     }
 
     private void parseDeclaration() throws ParserException, IOException, Lexer.LexerException {
@@ -435,7 +466,7 @@ public class Parser {
         // If there are dependencies, specialize the term with its own arguments, but with dependencies!
         if (n == 1) {
             Function f = terms.get(0);
-            if(dependencies.isEmpty())
+            if (dependencies.isEmpty())
                 return f;
             try {
                 return f.specialize(f.getArguments(), dependencies);
@@ -525,9 +556,16 @@ public class Parser {
         }
     }
 
+    private void error(String message) {
+        if(format == Format.JSON)
+            output(Message.create(Message.Status.ERROR, message));
+        else
+            output("⚠️ " + message);
+    }
+
     // ---- Parser Exceptions ----
 
-    private class ParserException extends Exception {
+    private static class ParserException extends Exception {
 
         private final Token token;
 

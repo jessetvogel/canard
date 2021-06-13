@@ -8,15 +8,6 @@
 //    those other proofs have not really be attempted, so their depth doesn't really count!
 //    Rather keep track of the depth of the indeterminants!
 
-- Re-use existing proofs
-
-- Searching for indeterminants with dependencies.
-    - Could go with literal matches. Works in the easy cases
-    - Could go with a kind of subSearcher? I.e. we instantiate the dependencies and then search for the type.
-    If that succeeds, construct a lambda-thingy
-
-- 'not', and maybe further logic stuff
-
 // - include files
 //      - The obvious syntax is `include/import file`
 //      - Or copy LEAN and use `import dir.subDir.file`
@@ -36,9 +27,18 @@
 //    - Well LEAN does not support it, so why would we ?
 //    - namespaces should suffice
 
-- aliases of some sort
-    - alias/set/def ideal (R : Ring) := submodule (RingAsModule R)
-    - def makes sense, in relation to LEAN. What do we use for def instead? `let` / `axiom` ?
+// - aliases of some sort
+//    - alias/set/def ideal (R : Ring) := submodule (RingAsModule R)
+//    - def makes sense, in relation to LEAN. What do we use for def instead? `let` / `axiom` ?
+
+// - Searching for indeterminants with dependencies.
+//    - Could go with literal matches. Works in the easy cases
+//    - Could go with a kind of subSearcher? I.e. we instantiate the dependencies and then search for the type.
+//    If that succeeds, construct a lambda-thingy
+
+- Re-use existing proofs
+
+- 'not', and maybe further logic stuff
 
 - variables like LEAN.  `variables {X Y : Scheme} {f : Morphism X Y}`. But seems quite difficult to implement!
 
@@ -47,10 +47,11 @@
   I.e. context has an additional map index<Function (base), List<Function>>. Then if possible, we can restrict to the indexed-list.
   Probably greatly improves speed!
 
-
-
+- When can .specialze just return the base ??
 
 - While searching, knowing when to break a branch! If we ask a question that a parent is also asking (i.e. detecting a loop), just stop
 
+// - Messaging system, support JSON format
 
-search (S (T : Scheme) (h : affine T) : proper (id T) );
+- Synthax for searching for multiple results
+    - Currently is `search (..args..) <int>`

@@ -16,9 +16,6 @@ public class Query {
     private final Set<Function> locals;
     private final Map<Function, Set<Function>> allowedLocals;
 
-//    private Function hType;
-//    private List<Function.Dependency> hDependencies;
-
     public Query(List<Function> indeterminates) {
         this.parent = null;
         this.indeterminates = indeterminates;
@@ -126,6 +123,9 @@ public class Query {
                         newIndeterminates.add(solution);
                         newDepths.add(depths.get(indeterminates.indexOf(f))); // The indeterminate has not changed, so its depth remains the same
 //                        System.out.println("No solution yet for " + f);
+
+                        if(allowedLocals.containsKey(f)) // Pass on the allowed locals (if f has any)
+                            subQuery.allowedLocals.put(solution, allowedLocals.get(f));
                     }
                     // Store the solution,  un-mark as unmapped, match, and indicate that changes are made
                     solutions.put(f, solution);

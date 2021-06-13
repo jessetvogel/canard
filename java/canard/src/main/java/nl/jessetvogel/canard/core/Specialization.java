@@ -35,11 +35,11 @@ public class Specialization extends Function {
 
     @Override
     public String toString() {
-        if (label != null) return label;
-
         StringBuilder sb = new StringBuilder();
         if (!getDependencies().isEmpty()) {
             sb.append("λ");
+            if(label != null)
+                sb.append(" ").append(label);
             for (Function.Dependency d : getDependencies())
                 sb.append(d.explicit ? " (" : " {").append(d.function.toFullString()).append(d.explicit ? ")" : "}");
             sb.append(" := ");

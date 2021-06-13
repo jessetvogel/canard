@@ -13,21 +13,46 @@ public class Main {
         // Create session
         Session session = new Session();
 
-        // Parse any files given
-        for(String arg : args) {
+        // Set options
+        Parser.Format format = Parser.Format.PLAIN;
+        for (String arg : args) {
+            // Check for options (starting with --)
+            if(!arg.startsWith("--"))
+                continue;
+
+            if(arg.equals("--json")) {
+                format = Parser.Format.JSON;
+                continue;
+            }
+
+            System.out.println("Invalid option " + arg);
+            return;
+        }
+
+        // Parse files
+        for (String arg : args) {
+            // (files are the arguments which are not options)
+            if(arg.startsWith("--"))
+                continue;
+
             File file = new File(arg);
-            if(!file.exists() || !file.isFile()) {
-                System.out.println("could not find file '" + arg + "'");
+            if (!file.exists() || !file.isFile()) {
+                System.out.println("Could not find file '" + arg + "'");
                 return;
             }
 
+            // Create a parser to parse this file
             Parser parserFile = new Parser(new FileInputStream(file), System.out, session);
             parserFile.setLocation(file.getAbsoluteFile().getParent(), file.getName());
+            parserFile.setFormat(format);
             parserFile.parse();
         }
 
-        // Parse via System.in
+        // Create parser
         Parser parser = new Parser(System.in, System.out, session);
-        parser.parse();
+        parser.setFormat(format);
+
+        // Keep parsing (until exit) via System.in
+        while (true) parser.parse();
     }
 }

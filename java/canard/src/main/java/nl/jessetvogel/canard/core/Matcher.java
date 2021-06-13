@@ -67,7 +67,7 @@ public class Matcher {
             //noinspection SuspiciousNameCombination
             return putSolution(y, x, !reverse);
 
-        System.out.println("Nope, " + x + " will not map to " + y);
+//        System.out.println("Nope, " + x + " will not map to " + y);
         return false;
     }
 
@@ -134,10 +134,9 @@ public class Matcher {
         Function fBase = f.getBase(), gBase = g.getBase();
 
         // TODO: what if fBase/gBase is an indeterminate, but also it has dependencies ?
+        //  At some points problems appear, because there will be multiple solutions..
 
-        if ((gIndeterminates.contains(gBase) && putSolution(gBase, fBase, true))
-                || (fIndeterminates.contains(fBase) && putSolution(fBase, gBase, false))
-                || fBase == gBase) {
+        if (((gIndeterminates.contains(gBase) || fIndeterminates.contains(fBase)) && matches(fBase, gBase)) || fBase == gBase) {
             List<Function> fArguments = f.getArguments(), gArguments = g.getArguments();
             int l = fArguments.size(); // Since the bases already agree, we know the number of arguments must agree as well
             for (int i = 0; i < l; ++i) {
@@ -161,11 +160,13 @@ public class Matcher {
     }
 
     public void assertMatch(Function f, Function g) {
-        assert matches(f, g);
+        if(!matches(f, g))
+            assert false;
     }
 
     public void assertMatch(Function f, Function g, boolean reverse) {
-        assert matches(f, g, reverse);
+        if(!matches(f, g, reverse))
+            assert false;
     }
 
     public Function convert(Function x) {

@@ -1,16 +1,24 @@
 open algebraic_geometry;
 open commutative_algebra;
-search (P (X : Scheme) (h : affine X) : quasi_compact X)
-search (Q (X : Scheme) (h : affine X) : quasi_separated X);
-search (R (X : Scheme) (h : affine X) : m_affine (id X) );
-search (S (X : Scheme) (h : affine X) : m_quasi_compact (id X) );
 
-search (P {X Y : Scheme} {f : Morphism X Y} (h : closed_immersion f) : locally_finite_type f) ;
+search (R : Ring);
 
-open algebraic_geometry;
-open commutative_algebra;
 search (X : Scheme) (h : affine X);
-
-open algebraic_geometry;
-open commutative_algebra;
 search (X : Scheme) (h : affine X) (q : quasi_compact X);
+
+search (P (X : Scheme) (h : affine X) : quasi_compact X);
+search (P (X : Scheme) (h : affine X) : quasi_separated X);
+search (P (X : Scheme) (h : affine X) : m_affine (id X) );
+search (P (X : Scheme) (h : affine X) : m_quasi_compact (id X) );
+search (P {X Y : Scheme} {f : Morphism X Y} (h : closed_immersion f) : locally_finite_type f) ;
+search (P {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (fProper : proper f) (gProper : proper g) : proper (comp g f));
+search (P {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (fFinite : finite f) (gFinite : finite g) : proper (comp g f));
+
+search (P {A B : Prop} (h (a : A) : B) (a1 : A) (a2 : A) : B) ;
+search (P (X: Scheme) (h : not (quasi_compact X)) : not (affine X));
+
+search (P {X Y: Scheme} {f : Morphism X Y} (h : not (unramified f)) : not (etale f));
+search (P {X Y: Scheme} {f : Morphism X Y} (h : etale f) : unramified f);;
+
+def unram_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := funram_lft_imp_unram (fetale_imp_funram (etale_imp_fetale h)) (lfp_imp_lft (etale_imp_lfp h))
+
