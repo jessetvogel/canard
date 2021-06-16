@@ -25,3 +25,6 @@ search (P : locally_noetherian (affine_line (Spec QQ)))
 
 def unram_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := funram_lft_imp_unram (fetale_imp_funram (etale_imp_fetale h)) (lfp_imp_lft (etale_imp_lfp h))
 
+
+
+

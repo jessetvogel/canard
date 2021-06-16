@@ -42,6 +42,7 @@ public class Searcher {
             // Take the first query from the queue, and try to reduce it
             // Note that we peek, and not poll, because we might need it for the next .next()
             Query q = queue.peek();
+
 //            System.out.println("Current query: " + q);
 
             // Prepare the query before reducing
@@ -51,14 +52,6 @@ public class Searcher {
 
             // First list to search through is the list of local variables of q
             searchLists.set(0, q.getLocals());
-
-//            for(Function thm : q.getLocals()) {
-//                Query subQuery = q.reduce(thm);
-//                if (subQuery == null) {
-//                    System.out.println("Local '" + thm.toFullString() + "' does not apply to " + q.indeterminates.get(q.indeterminates.size() - 1).toFullString());
-//                }
-//            }
-
 
             // Search for a theorem/definition to fill it
             for (Collection<Function> list : searchLists) {

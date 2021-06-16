@@ -61,12 +61,8 @@ public class Function {
         return coll.contains(this);
     }
 
-    public boolean signatureDependsOn(List<Function> list) {
+    public boolean signatureDependsOn(Collection<Function> list) {
         return dependencies.stream().anyMatch(dep -> dep.function.signatureDependsOn(list)) || type.dependsOn(list);
-//        for(Dependency dependency : dependencies)
-//            if(dependency.function.signatureDependsOn(list))
-//                return true;
-//        return type.dependsOn(list);
     }
 
     public Function specialize(List<Function> arguments, List<Function.Dependency> dependencies) throws SpecializationException {
@@ -90,7 +86,7 @@ public class Function {
                 sj.setEmptyValue("");
                 for(int j = 0;j < i; ++j)
                     sj.add(explicitDependencies.get(j) + " = " + arguments.get(j));
-                throw new SpecializationException("argument '" + argument + "' does not match '" + dependency.toFullString() + "'" + sj);
+                throw new SpecializationException("argument '" + argument.toFullString() + "' does not match '" + dependency.toFullString() + "'" + sj);
             }
         }
 

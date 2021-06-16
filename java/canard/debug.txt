@@ -10,3 +10,31 @@ let inf_union_spec_QQ_not_quasi_compact : not (quasi_compact inf_union_spec_QQ)
 let aff_imp_qcomp {X : Scheme} (h : affine X) : quasi_compact X
 
 search (X : Scheme) (h : not (affine X))
+
+
+-------------------------------------------------
+
+let Scheme : Type
+let prop_1 prop_2 (X : Scheme) : Prop
+
+let E : Scheme
+let thm (h : prop_1 E) : prop_2 E
+
+search (S : Scheme) (P (p : prop_1 S) : prop_2 S)
+
+-------------------------------------------------
+
+let True : Prop;
+let t : True;
+
+let P : Prop
+let np : not P
+
+search (f : not True);
+
+------------------------------------------------
+
+open algebraic_geometry;
+open commutative_algebra;
+search (__P (S : Scheme) : not (affine S));
+

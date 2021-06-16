@@ -296,7 +296,7 @@ public class Parser {
         Set<Namespace> searchSpace = new HashSet<>(openNamespaces);
         for (Namespace space = currentNamespace; space != null; space = space.getParent())
             searchSpace.add(space);
-        Searcher searcher = new Searcher(searchSpace, 7); // TODO: watch out, its a magic number! 🪄
+        Searcher searcher = new Searcher(searchSpace, 5); // TODO: watch out, its a magic number! 🪄
 
         // Make a query and do a search
         // Store the results in a list

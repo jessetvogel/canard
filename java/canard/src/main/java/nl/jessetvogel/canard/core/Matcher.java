@@ -30,46 +30,56 @@ public class Matcher {
     }
 
     private boolean putSolution(Function x, Function y) {
-        // If y itself is an indeterminate itself and y -> z, we may need to redirect x -> z
-        if(indeterminates.contains(y)) {
-            Function z = solutions.get(y);
-            if(z != null)
-                return putSolution(x, z);
-        }
-
-        // We are not going to map x -> x
-        if(x == y)
+        // Case x = y: we are not going to map x -> x, but we will return true nonetheless
+        if (x == y)
             return true;
+
+        // Case y -> w: we map x -> w as well
+        // noinspection SuspiciousNameCombination
+        Function w = mapSolution(y);
+        if (w != null)
+            return putSolution(x, w);
 
         // If x -> z already, do some checks
+        // TODO: we must prevent loops "x -> y -> x"
         Function z = solutions.get(x);
-        if (z == null) {
-            // If we are working with local variables, then it may be that y may not depend on some values.
-            // Check this.
-            if (locals != null && !locals.isEmpty()) {
-                Set<Function> allowed = allowedLocals.get(x);
-                Set<Function> disallowed = (allowed == null) ? locals : locals.stream().filter(f -> !allowed.contains(f)).collect(Collectors.toUnmodifiableSet());
-                if (y.dependsOn(disallowed)) {
-//                    System.out.println("Oops, wanted to map " + x + " to " + y + " but it allows on some disallowed value!");
-                    return false;
-                }
-            }
-            // If all is well, put x -> y.
-            solutions.put(x, y);
-            return true;
+        if(z != null) {
+            if (z.equals(y))
+                return true;
+
+            // If z is also an indeterminate (possibly of a parent!), then we are satisfied with mapping y -> z
+            if (isIndeterminate(z))
+                // noinspection SuspiciousNameCombination
+                return putSolution(y, z);
+
+            // Finally, if y is an indeterminate, it was apparently not mapped before. Hence we will map y -> x instead
+            if(isIndeterminate(y))
+                // noinspection SuspiciousNameCombination
+                return putSolution(y, x);
+
+//             System.out.println("Nope, " + x + " will not map to " + y + ". It is already mapped to " + z + ", which is NOT an indeterminate!");
+            return false;
         }
 
-        if (z.equals(y))
-            return true;
+        // If we are working with local variables, then it may be that y may not depend on some values.
+        // Check this.
+        if (locals != null && !locals.isEmpty()) {
+            Set<Function> allowed = allowedLocals.get(x);
+            Set<Function> disallowed = (allowed == null) ? locals : locals.stream().filter(f -> !allowed.contains(f)).collect(Collectors.toUnmodifiableSet());
+            if (y.dependsOn(disallowed)) {
+//                    System.out.println("Oops, wanted to map " + x + " to " + y + " but it allows on some disallowed value!");
+                return false;
+            }
+        }
+        // If all is well, put x -> y.
+        solutions.put(x, y);
+        return true;
+    }
 
-        // TODO: we must prevent loops "x -> y -> x"
-
-        // In case x -> z and z is also an indeterminate, then we are satisfied with mapping y -> z
-        if (indeterminates.contains(z))
-            // noinspection SuspiciousNameCombination
-            return putSolution(y, z);
-
-//        System.out.println("Nope, " + x + " will not map to " + y);
+    private boolean isIndeterminate(Function z) {
+        for (Matcher m = this; m != null; m = m.parent)
+            if (m.indeterminates.contains(z))
+                return true;
         return false;
     }
 
@@ -121,7 +131,7 @@ public class Matcher {
         // At this point, f and g agree up to their signature, i.e. their dependencies and types match
 
         // If f is an indeterminate, map f -> g
-        if (indeterminates.contains(f))
+        if (indeterminates.contains(f)) // TODO: maybe check if it is an indeterminate of a parent immediately here??
             return putSolution(f, g);
 
         // If g is an indeterminate, map g -> f
@@ -150,7 +160,7 @@ public class Matcher {
         // Last chance: the parent might let them match, because f might be an indeterminate of some (grand)parent instead!
         if (parent != null)
             return parent.matches(f, g); // TODO: this is necessary, but can it be simplified ?? If it only applies when f or g is an indeterminate, can check for that instead?
-                                         //  otherwise we must check all the above once again (e.g. types) which is totally unnecessary!
+        //  otherwise we must check all the above once again (e.g. types) which is totally unnecessary!
 
 //        System.out.println("Oops, " + f + " does not match " + g);
 //        System.out.println("... while " + f + "");
@@ -159,14 +169,14 @@ public class Matcher {
 
     public void assertMatch(Function f, Function g) {
 //        System.out.println("Must match " + f.toFullString() + " to " + g.toFullString());
-        if(!matches(f, g))
+        if (!matches(f, g))
             assert false;
     }
 
     public Function convert(Function x) {
         // If x -> y (we use .mapSolution because it may possibly be mapped by a parent!), return y
         Function y = mapSolution(x);
-        if(y != null)
+        if (y != null)
             return y;
 
         Function base = x.getBase();
@@ -184,7 +194,7 @@ public class Matcher {
                 x.getDependenciesAsFunctions()
         ) : this; // If x has no dependencies, no need to construct new dependencies. Duh!
         for (Function.Dependency xDep : xDependencies) {
-            Function.Dependency dupDep = new Function.Dependency(subMatcher.duplicateDependency(xDep.function), xDep.explicit);
+            Function.Dependency dupDep = new Function.Dependency(subMatcher.clone(xDep.function), xDep.explicit);
             subMatcher.assertMatch(xDep.function, dupDep.function);
             convertedDependencies.add(dupDep);
         }
@@ -210,19 +220,30 @@ public class Matcher {
         if (!changes)
             return x;
 
+//        System.out.println("Trying to convert " + x.toFullString() + " along " + this);
+
         // Now we must convert the type of x, this requires another subMatcher!
         // Because the type is determined by the arguments provided to the base Function,
         // since we replace those now, the type should be re-determined
         List<Function> baseExplicitDependencies = base.getExplicitDependencies();
         Matcher subSubMatcher = new Matcher(subMatcher, base.getDependenciesAsFunctions());
         int m = baseExplicitDependencies.size();
-        for (int i = 0; i < m; ++i)
+        for (int i = 0; i < m; ++i) {
+//            System.out.println("ASSERT TO MATCH " + baseExplicitDependencies.get(i).toFullString() + " to " + convertedArguments.get(i).toFullString());
             subSubMatcher.assertMatch(baseExplicitDependencies.get(i), convertedArguments.get(i));
+        }
         Function convertedType = subSubMatcher.convert(x.getType());
         return new Specialization(base, convertedArguments, convertedType, convertedDependencies);
     }
 
-    public Function duplicateDependency(Function x) {
+    public Function.Dependency convert(Function.Dependency d) {
+        Function g = convert(d.function);
+        if (g == d.function)
+            return d;
+        return new Function.Dependency(g, d.explicit);
+    }
+
+    public Function clone(Function x) {
         // Since we only use this for duplicating dependencies, and dependencies are always their own base function!
         assert (x == x.getBase());
         // TODO: does it make sense to duplicate a specialization ?
@@ -237,7 +258,7 @@ public class Matcher {
                 x.getDependenciesAsFunctions()
         ) : this;
         for (Function.Dependency xDep : xDependencies) {
-            Function.Dependency dupDep = new Function.Dependency(subMatcher.duplicateDependency(xDep.function), xDep.explicit);
+            Function.Dependency dupDep = new Function.Dependency(subMatcher.clone(xDep.function), xDep.explicit);
             subMatcher.assertMatch(xDep.function, dupDep.function);
             convertedDependencies.add(dupDep);
         }
@@ -251,6 +272,18 @@ public class Matcher {
         return y;
     }
 
+    public Function cheapClone(Function x) {
+        // Should return x itself when x does not depend on any indeterminate (and neither on an indeterminate of some parent)
+        Matcher m;
+        for (m = this; m != null; m = m.parent) {
+            if (x.signatureDependsOn(m.indeterminates))
+                break;
+        }
+        if (m == null)
+            return x;
+        return clone(x);
+    }
+
     @Override
     public String toString() {
         StringJoiner sj = new StringJoiner(", ", "{", "}");
@@ -258,4 +291,5 @@ public class Matcher {
             sj.add(entry.getKey() + " -> " + entry.getValue());
         return sj.toString();
     }
+
 }
