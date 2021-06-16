@@ -45,10 +45,20 @@ public class Searcher {
 //            System.out.println("Current query: " + q);
 
             // Prepare the query before reducing
-            q.prepare();
+            Query subQ = q.abstraction();
+            if(subQ != null)
+                q = subQ;
 
             // First list to search through is the list of local variables of q
             searchLists.set(0, q.getLocals());
+
+//            for(Function thm : q.getLocals()) {
+//                Query subQuery = q.reduce(thm);
+//                if (subQuery == null) {
+//                    System.out.println("Local '" + thm.toFullString() + "' does not apply to " + q.indeterminates.get(q.indeterminates.size() - 1).toFullString());
+//                }
+//            }
+
 
             // Search for a theorem/definition to fill it
             for (Collection<Function> list : searchLists) {

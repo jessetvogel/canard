@@ -59,10 +59,11 @@ public class Namespace {
         return (subSpace == null) ? null : subSpace.getNamespace(path.substring(i + 1));
     }
 
-    public String fullName() {
+    @Override
+    public String toString() {
         if(parent == null)
             return name;
-        String parentName = parent.fullName();
+        String parentName = parent.toString();
         if(parentName.isEmpty())
             return name;
         return parentName + "." + name;

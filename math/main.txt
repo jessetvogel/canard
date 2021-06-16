@@ -1,17 +1,17 @@
 # Type
-def type {T : Type} (x : T) := T;
+# def type {T : Type} (x : T) := T;
 
 # Stuff on morphisms
 let Morphism {T : Type} (X Y : T) : Type # maybe a bit too general ?
 let id {T : Type} (X : T) : Morphism X X
 let comp {T : Type} {X Y Z : T} (g : Morphism Y Z) (f : Morphism X Y) : Morphism X Z
-def dom {T : Type} {X Y : T} (f : Morphism X Y) := X
-def cod {T : Type} {X Y : T} (f : Morphism X Y) := Y
+# def dom {T : Type} {X Y : T} (f : Morphism X Y) := X
+# def cod {T : Type} {X Y : T} (f : Morphism X Y) := Y
 
 import "logic.txt"
-import "algebraic_geometry.txt"
-import "commutative_algebra.txt"
-import "topology.txt"
+import "algebraic_geometry/algebraic_geometry.txt"
+import "commutative_algebra/commutative_algebra.txt"
+import "topology/topology.txt"
 
 open commutative_algebra
 open algebraic_geometry

@@ -6,11 +6,12 @@ import java.util.stream.Collectors;
 public class Function {
 
     public String label = null;
+    public Namespace space = null;
 
     private final Function type;
     private final List<Dependency> dependencies;
 
-    Function(Function type, List<Dependency> dependencies) {
+    public Function(Function type, List<Dependency> dependencies) {
         this.type = (type != null ? type : this);
         this.dependencies = dependencies;
     }
@@ -52,6 +53,10 @@ public class Function {
         this.label = label;
     }
 
+    public void setNamespace(Namespace space) {
+        this.space = space;
+    }
+
     public boolean dependsOn(Collection<Function> coll) {
         return coll.contains(this);
     }
@@ -76,7 +81,7 @@ public class Function {
             return this;
 
         // Create a matcher that matches the dependencies to the arguments given
-        Matcher matcher = new Matcher(getDependenciesAsFunctions(), Collections.emptyList());
+        Matcher matcher = new Matcher(getDependenciesAsFunctions());
         for(int i = 0;i < n; ++i) {
             Function dependency = explicitDependencies.get(i);
             Function argument = arguments.get(i);
@@ -114,8 +119,14 @@ public class Function {
     public String toString() {
         if (label == null)
             return String.format("%04d", hashCode() % 10000);
-        else
+
+        if(space == null)
             return label; // + "[" + String.format("%04d", hashCode() % 10000) + "]";
+
+//        return label;
+
+        String path = space.toString();
+        return path.isEmpty() ? label : path + "." + label;
     }
 
     public String toFullString() {
@@ -154,7 +165,7 @@ public class Function {
         }
 
         // If there are dependencies, we need a Matcher
-        Matcher matcher = new Matcher(getDependenciesAsFunctions(), Collections.emptyList());
+        Matcher matcher = new Matcher(getDependenciesAsFunctions());
         for (int i = 0; i < n; i++) {
             Dependency thisDep = thisDependencies.get(i), otherDep = otherDependencies.get(i);
             if (thisDep.explicit != otherDep.explicit) // Explicitness must match

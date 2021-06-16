@@ -20,17 +20,46 @@ public class Message {
         return String.format("{\"status\":\"%s\",\"data\":%s}", status.toString().toLowerCase(), sj);
     }
 
+//    public static String create(Status status, Function data) {
+//        return String.format("{\"status\":\"%s\",\"data\":[%s,%s]}", status.toString().toLowerCase(), jsonOfFunction(data), jsonOfFunction(data.getType()));
+//    }
+
     public static String create(Status status, List<Function> keys, List<List<Function>> data) {
         int n = keys.size();
         StringJoiner sjList = new StringJoiner(",", "[", "]");
         for(List<Function> result : data) {
             StringJoiner sjMap = new StringJoiner(",","{","}");
             for(int i = 0;i < n; ++i)
-                sjMap.add("\"" + escape(keys.get(i).toString()) + "\":\"" + escape(result.get(i).toString()) + "\"");
+                sjMap.add("\"" + escape(keys.get(i).toString()) + "\":\"" + escape(result.get(i).toFullString()) + "\"");
             sjList.add(sjMap.toString());
         }
         return String.format("{\"status\":\"%s\",\"data\":%s}", status.toString().toLowerCase(), sjList);
     }
+
+//    private static String jsonOfFunction(Function f) {
+//        // First construct the body
+//        String body;
+//        if(f == f.getBase())
+//            body = "\"" + escape(f.toString()) + "\"";
+//        else {
+//            StringJoiner sj = new StringJoiner(",", "[", "]");
+//            sj.add("\"" + escape(f.getBase().toString()) + "\"");
+//            for (Function arg : f.getArguments())
+//                sj.add(jsonOfFunction(arg));
+//            body = sj.toString();
+//        }
+//
+//        // If there are no dependencies, just return the body
+//        List<Function.Dependency> fDependencies = f.getDependencies();
+//        if(fDependencies.isEmpty())
+//            return body;
+//
+//        // Otherwise, [dependencies, body]
+//        StringJoiner sj = new StringJoiner(",", "[", "]");
+//        for(Function.Dependency dep : f.getDependencies())
+//            sj.add(String.format("[%d,%s,%s]", dep.explicit ? 1 : 0, jsonOfFunction(dep.function), jsonOfFunction(dep.function.getType())));
+//        return String.format("[%s,%s]", sj, body);
+//    }
 
     private static String escape(String raw) {
         StringBuilder sb = new StringBuilder();

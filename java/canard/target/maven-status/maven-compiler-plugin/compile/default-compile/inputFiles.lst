@@ -4,6 +4,7 @@
 /Users/jessevogel/Projects/canard/java/canard/src/main/java/nl/jessetvogel/canard/parser/Lexer.java
 /Users/jessevogel/Projects/canard/java/canard/src/main/java/nl/jessetvogel/canard/parser/Parser.java
 /Users/jessevogel/Projects/canard/java/canard/src/main/java/nl/jessetvogel/canard/core/Session.java
+/Users/jessevogel/Projects/canard/java/canard/src/main/java/nl/jessetvogel/canard/parser/Message.java
 /Users/jessevogel/Projects/canard/java/canard/src/main/java/nl/jessetvogel/canard/parser/Token.java
 /Users/jessevogel/Projects/canard/java/canard/src/main/java/nl/jessetvogel/canard/parser/Scanner.java
 /Users/jessevogel/Projects/canard/java/canard/src/main/java/nl/jessetvogel/canard/core/Matcher.java

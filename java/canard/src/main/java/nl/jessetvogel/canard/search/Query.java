@@ -9,11 +9,11 @@ import java.util.stream.Collectors;
 public class Query {
 
     private final Query parent;
-    private final List<Function> indeterminates;
+    final List<Function> indeterminates;
     private final Map<Function, Function> solutions; // Maps the indeterminates of parent to stuff w.r.t. this query
     private final List<Integer> depths; // An integer per indeterminate, indicating how deep that determinate is used for
 
-    private final Set<Function> locals;
+    private Set<Function> locals;
     private final Map<Function, Set<Function>> allowedLocals;
 
     public Query(List<Function> indeterminates) {
@@ -34,53 +34,71 @@ public class Query {
         this.allowedLocals = new HashMap<>();
     }
 
-    void prepare() {
-        // Can only prepare once!
-//        assert (hType == null);
-
+    Query abstraction() {
         // Get last indeterminate
         Function h = indeterminates.get(indeterminates.size() - 1);
 
-        // Set the type and dependencies
-//        hType = h.getType();
-//        hDependencies = h.getDependencies();
+        // If h has no dependencies, nothing to do here
+        if (h.getDependencies().isEmpty())
+            return null;
 
-        // Add the dependencies of h to the local variables
-        for (Function.Dependency dependency : h.getDependencies())
-            locals.add(dependency.function);
+        // Create a subQuery where h is replaced by a dependency-less version of h
+        // This introduces new locals: the current dependencies of h
+        List<Function> newIndeterminates = new ArrayList<>(indeterminates);
+        newIndeterminates.remove(h);
+        Function hNew = new Function(h.getType(), Collections.emptyList());
+        newIndeterminates.add(hNew);
+        Map<Function, Function> newSolutions = new HashMap<>();
+        newSolutions.put(h, hNew);
+
+        Query subQuery = new Query(this, newSolutions, newIndeterminates, depths);
+
+        // Add the dependencies of h to the locals of subQuery
+        // Then hNew may depend on these new locals
+        Set<Function> hNewAllowed = allowedLocals.containsKey(h) ? allowedLocals.get(h) : new HashSet<>();
+        for (Function.Dependency dependency : h.getDependencies()) {
+            subQuery.locals.add(dependency.function);
+            hNewAllowed.add(dependency.function);
+        }
+        subQuery.allowedLocals.put(hNew, hNewAllowed);
+
+        return subQuery;
     }
 
     Query reduce(Function thm) {
-        // Must be prepared!
-//        assert (hType != null);
-
         // Get last indeterminate
         Function h = indeterminates.get(indeterminates.size() - 1);
 
-        // Create matcher
-        List<Function> thmDependencies = thm.getDependenciesAsFunctions();
-        Matcher matcher = new Matcher(indeterminates, thmDependencies);
+        // At this point, h is asserted to have no dependencies!
+        assert (h.getDependencies().isEmpty());
 
-        // Thm arguments have same allowances as h, together with the dependencies of h
-        Set<Function> hAllowed = allowedLocals.containsKey(h) ? allowedLocals.get(h) : new HashSet<>();
-        for (Function.Dependency d : h.getDependencies())
-            hAllowed.add(d.function);
-        if (!locals.isEmpty()) { // only do something in non-trivial cases: when there *are* local variables
+        // Create matcher
+        List<Function> allIndeterminates = new ArrayList<>(indeterminates);
+        List<Function> thmDependencies = thm.getDependenciesAsFunctions();
+        allIndeterminates.addAll(thmDependencies);
+        Matcher matcher = new Matcher(allIndeterminates);
+
+        // Thm arguments have same allowances as h (if any)
+        Set<Function> hAllowed = allowedLocals.get(h);
+        if (hAllowed != null && !hAllowed.isEmpty()) {
             Map<Function, Set<Function>> allowedLocalsCopy = new HashMap<>(allowedLocals);
             for (Function thmDep : thmDependencies)
                 allowedLocalsCopy.put(thmDep, hAllowed);
             matcher.setLocalVariables(locals, allowedLocalsCopy);
         }
 
+//        System.out.println("Will '" + thm.toFullString() + "' satisfy '" + h.toFullString() + "' ?");
+//        System.out.println("(indeterminates are " + indeterminates.get(0) + " and more ...)");
+
         // Note that we do not match (h, thm) since they might not match!
         // (E.g. when thm has dependencies that require arguments, while h has not)
-        // (Also, e.g. when h has dependencies, but we are constructing lambda-style)
+        // // (Also, e.g. when h has dependencies, but we are constructing lambda-style)
         // Therefore we just match the types of h and thm
         if (!matcher.matches(h.getType(), thm.getType()))
             return null;
 
 //        System.out.println("Valid reduction in " + this);
-//        System.out.println("  Solve for " + h.getType() + " with " + thm);
+//        System.out.println("--> solve for " + h.toFullString() + " with " + thm);
 
         // Create the new subQuery, and keep track of the solutions (for indeterminates) and the arguments (for thm)
         // and the new indeterminates (for the subQuery)
@@ -92,10 +110,9 @@ public class Query {
 
         int hDepth = depths.get(indeterminates.indexOf(h));
 
-        List<Function> allIndeterminates = new ArrayList<>(indeterminates);
+        allIndeterminates = new ArrayList<>(allIndeterminates); // (TODO: this is just to be sure)
         allIndeterminates.remove(h); // Note that h will be solved for, so will no longer be an indeterminate
-        allIndeterminates.addAll(thm.getDependenciesAsFunctions()); // All dependencies of thm will be indeterminates (unless they were given arguments of course)
-        Matcher queryToSubQuery = new Matcher(allIndeterminates, Collections.emptyList());
+        Matcher queryToSubQuery = new Matcher(allIndeterminates);
 
         List<Function> unmapped = new ArrayList<>(allIndeterminates);
         boolean changes = true;
@@ -105,7 +122,7 @@ public class Query {
                 Function f = it.next();
                 // When f is an indeterminate of this query
                 if (indeterminates.contains(f)) {
-                    Function solution = matcher.mapSolution(f, false);
+                    Function solution = matcher.mapSolution(f);
                     if (solution != null) {
                         // If f has a solution, the solution must not depend on any unmapped indeterminate
                         // And, in this case, we simply convert along the new matcher
@@ -119,12 +136,12 @@ public class Query {
                         if (f.signatureDependsOn(unmapped))
                             continue;
                         solution = queryToSubQuery.duplicateDependency(f);
-                        solution.setLabel(f.label + "'"); // Not really needed, but is pretty
+                        solution.setLabel(f.label); // + "'"); // Not really needed, but is pretty
                         newIndeterminates.add(solution);
                         newDepths.add(depths.get(indeterminates.indexOf(f))); // The indeterminate has not changed, so its depth remains the same
 //                        System.out.println("No solution yet for " + f);
 
-                        if(allowedLocals.containsKey(f)) // Pass on the allowed locals (if f has any)
+                        if (allowedLocals.containsKey(f)) // Pass on the allowed locals (if f has any)
                             subQuery.allowedLocals.put(solution, allowedLocals.get(f));
                     }
                     // Store the solution,  un-mark as unmapped, match, and indicate that changes are made
@@ -136,7 +153,7 @@ public class Query {
                 }
                 // Otherwise it must be a dependency of thm
                 else {
-                    Function argument = matcher.mapSolution(f, true);
+                    Function argument = matcher.mapSolution(f);
                     if (argument != null) {
                         // If the argument is set, the argument must not depend on unmapped stuff
                         // And, in that case, convert along the new matcher
@@ -149,13 +166,14 @@ public class Query {
                         if (f.signatureDependsOn(unmapped))
                             continue;
                         argument = queryToSubQuery.duplicateDependency(f);
-                        argument.setLabel(f.label + "'"); // Not really needed, but is pretty
+                        argument.setLabel(f.label); // + "'"); // Not really needed, but is pretty
                         newIndeterminates.add(argument);
                         newDepths.add(hDepth + 1); // This indeterminate was introduced because of h, so its depth is one more than that of h
 //                        System.out.println("No argument yet for " + f + ", so we added " + argument + " as a new indeterminate");
 
                         // This new indeterminate may depend on the local variables that h was allowed to depend on
-                        subQuery.allowedLocals.put(argument, hAllowed);
+                        if (hAllowed != null && !hAllowed.isEmpty())
+                            subQuery.allowedLocals.put(argument, hAllowed);
                     }
                     // Store the argument, un-mark as unmapped, match, and indicate that changes are made
                     arguments.put(f, argument);
@@ -171,6 +189,17 @@ public class Query {
         // we cannot reduce to a subQuery
         if (!unmapped.isEmpty())
             return null;
+
+        // Convert local variables if needed (TODO: probably this must be done in some order as well.. and result must be stored)
+        Map<Function, Function> mapLocals = new HashMap<>();
+        for (Function l : locals) {
+            Function copyL = queryToSubQuery.duplicateDependency(l);
+            mapLocals.put(l, copyL);
+            solutions.put(l, copyL);
+        }
+        subQuery.locals = subQuery.locals.stream().map(mapLocals::get).collect(Collectors.toSet());
+        for (Map.Entry<Function, Set<Function>> entry : subQuery.allowedLocals.entrySet())
+            entry.setValue(entry.getValue().stream().map(mapLocals::get).collect(Collectors.toSet()));
 
         // Finally, set solution of h, as specialization of thm
         List<Function> thmArguments = thm.getExplicitDependencies().stream().map(arguments::get).collect(Collectors.toUnmodifiableList());
@@ -204,29 +233,48 @@ public class Query {
                 \           \          \       |
                  ----->      ----->     -> Solution
         */
-        Matcher matcher = new Matcher(Collections.emptyList(), Collections.emptyList());
+        Matcher matcher = new Matcher(Collections.emptyList());
         for (Query q : chain) {
+//            System.out.println(" -- start new chain layer ---");
+//            System.out.println("Current Matcher: " + matcher);
+
             assert (q.parent != null); // (Just to be sure)
-            Matcher nextMatcher = new Matcher(q.parent.indeterminates, Collections.emptyList());
+            Matcher nextMatcher = new Matcher(matcher, q.solutions.keySet());
             Function h = q.parent.indeterminates.get(q.parent.indeterminates.size() - 1);
-            for (Function f : q.parent.indeterminates) {
+//            for (Function f : q.parent.indeterminates) {
+            for (Function f : q.solutions.keySet()) { // TODO: reason is that locals can also be mapped to solutions, and potentially not all indeterminates need to have solutions at each step ?
                 Function g = q.solutions.get(f);
                 assert (g != null);
                 // First convert the solution along the previous matcher
                 g = matcher.convert(g);
-                // Then, if needed, add dependencies to the solution of h (Note: it is important that this is done *after* the conversion by matcher!)
-                if (f == h && !h.getDependencies().isEmpty()) {
-                    try {
-                        g = g.specialize(Collections.emptyList(), h.getDependencies());
-                    } catch (Function.SpecializationException e) {
-                        e.printStackTrace();
-                        assert (false);
-                        return null;
+
+                // Case f = h, may need to convert the dependencies
+                if (f == h) {
+                    if (!h.getDependencies().isEmpty()) {
+                        try {
+//                            System.out.println("Converted hDependencies = ");
+//                            for (Function.Dependency d : h.getDependencies())
+//                                System.out.print("(" + d.function + "), ");
+//                            System.out.println(" to ... ");
+                            Matcher m = matcher;
+                            List<Function.Dependency> convertedHDependencies = h.getDependencies().stream().map(d -> new Function.Dependency(m.convert(d.function), d.explicit)).collect(Collectors.toUnmodifiableList());
+//                            for (Function.Dependency d : convertedHDependencies)
+//                                System.out.print("(" + d.function + "), ");
+//                            System.out.println("!");
+
+                            g = g.specialize(Collections.emptyList(), convertedHDependencies);
+                        } catch (Function.SpecializationException e) {
+                            e.printStackTrace();
+                            assert (false);
+                            return null;
+                        }
                     }
                 }
+
                 // Now the next matcher should map f to g
                 nextMatcher.assertMatch(f, g);
             }
+
             // Update the matcher
             matcher = nextMatcher;
         }
