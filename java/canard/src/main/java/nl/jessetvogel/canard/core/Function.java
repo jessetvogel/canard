@@ -69,24 +69,24 @@ public class Function {
         // Check that the number of arguments equals the number of explicit dependencies
         int n = arguments.size();
         List<Function> explicitDependencies = getExplicitDependencies();
-        if(n != explicitDependencies.size())
+        if (n != explicitDependencies.size())
             throw new SpecializationException("expected " + explicitDependencies.size() + " arguments but received " + n);
 
         // Base case: if there are no arguments and no given dependencies, immediately return
-        if(n == 0 && dependencies.isEmpty())
+        if (n == 0 && dependencies.isEmpty())
             return this;
 
         // Create a matcher that matches the dependencies to the arguments given
         Matcher matcher = new Matcher(getDependenciesAsFunctions());
-        for(int i = 0;i < n; ++i) {
+        for (int i = 0; i < n; ++i) {
             Function dependency = explicitDependencies.get(i);
             Function argument = arguments.get(i);
-            if(!matcher.matches(dependency, argument)) {
+            if (!matcher.matches(dependency, argument)) {
                 StringJoiner sj = new StringJoiner(", ", " where ", "");
                 sj.setEmptyValue("");
-                for(int j = 0;j < i; ++j)
+                for (int j = 0; j < i; ++j)
                     sj.add(explicitDependencies.get(j) + " = " + arguments.get(j));
-                throw new SpecializationException("argument '" + argument.toFullString() + "' does not match '" + dependency.toFullString() + "'" + sj);
+                throw new SpecializationException("argument '" + argument + "' does not match '" + dependency + "'" + sj);
             }
         }
 
@@ -95,7 +95,7 @@ public class Function {
         // Note this must be done recursively, since specializing the base requires a different Matcher
         // Note also that base must be converted as well! E.g. when specializing 'def dom {T : Type} {X Y : T} (f : Morphism X Y) := X'
         Function base = getBase();
-        if(base != this) {
+        if (base != this) {
             List<Function> baseArguments = getArguments().stream().map(matcher::convert).collect(Collectors.toUnmodifiableList());
             return matcher.convert(base).specialize(baseArguments, dependencies);
         }
@@ -113,29 +113,51 @@ public class Function {
 
     @Override
     public String toString() {
-        if (label == null)
-            return String.format("%04d", hashCode() % 10000);
-
-        if(space == null)
-            return label; // + "[" + String.format("%04d", hashCode() % 10000) + "]";
+//        if (label == null)
+//            return String.format("%04d", hashCode() % 10000);
+//
+//        if (space == null)
+//            return label; // + "[" + String.format("%04d", hashCode() % 10000) + "]";
 
 //        return label;
 
-        String path = space.toString();
-        return path.isEmpty() ? label : path + "." + label;
+        return toString(false, false);
     }
 
-    public String toFullString() {
+    public String toString(boolean full, boolean namespace) {
         StringBuilder sb = new StringBuilder();
-        sb.append(this);
-        for(Function.Dependency d : dependencies)
-            sb.append(d.explicit ? " (" : " {").append(d.function.toFullString()).append(d.explicit ? ")" : "}");
-        sb.append(" : ");
-        sb.append(type);
-        if(label != null && getBase() != this)
-            sb.append(" := ").append(getBase().toString());
+
+        if (namespace && space != null) {
+            String path = space.toString();
+            if (!path.isEmpty())
+                sb.append(path).append(".");
+        }
+
+        sb.append(label != null ? label : String.format("%04d", hashCode() % 10000));
+
+        if (full) {
+            for (Function.Dependency d : dependencies)
+                sb.append(d.explicit ? " (" : " {").append(d.function.toString(true, namespace)).append(d.explicit ? ")" : "}");
+            sb.append(" : ");
+            sb.append(type.toString(false, namespace)); // Don't want infinite recursivive Type : Type : Type ..
+//            if (label != null && getBase() != this)
+//                sb.append(" := ").append(getBase().toString());
+        }
+
         return sb.toString();
     }
+
+//    public String toFullString() {
+//        StringBuilder sb = new StringBuilder();
+//        sb.append(this);
+//        for (Function.Dependency d : dependencies)
+//            sb.append(d.explicit ? " (" : " {").append(d.function.toFullString()).append(d.explicit ? ")" : "}");
+//        sb.append(" : ");
+//        sb.append(type);
+//        if (label != null && getBase() != this)
+//            sb.append(" := ").append(getBase().toString());
+//        return sb.toString();
+//    }
 
     @Override
     public boolean equals(Object obj) {

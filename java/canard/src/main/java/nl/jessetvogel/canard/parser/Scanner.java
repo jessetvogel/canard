@@ -5,8 +5,10 @@ import java.io.InputStream;
 
 class Scanner {
 
-    final InputStream stream;
+    private final InputStream stream;
     int line = 1, column = 0;
+    private Character c0, c1;
+
 
     Scanner(InputStream stream) {
         this.stream = stream;
@@ -24,7 +26,13 @@ class Scanner {
         }
         else
             column++;
+
+        c1 = c0;
+        c0 = c;
         return c;
     }
 
+    public Character prevChar() {
+        return c1;
+    }
 }

@@ -15,6 +15,8 @@ public class Main {
 
         // Set options
         Parser.Format format = Parser.Format.PLAIN;
+        boolean explicit = false;
+
         for (String arg : args) {
             // Check for options (starting with --)
             if(!arg.startsWith("--"))
@@ -25,9 +27,16 @@ public class Main {
                 continue;
             }
 
+            if(arg.equals("--explicit")) {
+                explicit = true;
+                continue;
+            }
+
             System.out.println("Invalid option " + arg);
             return;
         }
+
+        long startTime = System.nanoTime();
 
         // Parse files
         for (String arg : args) {
@@ -44,13 +53,16 @@ public class Main {
             // Create a parser to parse this file
             Parser parserFile = new Parser(new FileInputStream(file), System.out, session);
             parserFile.setLocation(file.getAbsoluteFile().getParent(), file.getName());
-            parserFile.setFormat(format);
+            parserFile.setFormat(format, explicit);
             parserFile.parse();
         }
 
+        long endTime = System.nanoTime();
+        System.err.println("Parsed files in " + (endTime - startTime) / 1000000 + " ms");
+
         // Create parser
         Parser parser = new Parser(System.in, System.out, session);
-        parser.setFormat(format);
+        parser.setFormat(format, explicit);
 
         // Keep parsing (until exit) via System.in
         while (true) parser.parse();

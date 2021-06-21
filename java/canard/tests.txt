@@ -1,22 +1,27 @@
 open algebraic_geometry;
+open algebraic_geometry.scheme;
+open algebraic_geometry.morphism;
 open commutative_algebra;
+open commutative_algebra.ring;
 
 search (R : Ring);
 
-search (X : Scheme) (h : affine X);
-search (X : Scheme) (h : affine X) (q : quasi_compact X);
+search (X : Scheme) (h : scheme.affine X);
+search (X : Scheme) (h : scheme.affine X) (q : scheme.quasi_compact X);
 
-search (P (X : Scheme) (h : affine X) : quasi_compact X);
-search (P (X : Scheme) (h : affine X) : quasi_separated X);
-search (P (X : Scheme) (h : affine X) : m_affine (id X) );
-search (P (X : Scheme) (h : affine X) : m_quasi_compact (id X) );
+search (P (X : Scheme) (h : scheme.affine X) : scheme.quasi_compact X);
+search (P (X : Scheme) (h : scheme.affine X) : scheme.quasi_separated X);
+search (P (X : Scheme) (h : scheme.affine X) : morphism.affine (id X) );
+search (P (X : Scheme) (h : scheme.affine X) : morphism.quasi_compact (id X) );
 search (P {X Y : Scheme} {f : Morphism X Y} (h : closed_immersion f) : locally_finite_type f) ;
 search (P {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (fProper : proper f) (gProper : proper g) : proper (comp g f));
 search (P {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (fFinite : finite f) (gFinite : finite g) : proper (comp g f));
 
 search (P {A B : Prop} (h (a : A) : B) (x : A) : B) ;
 search (P {A B : Prop} (h (a : A) : B) (a1 : A) (a2 : A) : B) ;
-search (P (X: Scheme) (h : not (quasi_compact X)) : not (affine X));
+search (P {A B : Prop} (h (a : A) : B) (nb : not B) : not A) ;
+search (P (X: Scheme) (h : not (scheme.quasi_compact X)) : not (scheme.affine X));
+search (P {X Y : Scheme} {f : Morphism X Y} (h : not (universally_closed f)) : not(proper f));
 
 search (P {X Y: Scheme} {f : Morphism X Y} (h : not (unramified f)) : not (etale f));
 search (P {X Y: Scheme} {f : Morphism X Y} (h : etale f) : unramified f);

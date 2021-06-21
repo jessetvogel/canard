@@ -24,8 +24,9 @@ public class Parser {
     private final Set<Namespace> openNamespaces;
     private List<String> importedFiles;
 
-    public enum Format { PLAIN, JSON };
+    public enum Format {PLAIN, JSON}
     private Format format = Format.PLAIN;
+    private boolean explicit = false;
 
     public Parser(InputStream in, OutputStream out, Session session) {
         this.out = out;
@@ -40,8 +41,9 @@ public class Parser {
         this.importedFiles = new ArrayList<>();
     }
 
-    public void setFormat(Format format) {
+    public void setFormat(Format format, boolean explicit) {
         this.format = format;
+        this.explicit = explicit;
     }
 
     public void setLocation(String directory, String filename) {
@@ -186,14 +188,18 @@ public class Parser {
         // Get namespace
         String path = parsePath();
         Namespace space = session.globalNamespace.getNamespace(path);
-        if(space == null)
+        if (space == null)
             throw new ParserException(tInspect, "unknown namespace '" + path + "'");
 
-        if(format == Format.JSON)
-            output(Message.create(Message.Status.SUCCESS, space.context.getFunctions().stream().map(Function::toString).collect(Collectors.toUnmodifiableList())));
+        // Construct list of labels
+        List<String> labels = space.context.getFunctions().stream().map(f -> f.label).filter(Objects::nonNull).collect(Collectors.toUnmodifiableList());
+
+        // Output
+        if (format == Format.JSON)
+            output(Message.create(Message.Status.SUCCESS, labels));
         else
-            for (Function f : space.context.getFunctions())
-                output(f.toString());
+            for (String label : labels)
+                output(label);
     }
 
     private void parseOpen() throws ParserException, IOException, Lexer.LexerException {
@@ -202,10 +208,10 @@ public class Parser {
          */
 
         Token tOpen = consume(Token.Type.KEYWORD, "open");
-        String name = consume(Token.Type.IDENTIFIER).data;
-        Namespace space = session.globalNamespace.getNamespace(name);
+        String path = parsePath();
+        Namespace space = session.globalNamespace.getNamespace(path);
         if (space == null)
-            throw new ParserException(tOpen, "invalid namespace name '" + name + "'");
+            throw new ParserException(tOpen, "invalid namespace name '" + path + "'");
         openNamespaces.add(space);
     }
 
@@ -215,10 +221,10 @@ public class Parser {
          */
 
         Token tClose = consume(Token.Type.KEYWORD, "close");
-        String name = consume(Token.Type.IDENTIFIER).data;
-        Namespace space = session.globalNamespace.getNamespace(name);
+        String path = parsePath();
+        Namespace space = session.globalNamespace.getNamespace(path);
         if (space == null)
-            throw new ParserException(tClose, "invalid namespace name '" + name + "'");
+            throw new ParserException(tClose, "invalid namespace name '" + path + "'");
         openNamespaces.remove(space);
     }
 
@@ -298,29 +304,32 @@ public class Parser {
             searchSpace.add(space);
         Searcher searcher = new Searcher(searchSpace, 5); // TODO: watch out, its a magic number! 🪄
 
+        long startTime = System.nanoTime();
+
         // Make a query and do a search
         // Store the results in a list
-        List<List<Function>> results = new ArrayList<>();
+        List<List<String>> results = new ArrayList<>();
         Query query = new Query(indeterminates);
-        List<Function> solution = searcher.search(query);
-        if (solution != null)
-            results.add(solution);
-        for (int i = 1; i < N && solution != null; ++i) {
-            solution = searcher.next();
-            if (solution != null)
-                results.add(solution);
+        List<Function> solution;
+        for (int i = 0; i < N; ++i) {
+            solution = (i == 0) ? searcher.search(query) : searcher.next();
+            if (solution == null)
+                break;
+            results.add(solution.stream().map(f -> f.toString(true, explicit)).collect(Collectors.toUnmodifiableList()));
         }
 
+        long endTime = System.nanoTime();
+
         // Print the solutions
-        if(format == Format.JSON)
-            output(Message.create(Message.Status.SUCCESS, indeterminates, results));
+        if (format == Format.JSON)
+            output(Message.create(Message.Status.SUCCESS, indeterminates.stream().map(Function::toString).collect(Collectors.toUnmodifiableList()), results));
         else {
             if (results.isEmpty()) {
                 output("\uD83E\uDD7A no solutions found");
                 return;
             }
 
-            for (List<Function> result : results) {
+            for (List<String> result : results) {
                 StringJoiner sj = new StringJoiner(", ");
                 int n = result.size();
                 for (int i = 0; i < n; ++i)
@@ -328,6 +337,8 @@ public class Parser {
                 output("\uD83D\uDD0E " + sj);
             }
         }
+
+        System.err.println("Search took " + (endTime - startTime) / 1000000 + " ms");
     }
 
     private void parseCheck() throws ParserException, IOException, Lexer.LexerException {
@@ -338,10 +349,10 @@ public class Parser {
         consume(Token.Type.KEYWORD, "check");
         Function f = parseExpression(currentNamespace.context);
 
-        if(format == Format.JSON)
-            output(Message.create(Message.Status.SUCCESS, f.toFullString()));
+        if (format == Format.JSON)
+            output(Message.create(Message.Status.SUCCESS, f.toString(true, explicit)));
         else
-            output("\uD83E\uDD86 " + f.toFullString());
+            output("\uD83E\uDD86 " + f.toString(true, explicit));
     }
 
     private void parseDeclaration() throws ParserException, IOException, Lexer.LexerException {
@@ -350,7 +361,7 @@ public class Parser {
          */
 
         consume(Token.Type.KEYWORD, "let");
-        for(Function f : parseFunctions(currentNamespace.context))
+        for (Function f : parseFunctions(currentNamespace.context))
             f.setNamespace(currentNamespace);
     }
 
@@ -560,7 +571,7 @@ public class Parser {
     }
 
     private void error(String message) {
-        if(format == Format.JSON)
+        if (format == Format.JSON)
             output(Message.create(Message.Status.ERROR, message));
         else
             output("⚠️ " + message);

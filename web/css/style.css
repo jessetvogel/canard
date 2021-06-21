@@ -1,0 +1,101 @@
+body {
+    background-color: #fbfaf5;
+    font-family: 'Computer-Modern';
+}
+
+h2 {
+    text-align: center;
+}
+
+textarea {
+    display: block;
+    width: 100%;
+    line-height: 24px;
+    font-size: 16px;
+    
+    height: 40px;
+    box-sizing: border-box;
+
+    border: 0;
+    outline: none;
+    padding: 8px 8px;
+    font-family: 'Menlo';
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.12);
+    background-color: #ffffff;
+    resize: none;
+    overflow: scroll hidden;
+}
+
+#context {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+#context .line-numbers {
+    display: flex;
+    flex-direction: column;
+
+    text-align: right;
+    line-height: 24px;
+    font-size: 16px;
+    padding: 8px 8px;
+    font-family: 'Menlo';
+    background-color: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.5);
+}
+
+button {
+    line-height: 32px;
+    padding: 0px 8px;
+    border-radius: 4px;
+    background-color:rgba(0, 0, 0, 0.12);
+    border: 0;
+    min-width: 96px;
+
+    margin: 8px 0px;
+    cursor: pointer;
+
+}
+
+#input-prove {
+    width: 100%;
+}
+
+#content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.loading {
+    width: 64px;
+    height: 64px;
+    border-radius: 32px;
+    opacity: 0.0;
+    background-color: black;
+    animation: loading 0.8s infinite;
+    animation-delay: 0.2s;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 32px;
+    margin-bottom: 32px;
+}
+
+@keyframes loading {
+    0% { transform: scale(0.0); opacity: 1.0 }
+    100% { transform: scale(1.0); opacity: 0.0; }
+}
+
+#button-search, #button-prove {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tt {
+    font-family: 'Computer-Modern-Typewriter';
+}
+
+a {
+    color: #3280b5;
+}

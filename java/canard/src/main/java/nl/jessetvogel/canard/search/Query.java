@@ -332,7 +332,7 @@ public class Query {
     public String toString() {
         StringBuilder sb = new StringBuilder("Query");
         for (Function f : indeterminates)
-            sb.append(" (").append(f.toFullString()).append(")");
+            sb.append(" (").append(f).append(")");
         return sb.toString();
     }
 }

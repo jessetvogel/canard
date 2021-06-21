@@ -36,24 +36,52 @@
 //    - Could go with a kind of subSearcher? I.e. we instantiate the dependencies and then search for the type.
 //    If that succeeds, construct a lambda-thingy
 
-- Re-use existing proofs
+// - Messaging system, support JSON format
 
-- 'not', and maybe further logic stuff
+// - Change comments to '-- comment' and '/- block comment -/' to match LEAN style
+
+// - Create a '--explicit' option, which prints the namespace each time
+
+// - Create a VSCode extension for synthax highlighting
+
+// - 'not', and maybe further logic stuff
+
+[ PRIORITY ! ]
+
+- While searching, knowing when to break a branch!
+    - If we ask a question that a parent is also asking (i.e. detecting a loop), just stop
+    - How to do this ?
+    - Compare a query to all of its parents. If the parent 'injects into the query', we can skip the query
+
+[ LESS PRIORITY ]
+
+- Maybe clean up Matcher.putSolution, while keeping the functionality
+    - Can a child-matcher put solutions for the parent ??
+
+- Re-use existing proofs
 
 - variables like LEAN.  `variables {X Y : Scheme} {f : Morphism X Y}`. But seems quite difficult to implement!
 
-- When the number of definitions is becomes large, use some indexing system.
+- When the number of definitions is becomes large, use some **indexing system**.
   I.e. when we need `affine X`, already filter on all those functions which match `affine _`
   I.e. context has an additional map index<Function (base), List<Function>>. Then if possible, we can restrict to the indexed-list.
   Probably greatly improves speed!
 
-- When can .specialze just return the base ??
-
-- While searching, knowing when to break a branch! If we ask a question that a parent is also asking (i.e. detecting a loop), just stop
-
-// - Messaging system, support JSON format
+- When can .specialze simply return the base ??
 
 - Synthax for searching for multiple results
-    - Currently is `search (..args..) <int>`
+    - Currently is `search (..args..) <int>`, but seems ugly
 
 - Preserve dependencies in duplicate when possible!
+
+- Create a web interface
+    - Home page
+    - Explore/search page
+    - Docs page #hash to encode what page
+
+??- Move from Java to C++, so that we don't need a JVM, and maybe increase performance at some point ?
+??    - Just learned about shared_ptr's, so might actually be doable to use C++ now
+
+??- '--server <PORT>' option which starts a server at the given port
+??    - Creates a parser object for each client, then just connect I/O
+

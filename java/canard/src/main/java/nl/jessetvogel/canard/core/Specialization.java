@@ -35,29 +35,42 @@ public class Specialization extends Function {
 
     @Override
     public String toString() {
+        return toString(true, false);
+    }
+
+    @Override
+    public String toString(boolean full, boolean namespace) {
         StringBuilder sb = new StringBuilder();
+
         if (!getDependencies().isEmpty()) {
-            sb.append("λ");
-            if(label != null)
-                sb.append(" ").append(label);
+            if (label != null && namespace) {
+                String path = space.toString();
+                if (!path.isEmpty())
+                    sb.append(path).append(".");
+            }
+
+            sb.append(label != null ? label : "λ");
+
             for (Function.Dependency d : getDependencies())
-                sb.append(d.explicit ? " (" : " {").append(d.function.toFullString()).append(d.explicit ? ")" : "}");
+                sb.append(d.explicit ? " (" : " {").append(d.function.toString(true, namespace)).append(d.explicit ? ")" : "}");
+
             sb.append(" := ");
         }
 
-        sb.append(getBase().toString());
+        sb.append(getBase().toString(false, namespace));
         for (Function f : arguments) {
-            String strArgument = f.toString();
+            String strArgument = f.toString(false, namespace);
             if (strArgument.contains(" "))
                 strArgument = "(" + strArgument + ")";
             sb.append(" ").append(strArgument);
         }
-        return sb.toString();
-    }
 
-    @Override
-    public String toFullString() {
-        return this + " : " + getType();
+        if (full) {
+            sb.append(" : ");
+            sb.append(getType().toString(false, namespace)); // Don't want infinite recursivive Type : Type : Type ..
+        }
+
+        return sb.toString();
     }
 
 }

@@ -20,17 +20,13 @@ public class Message {
         return String.format("{\"status\":\"%s\",\"data\":%s}", status.toString().toLowerCase(), sj);
     }
 
-//    public static String create(Status status, Function data) {
-//        return String.format("{\"status\":\"%s\",\"data\":[%s,%s]}", status.toString().toLowerCase(), jsonOfFunction(data), jsonOfFunction(data.getType()));
-//    }
-
-    public static String create(Status status, List<Function> keys, List<List<Function>> data) {
+    public static String create(Status status, List<String> keys, List<List<String>> data) {
         int n = keys.size();
         StringJoiner sjList = new StringJoiner(",", "[", "]");
-        for(List<Function> result : data) {
+        for(List<String> result : data) {
             StringJoiner sjMap = new StringJoiner(",","{","}");
             for(int i = 0;i < n; ++i)
-                sjMap.add("\"" + escape(keys.get(i).toString()) + "\":\"" + escape(result.get(i).toFullString()) + "\"");
+                sjMap.add("\"" + escape(keys.get(i)) + "\":\"" + escape(result.get(i)) + "\"");
             sjList.add(sjMap.toString());
         }
         return String.format("{\"status\":\"%s\",\"data\":%s}", status.toString().toLowerCase(), sjList);

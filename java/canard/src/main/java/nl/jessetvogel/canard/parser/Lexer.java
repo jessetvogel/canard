@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 class Lexer {
 
     private static final List<String> KEYWORDS = List.of("let", "def", "check", "search", "import", "namespace", "end", "open", "close", "exit", "inspect");
-    private static final List<String> SEPARATORS = List.of(":", "(", ")", "{", "}", "_", ";", ".", ":=");
+    private static final List<String> SEPARATORS = List.of(":", "(", ")", "{", "}", "_", ";", ".", ":=", "--");
     private static final Pattern PATTERN_NUMBERS = Pattern.compile("^\\d+$");
     private static final Pattern PATTERN_IDENTIFIERS = Pattern.compile("^\\w+$");
     private static final Pattern PATTERN_STRING = Pattern.compile("^\"[^\"]*\"$");
@@ -48,17 +48,32 @@ class Lexer {
                 return makeToken();
             }
 
-            // Comments: mark the end of a token (if there currently is one),
+            // Line comments (--): mark the end of a token (if there currently is one),
             // then continue discarding characters until a newline appears
-            if (c.equals('#')) {
+            if (c.equals('-') && scanner.prevChar() != null && scanner.prevChar().equals('-')) {
+                sb.deleteCharAt(sb.length() - 1); // Remove the first '-'
                 Token token = (sb.length() != 0) ? makeToken() : null;
 
                 do {
                     c = scanner.get();
                 } while (c != null && !c.equals('\n'));
 
-                if (c != null)
+                if (c != null) // include the newlines themselves
                     sb.append(c);
+
+                line = scanner.line;
+                column = scanner.column;
+                tokenize(sb.toString());
+                return (token != null) ? token : getToken();
+            }
+
+            // Block comments (/- * -/): do a similar thing as line comments
+            if (c.equals('-') && scanner.prevChar() != null && scanner.prevChar().equals('/')) {
+                Token token = (sb.length() != 0) ? makeToken() : null;
+
+                do {
+                    c = scanner.get();
+                } while (c != null && !(scanner.prevChar().equals('-') && c.equals('/')));
 
                 line = scanner.line;
                 column = scanner.column;
@@ -115,15 +130,14 @@ class Lexer {
         if (currentToken != null) {
             currentToken.type = type;
             currentToken.data = str;
-        }
-        else
+        } else
             currentToken = new Token(type, str, line, column);
         return true;
     }
 
     private Token makeToken() throws LexerException {
         if (currentToken == null) {
-            String message = "Unknown token '" + sb + "'";
+            String message = "unknown token '" + sb + "'";
             sb.setLength(0);
             throw new LexerException(message);
         }
