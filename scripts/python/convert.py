@@ -12,7 +12,7 @@ from tex2html import Parser
 
 
 # Specify paths
-doc_path = '../../doc'
+doc_path = '../../web/doc'
 tex_path = '../../tex'
 
 # Create parser

@@ -6,8 +6,6 @@ import os
 import hashlib
 import subprocess
 import shutil
-
-
 # %%
 def tex2svg(tex_file, svg_dest):
     # Paths and filenames
@@ -257,7 +255,9 @@ class Parser:
         print('✅ [{}]'.format(identifier))
         self.identifiers.append(identifier)
         
-        self.output = open(self.output_dir + '/' + identifier.replace('.', '/') + '.html', 'w')
+        output_file = self.output_dir + '/' + identifier.replace('.', '/') + '.html'
+        os.makedirs(os.path.dirname(output_file), exist_ok = True)
+        self.output = open(output_file, 'w')
         self.parse_environment('doc')
         self.output.close()
     

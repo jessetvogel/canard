@@ -59,7 +59,7 @@ public class Query {
         // Add the dependencies of h to the locals of subQuery
         // Then hNew may depend on these new locals
         Set<Function> hNewAllowed = new HashSet<>();
-        if(allowedLocals.containsKey(h)) // Add all that h was allowed to
+        if (allowedLocals.containsKey(h)) // Add all that h was allowed to
             hNewAllowed.addAll(allowedLocals.get(h));
         for (Function.Dependency dependency : h.getDependencies()) {
             subQuery.locals.add(dependency.function);
@@ -82,7 +82,7 @@ public class Query {
         Set<Function> hAllowed = allowedLocals.get(h);
 
         // Check: if thm *itself* is a local: then require that it is allowed for h! This is very important.
-        if(locals.contains(thm) && !hAllowed.contains(thm))
+        if (locals.contains(thm) && (hAllowed == null || !hAllowed.contains(thm)))
             return null;
 
         // Create matcher
@@ -97,8 +97,7 @@ public class Query {
             for (Function thmDep : thmDependencies)
                 allowedLocalsCopy.put(thmDep, hAllowed);
             matcher.setLocalVariables(locals, allowedLocalsCopy);
-        }
-        else {
+        } else {
             // Note: this is important. Even though the current h does not have any allowed locals,
             // still there can be locals, which are *disallowed* for h, so we must pass locals to the matcher
             matcher.setLocalVariables(locals, allowedLocals);
@@ -159,7 +158,7 @@ public class Query {
                         if (f.signatureDependsOn(unmapped))
                             continue;
                         solution = queryToSubQuery.cheapClone(f); // This can be done cheaply, i.e. might preserve f as an indeterminate
-                        if(solution != f)
+                        if (solution != f)
                             solution.setLabel(f.label); // + "'"); // Not really needed, but is pretty
                         newIndeterminates.add(solution);
                         newDepths.add(depths.get(indeterminates.indexOf(f))); // The indeterminate has not changed, so its depth remains the same
@@ -191,7 +190,7 @@ public class Query {
                         if (f.signatureDependsOn(unmapped))
                             continue;
                         argument = queryToSubQuery.clone(f); // Note: no cheap clone here! This might cause confusion e.g. when theorems are applied twice
-                        if(argument != f)
+                        if (argument != f)
                             argument.setLabel(f.label); // + "'"); // Not really needed, but is pretty
                         newIndeterminates.add(argument);
                         newDepths.add(hDepth + 1); // This indeterminate was introduced because of h, so its depth is one more than that of h
@@ -212,13 +211,13 @@ public class Query {
                 // Case f is a local
                 else if (locals.contains(f)) {
                     // If the signature of this local depends on something unmapped, we cannot know yet what to do
-                    if(f.signatureDependsOn(unmapped))
+                    if (f.signatureDependsOn(unmapped))
                         continue;
 
                     // We should clone this dependency (cheaply!) and add it as a local of subQuery
                     Function fClone = queryToSubQuery.cheapClone(f);
                     subQuery.locals.add(fClone);
-                    if(fClone != f) // if something changed, then add as a solution
+                    if (fClone != f) // if something changed, then add as a solution
                         solutions.put(f, fClone);
                     queryToSubQuery.assertMatch(f, fClone);
                     it.remove();
@@ -235,7 +234,7 @@ public class Query {
 
         // Now, subQuery.locals is set.
         // Also subQuery.allowedLocals is set, but with the OLD locals. We simply need to replace those!
-        for(Map.Entry<Function, Set<Function>> entry : subQuery.allowedLocals.entrySet())
+        for (Map.Entry<Function, Set<Function>> entry : subQuery.allowedLocals.entrySet())
             entry.setValue(entry.getValue().stream().map(queryToSubQuery::convert).collect(Collectors.toUnmodifiableSet()));
 
         // Finally, set solution of h, as specialization of thm
@@ -316,6 +315,87 @@ public class Query {
         return initialQuery.indeterminates.stream().map(matcher::convert).collect(Collectors.toUnmodifiableList());
     }
 
+    public boolean injectsInto(Query other) {
+        // Goal is to map (injectively) all my indeterminates to other.indeterminates, but all other.locals to my locals
+        // That is, we are checking if this query searches for less with more information.
+
+        // Probably start at the end, work way towards the beginning
+        // Method should be recursive
+        // Can we just use Matchers ?
+
+        // 1. let f = indeterminates[-1]
+        // 2. for each g in other.indeterminates:
+        //   2.1. Create subMatcher with f -> g. If fail, continue with next g
+        //   2.2. If succeeded, see what indeterminates are mapped, and update the lists of which to map and which are still allowed from other
+        //   2.3. Continue recursively to the next (not yet mapped (also not induced mapped)) indeterminate (from the end, remember)
+
+        // At any point, we need:
+        // - current matcher (possibly null)
+        // - indeterminates yet to be mapped
+        // - allowed other.indeterminates to map to
+
+//        System.out.println("Does [" + this + "] inject into [" + other + "] ? ");
+
+        List<Function> unmapped = new ArrayList<>(indeterminates);
+        List<Function> allowed = new ArrayList<>(other.indeterminates);
+
+        // Removes the intersection of the two lists from both of them!
+        unmapped.removeIf(allowed::remove);
+
+        // So that we start at the back!
+        Collections.reverse(unmapped);
+        Collections.reverse(allowed);
+
+        if (!injectsIntoHelper(null, unmapped, allowed))
+            return false;
+
+
+        // If all is done, match locals!
+        // TODO !!
+
+        return true;
+    }
+
+    private boolean injectsIntoHelper(Matcher matcher, List<Function> unmapped, List<Function> allowed) {
+        // Base case
+        if (unmapped.isEmpty())
+            return true;
+
+        // Try to map the first unmapped Function to some allowed Function
+        Function f = unmapped.get(0);
+        loopG:
+        for (Function g : allowed) {
+            Matcher subMatcher = (matcher == null) ? new Matcher(unmapped) : new Matcher(matcher, unmapped);
+            if (!subMatcher.matches(f, g))
+                continue;
+
+            // Create new unmapped and allowed lists, by removing those which are mapped and to which they are mapped
+            List<Function> newUnmapped = new ArrayList<>();
+            List<Function> newAllowed = new ArrayList<>(allowed);
+            for (Function h : unmapped) {
+                Function k = subMatcher.mapSolution(h);
+                if (k == null)
+                    // Add those which are not yet mapped
+                    newUnmapped.add(h);
+                else {
+                    // If h -> k, remove k from allowed lists
+                    // If list does not contain k, there was some invalid mapping anyway
+                    if (!newAllowed.remove(k))
+                        continue loopG;
+                }
+            }
+
+            if (injectsIntoHelper(subMatcher, newUnmapped, newAllowed))
+                return true;
+        }
+
+        return false;
+    }
+
+    public Query getParent() {
+        return parent;
+    }
+
     public int getDepth() {
         return Collections.max(depths);
     }
@@ -332,7 +412,14 @@ public class Query {
     public String toString() {
         StringBuilder sb = new StringBuilder("Query");
         for (Function f : indeterminates)
-            sb.append(" (").append(f).append(")");
+            sb.append(" (").append(f.toString(true, false)).append(")");
         return sb.toString();
     }
+
+
+//    @Override
+//    public int hashCode() {
+//        return 17;
+//    }
+
 }

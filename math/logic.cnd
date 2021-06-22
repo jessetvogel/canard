@@ -1,0 +1,2 @@
+let not (P : Prop) : Prop
+let modus_tollens {P Q : Prop} (i (p : P) : Q) (nq : not Q) : not P

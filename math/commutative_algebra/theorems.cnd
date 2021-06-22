@@ -1,0 +1,17 @@
+open commutative_algebra.ring
+open commutative_algebra.module
+
+namespace commutative_algebra
+
+-- Theorems
+let domain_of_field {R : Ring} (h : field R) : domain R
+let noetherian_of_field {R : Ring} (h : field R) : noetherian R
+
+let proj_of_free_module {R : Ring} {M : Module R} (h : free M) : projective M
+let flat_of_proj_module {R : Ring} {M : Module R} (h : projective M) : flat M
+def flat_of_free_module {R : Ring} {M : Module R} (h : free M) := flat_of_proj_module (proj_of_free_module h)
+
+let cyclic_module_self (R : Ring) : cyclic (module_self R)
+let free_module_self (R : Ring) : free (module_self R)
+
+end commutative_algebra

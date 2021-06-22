@@ -1,0 +1,147 @@
+{
+	"name": "Canard",
+	"scopeName": "source.canard",
+	"fileTypes": [
+		"canard"
+	],
+	"patterns": [{
+		"include": "#comments"
+	}, {
+		"comment": "declaration by `let`",
+		"begin": "\\b(let)\\b",
+		"end": "$",
+		"beginCaptures": {
+			"1": { "name": "keyword.other.canard" }
+		},
+		"patterns": [{
+			"include": "#comments"
+		}, {
+			"include": "#definition-name"
+		},{
+			"include": "#binders"
+		},{
+			"begin": ":(?!=)",
+			"end": "$",
+			"patterns": [{
+				"include": "#expressions"
+			}]
+		}]
+	}, {
+		"comment": "definition by `def`",
+		"begin": "\\b(def)\\b",
+		"end": "$",
+		"beginCaptures": {
+			"1": { "name": "keyword.other.canard" }
+		},
+		"patterns": [{
+			"include": "#comments"
+		}, {
+			"include": "#definition-name"
+		},{
+			"include": "#binders"
+		},{
+			"begin": ":=",
+			"end": "$",
+			"patterns": [{
+				"include": "#expressions"
+			}]
+		}]
+	}, {
+		"comment": "search query `search`",
+		"begin": "\\b(search)\\b",
+		"end": "$",
+		"beginCaptures": {
+			"1": { "name": "keyword.other.canard" }
+		},
+		"patterns": [{
+			"include": "#comments"
+		}, {
+			"include": "#binders"
+		}]
+	}, {
+		"name": "keyword.other.canard",
+		"match": "\\b(let|def|namespace|end|open|close|import|check|search)\\b"
+	}, {
+		"name": "entity.name.function.canard"
+	}, {
+		"include": "#strings"
+	}],
+	"repository": {
+		"strings": {
+			"name": "string.quoted.double.canard",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [{
+				"name": "constant.character.escape.canard",
+				"match": "\\\\."
+			}]
+		},
+		"comments": {
+			"patterns": [{
+				"name": "comment.line.canard",
+				"begin": "--", "end": "\\n"
+			}, {
+				"name": "comment.block.canard",
+				"begin": "/-", "end": "-/"
+			}]
+		},
+		"definition-name": {
+			"patterns": [{
+				"name": "entity.name.function.canard",
+				"match": "\\b\\w+\\b"
+			}]
+		},
+		"binder-name": {
+			"patterns": [{
+				"name": "variable.parameter.canard",
+				"match": "\\b\\w+\\b"
+			}]
+		},
+		"binders": {
+			"patterns": [{
+				"name": "meta.binder.implicit",
+				"begin": "\\{", "end": "\\}",
+				"beginCaptures": {"0": {"name": "punctuation.definition.binder.implicit.begin.canard"}},
+				"endCaptures": {"0": {"name": "punctuation.definition.binder.implicit.end.canard"}},
+				"patterns" : [{
+					"include": "#binders"
+				}, {
+					"begin": ":", "end": "(?=\\})",
+					"beginCaptures": { "0": { "name": "punctuation.separator.type.canard" }},
+					"patterns": [{
+						"include": "#expressions"
+					}]
+				}, {
+					"include": "#binder-name"
+				}]
+			}, {
+				"name": "meta.binder.explicit.canard",
+				"begin": "\\(", "end": "\\)",
+				"beginCaptures": {"0": {"name": "punctuation.definition.binder.explicit.begin.canard"}},
+				"endCaptures": {"0": {"name": "punctuation.definition.binder.explicit.end.canard"}},
+				"patterns": [{
+					"include": "#binders"
+				}, {
+					"begin": ":", "end": "(?=\\))",
+					"beginCaptures": {"0": {"name": "punctuation.separator.type.canard"}},
+					"patterns": [{
+						"include": "#expressions"
+					}]
+				}, {
+					"include": "#binder-name"
+				}]
+			}]
+		},
+		"expressions": {
+			"patterns": [{
+				"include": "#comments"
+			}, {
+				"name": "storage.type.canard",
+				"match": "\\b(Type|Prop)\\b"
+			}, {
+				"match": "\\b(\\w+\\.)*(\\w+)\\b",
+				"name": "meta.identifier.canard"
+			}]
+		}
+	}
+}

@@ -25,30 +25,56 @@ public class Searcher {
             searchLists.add(space.context.getFunctions());
     }
 
-    private Function skipTilThm = null;
-
     public List<Function> search(Query query) {
         // Clear the queue of queries, and add the query we want to solve for
         queue.clear();
         queue.add(query);
-        skipTilThm = null;
 
         // Now simply find the next solution
         return next();
     }
 
     public List<Function> next() {
+        loopQueue:
         while (!queue.isEmpty()) {
             // Take the first query from the queue, and try to reduce it
             // Note that we peek, and not poll, because we might need it for the next .next()
-            Query q = queue.peek();
+            Query q = queue.poll();
 
 //            System.out.println("Current query: " + q);
 
             // Prepare the query before reducing
             Query subQ = q.abstraction();
-            if(subQ != null)
+            if (subQ != null)
                 q = subQ;
+
+            // Check for redundancies:
+            for (Query r = q.getParent(); r != null; r = r.getParent()) {
+                // If some parent injects into q, then it does not make sense to even consider solving for q: (via q is clearly not the way to go)
+                if (r.injectsInto(q)) {
+//                    System.err.println("[" + q + "] was neglected because one of its parents is [" + r + "]");
+                    continue loopQueue;
+                }
+
+                // If q injects into the parent r, then we can safely delete all other branches coming from that parent r
+                // since any solution of the parent will yield a solution for q
+                if(q.injectsInto(r)) {
+                    Query root = r;
+//                    Query qq = q;
+                    queue.removeIf(s -> {
+                        for(Query t = s.getParent() ; t != null; t = t.getParent())
+                            if(t == root) {
+//                                System.err.println("[" + s + "] was removed (unnecessary) from the queue since [" + root + "] was already partially solved by [" + qq + "]");
+                                return true;
+                            }
+                        return false;
+                    });
+                }
+            }
+
+            // TODO: check for parallel equalities (hash-based) (a.k.a. the diamond problem)
+
+            // Now the actual search begins
 
             // First list to search through is the list of local variables of q
             searchLists.set(0, q.getLocals());
@@ -56,13 +82,7 @@ public class Searcher {
             // Search for a theorem/definition to fill it
             for (Collection<Function> list : searchLists) {
                 for (Function thm : list) {
-                    // Wait for last thm
-                    if(skipTilThm != null) {
-                        if(skipTilThm == thm)
-                            skipTilThm = null;
-                        continue;
-                    }
-
+                    // Try applying thm to reduce the query to a subQuery
                     Query subQuery = q.reduce(thm);
                     if (subQuery == null)
                         continue;
@@ -70,10 +90,8 @@ public class Searcher {
 //                    System.out.println("Reduced query: " + subQuery);
 
                     // If the subQuery is completely solved (i.e. no more indeterminates) we are done!
-                    if (subQuery.solved()) {
-                        skipTilThm = thm; // For next result, know that we should skip until we encounter this this thm again
+                    if (subQuery.solved())
                         return subQuery.getFinalSolutions();
-                    }
 
                     // Add all reductions to the end of the queue
                     // but only if it does not exceed the search depth!
@@ -81,7 +99,6 @@ public class Searcher {
                         queue.add(subQuery);
                 }
             }
-            queue.remove();
         }
 
         return null;

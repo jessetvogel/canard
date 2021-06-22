@@ -1,0 +1,5 @@
+namespace group_theory
+
+let symmetric_group (S : Set) : Group
+
+end

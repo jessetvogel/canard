@@ -52,6 +52,20 @@
     - If we ask a question that a parent is also asking (i.e. detecting a loop), just stop
     - How to do this ?
     - Compare a query to all of its parents. If the parent 'injects into the query', we can skip the query
+        - Note that this is the same function as the one below here, where we called it 'being strictly smaller' (although equal is also fine)
+        - The important condition is: Q_1 < Q_2 if and only if a solution for Q_2 implies a solution for Q_1
+    - Before searching (maybe during as well?) split the query in its independent parts ?
+    - If a query is stricly smaller than one of its parents, we can remove all other branches coming from that parent except this one
+        - The idea is that if a solution for the parent exists, then there should also exist a solution for the query that we are continuing with
+        - This also solves the 'independent parts' problem (partly), since if one independent part is solved for, all other trials of that part will be deleted
+    - Diamond problem: what if two branches are equal. Also, how to detect such a thing ?? Hashes ??
+        - If we get at a point where we can actually tell two queries are equivalent, keep the one with the lowest depth (so we can search further)
+
+    - When comparing queries, it makes sense to at least send overlapping indeterminates (or local variables) to themselves
+    -
+
+
+
 
 [ LESS PRIORITY ]
 

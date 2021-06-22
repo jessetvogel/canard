@@ -19,7 +19,7 @@ $descriptorspec = array(
 // Create process
 $cwd = null;
 $env = array();
-$process = proc_open('java -jar ../../bin/canard-1.0.jar --json ../../math/main.txt', $descriptorspec, $pipes, $cwd, $env);
+$process = proc_open('java -jar ../../bin/canard-1.0.jar --json --explicit ../../math/main.cnd', $descriptorspec, $pipes, $cwd, $env);
  
 if(!is_resource($process))
     response_server_error('failed to start canard');

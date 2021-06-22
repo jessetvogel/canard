@@ -1,0 +1,31 @@
+namespace commutative_algebra
+
+-- Type definitions
+let Ring : Type
+let Algebra (R : Ring) : Type -- Although actually, can we define an Algebra as a `Morphism R _` ?
+let Module (R : Ring) : Type
+
+-- Constructions
+let algebra_of_ring_morphism {R S : Ring} (f : Morphism R S) : Algebra R
+def algebra_self (R : Ring) := algebra_of_ring_morphism (id R)
+let module_of_ring_morphism {R S : Ring} (f : Morphism R S) : Module R
+let module_of_algebra {R : Ring} (A : Algebra R) : Module R
+def module_self (R : Ring) := module_of_ring_morphism (id R)
+
+-- Ring properties
+namespace ring
+    let domain field artin noetherian local gorenstein euclidean reduced (R : Ring) : Prop
+    let ideal (R : Ring) : Type -- define as a submodule of module_self R ? 
+    let maximal_ideal prime_ideal radical_ideal {R : Ring} (I : ideal R) : Prop
+    let nilradical zero_ideal unit_ideal jacobson_radical (R : Ring) : ideal R
+end ring
+
+-- Module properties
+namespace module
+    let flat free faithful injective projective simple cyclic {R : Ring} (M : Module R) : Prop
+end module
+
+end commutative_algebra
+
+import "theorems.cnd"
+import "examples.cnd"

@@ -1,0 +1,28 @@
+open algebraic_geometry
+open commutative_algebra
+
+open algebraic_geometry.scheme
+open algebraic_geometry.morphism
+
+namespace algebraic_geometry
+
+def spec_ZZ := Spec ZZ -- Even though this is two steps, this is the simplest scheme, so we want to consider it as a first case
+
+let empty_scheme : Scheme
+
+let affine_line (X : Scheme) : Scheme
+let affine_line_to_base (X : Scheme) : Morphism (affine_line X) X
+let affine_line_affine (R : Ring) : scheme.affine (affine_line (Spec R))
+let affine_line_to_base_ff (X : Scheme) : faithfully_flat (affine_line_to_base X)
+let affine_line_to_base_smooth (X : Scheme) : smooth (affine_line_to_base X)
+let affine_line_to_base_fp (X : Scheme) : finitely_presented (affine_line_to_base X)
+
+let proj_line (X : Scheme) : Scheme
+
+let spec_ZZ_integral : integral (Spec ZZ)
+
+let inf_union_spec_QQ : Scheme
+let inf_union_spec_QQ_not_quasi_compact : not (scheme.quasi_compact inf_union_spec_QQ)
+let proj_line_not_affine (X : Scheme) : not (scheme.affine (proj_line X))
+
+end algebraic_geometry

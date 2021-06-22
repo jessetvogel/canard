@@ -58,3 +58,7 @@ function hasClass(elem, c) {
 function setHTML(elem, html) {
     elem.innerHTML = html;
 }
+
+function setText(elem, text) {
+    elem.innerText = text;
+}

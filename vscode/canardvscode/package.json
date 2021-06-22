@@ -1,0 +1,25 @@
+{
+    "name": "canard-vscode",
+    "displayName": "canard-vscode",
+    "description": "canard-vscode",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.57.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "canard",
+            "aliases": ["Canard", "canard"],
+            "extensions": [".cnd"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "canard",
+            "scopeName": "source.canard",
+            "path": "./syntaxes/canard.tmLanguage.json"
+        }]
+    }
+}

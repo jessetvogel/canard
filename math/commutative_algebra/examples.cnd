@@ -1,0 +1,29 @@
+open commutative_algebra
+
+open commutative_algebra.ring
+open commutative_algebra.module
+
+namespace commutative_algebra
+
+-- Examples
+let ZZ QQ RR CC: Ring
+
+let ZZ_is_domain : domain ZZ
+let QQ_is_field : field QQ
+let RR_is_field : field RR
+let CC_is_field : field CC
+
+let ZZ_to_QQ : Morphism ZZ QQ
+let QQ_to_RR : Morphism QQ RR
+let RR_to_CC : Morphism RR CC
+def ZZ_to_RR := comp QQ_to_RR ZZ_to_QQ
+def QQ_to_CC := comp RR_to_CC QQ_to_RR
+
+let FF2 : Ring
+let FF2_is_field : field FF2
+
+let ZZ_to_FF2 : Morphism ZZ FF2
+
+let FF2_over_ZZ_not_flat : not (flat (module_of_ring_morphism ZZ_to_FF2))
+
+end commutative_algebra
