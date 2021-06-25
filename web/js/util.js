@@ -23,6 +23,14 @@ function onClick(elem, f) {
     elem.addEventListener('click', f);
 }
 
+function onContextMenu(elem, f) {
+    elem.addEventListener('contextmenu', f);
+}
+
+function onChange(elem, f) {
+    elem.addEventListener('change', f);
+}
+
 function onInput(elem, f) {
     elem.addEventListener('input', f);
 }

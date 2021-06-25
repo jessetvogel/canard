@@ -22,7 +22,7 @@ end ring
 
 -- Module properties
 namespace module
-    let flat free faithful injective projective simple cyclic {R : Ring} (M : Module R) : Prop
+    let flat free faithful injective projective simple cyclic finitely_generated {R : Ring} (M : Module R) : Prop
 end module
 
 end commutative_algebra

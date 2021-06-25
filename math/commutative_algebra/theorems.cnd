@@ -6,6 +6,7 @@ namespace commutative_algebra
 -- Theorems
 let domain_of_field {R : Ring} (h : field R) : domain R
 let noetherian_of_field {R : Ring} (h : field R) : noetherian R
+let reduced_of_domain {R : Ring} (h : domain R) : reduced R
 
 let proj_of_free_module {R : Ring} {M : Module R} (h : free M) : projective M
 let flat_of_proj_module {R : Ring} {M : Module R} (h : projective M) : flat M

@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/fonts.css">
+    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3.0.1/es5/tex-mml-chtml.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/api.js"></script>
+    <script type="text/javascript" src="js/search.js"></script>
+</head>
+
+<body>
+
+    <div id="object-bar">
+        <div><input id="object-name" class="math" placeholder="X" /></div><span>:</span>
+        <div><select id="object-type"></select></div>
+        <div id="object-type-arguments" style="display: none;"></div>
+        <div><button id="object-add">+ add</button></div>
+    </div>
+
+    <div id="object-overview">
+        <div id="object-list"></div>
+        <div id="object-properties"></div>
+    </div>
+
+    <div id="search-bar">
+        <button id="button-search">Search</button>
+        <a href="help.html" target="_blank">Help</a>
+    </div>
+
+    <div id="output"></div>
+
+    <script>init();</script>
+</body>
+
+</html>

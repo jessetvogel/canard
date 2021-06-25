@@ -9,6 +9,7 @@ namespace commutative_algebra
 let ZZ QQ RR CC: Ring
 
 let ZZ_is_domain : domain ZZ
+let ZZ_not_field : not (field ZZ)
 let QQ_is_field : field QQ
 let RR_is_field : field RR
 let CC_is_field : field CC
@@ -25,5 +26,7 @@ let FF2_is_field : field FF2
 let ZZ_to_FF2 : Morphism ZZ FF2
 
 let FF2_over_ZZ_not_flat : not (flat (module_of_ring_morphism ZZ_to_FF2))
+
+
 
 end commutative_algebra

@@ -315,7 +315,7 @@ public class Parser {
             solution = (i == 0) ? searcher.search(query) : searcher.next();
             if (solution == null)
                 break;
-            results.add(solution.stream().map(f -> f.toString(true, explicit)).collect(Collectors.toUnmodifiableList()));
+            results.add(solution.stream().map(f -> f.toString(false, explicit)).collect(Collectors.toUnmodifiableList()));
         }
 
         long endTime = System.nanoTime();
