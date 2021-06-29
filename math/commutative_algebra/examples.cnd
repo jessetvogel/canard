@@ -22,6 +22,7 @@ def QQ_to_CC := comp RR_to_CC QQ_to_RR
 
 let FF2 : Ring
 let FF2_is_field : field FF2
+let FF2_is_finite : finite FF2
 
 let ZZ_to_FF2 : Morphism ZZ FF2
 

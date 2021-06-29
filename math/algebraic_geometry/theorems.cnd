@@ -86,11 +86,6 @@ let src_jc_of_lft_trg_jc {X Y : Scheme} {f : Morphism X Y} (h1 : jacobson Y) (h2
 let sp_of_src_af {X Y : Scheme} (f : Morphism X Y) (h : scheme.affine X) : morphism.separated f
 let trg_sp_of_uc_sj_src_sp {X Y : Scheme} {f : Morphism X Y} (h1 : scheme.separated X) (h2 : universally_closed f) (h3 : surjective f) : scheme.separated Y
 let trg_qsp_of_uc_sj_src_qsp {X Y : Scheme} {f : Morphism X Y} (h1 : scheme.quasi_separated X) (h2 : universally_closed f) (h3 : surjective f) : scheme.quasi_separated Y
-
-let left_qcomp {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h1 : morphism.quasi_separated g) (h2 : morphism.quasi_compact (comp g f)) : morphism.quasi_compact f
-let left_qsep {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h : morphism.quasi_separated (comp g f)) : morphism.quasi_separated f
-let left_sep {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h : morphism.separated (comp g f)) : morphism.separated f
-let left_lft {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h : locally_finite_type (comp g f)) : locally_finite_type f
 let comp_qsep_left_univcl_surj_imp_right_qsep {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h1 : universally_closed f) (h2 : surjective f) (h3 : morphism.quasi_separated (comp g f)) : morphism.quasi_separated g
 let comp_sep_left_univcl_surj_imp_right_qsep {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h1 : universally_closed f) (h2 : surjective f) (h3 : morphism.quasi_separated (comp g f)) : morphism.quasi_separated g
 
@@ -115,16 +110,22 @@ let fl_of_fpqc {X Y : Scheme} {f : Morphism X Y} (h : fpqc_cover f) : flat f
 let sj_of_fpqc {X Y : Scheme} {f : Morphism X Y} (h : fpqc_cover f) : surjective f
 
 -- Composition theorems
-let comp {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} {P {T S : Scheme} (phi : Morphism T S) : Prop} (h1 : P f) (h2 : P g) (h3 : stable_composition P) : P (comp g f)
-let stable_comp_univcl : stable_composition universally_closed
-let stable_comp_proper : stable_composition proper
-let stable_comp_qsep : stable_composition morphism.quasi_separated
-let stable_comp_sep : stable_composition morphism.separated
+let property_comp {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} {P {T S : Scheme} (phi : Morphism T S) : Prop} (h1 : P f) (h2 : P g) (h3 : stable_composition P) : P (comp g f)
+let stable_comp_uc : stable_composition universally_closed
+let stable_comp_pr : stable_composition proper
+let stable_comp_qsp : stable_composition morphism.quasi_separated
+let stable_comp_sp : stable_composition morphism.separated
 let stable_comp_lft : stable_composition locally_finite_type
-let stable_comp_qcomp : stable_composition morphism.quasi_compact
+let stable_comp_qc : stable_composition morphism.quasi_compact
 let stable_comp_lfp : stable_composition locally_finitely_presented
 let stable_comp_fp : stable_composition finitely_presented
 let stable_comp_flat : stable_composition flat
 -- let stable_comp_iso : stable_composition isomorphism
+
+let property_left {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} {P {T S : Scheme} (phi : Morphism T S) : Prop} (h1 : P g) (h2 : P (comp g f)) (h3 : stable_left P) : P f
+let left_qc : stable_left morphism.quasi_compact
+let left_qsp : stable_left morphism.quasi_separated
+let left_sp : stable_left morphism.separated
+let left_lft : stable_left morphism.locally_finite_type
 
 end algebraic_geometry

@@ -14,7 +14,7 @@ def module_self (R : Ring) := module_of_ring_morphism (id R)
 
 -- Ring properties
 namespace ring
-    let domain field artin noetherian local gorenstein euclidean reduced (R : Ring) : Prop
+    let domain field artin noetherian local gorenstein euclidean reduced valuation dvr finite dedekind integrally_closed ufd pid (R : Ring) : Prop
     let ideal (R : Ring) : Type -- define as a submodule of module_self R ? 
     let maximal_ideal prime_ideal radical_ideal {R : Ring} (I : ideal R) : Prop
     let nilradical zero_ideal unit_ideal jacobson_radical (R : Ring) : ideal R

@@ -4,7 +4,7 @@ include 'php_util.php';
 
 // Get user data
 $query = POST_data()['query'];
-if($query == null)
+if($query === null)
     response_bad_request('no query given');
 if(strpos($query, 'import') !== false)
     response_bad_request('import not allowed');
@@ -33,8 +33,8 @@ if(!is_resource($process))
 // Write commands to process
 fwrite($pipes[0], 'open commutative_algebra;');
 fwrite($pipes[0], 'open algebraic_geometry;');
-fwrite($pipes[0], $query . '; ');
-fwrite($pipes[0], 'exit;');
+fwrite($pipes[0], $query);
+fwrite($pipes[0], ";\n/--/;exit;");
 fclose($pipes[0]);
 
 

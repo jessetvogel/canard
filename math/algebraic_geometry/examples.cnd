@@ -18,11 +18,16 @@ let affine_line_to_base_smooth (X : Scheme) : smooth (affine_line_to_base X)
 let affine_line_to_base_fp (X : Scheme) : finitely_presented (affine_line_to_base X)
 
 let proj_line (X : Scheme) : Scheme
+let proj_line_not_affine (X : Scheme) : not (scheme.affine (proj_line X)) -- only if the scheme is non-empty ..
+let proj_line_integral {X : Scheme} (h : integral X) : integral (proj_line X)
+let proj_line_separated {X : Scheme} (h : scheme.separated X) : scheme.separated (proj_line X)
 
 let spec_ZZ_integral : integral (Spec ZZ)
 
 let inf_union_spec_QQ : Scheme
 let inf_union_spec_QQ_not_quasi_compact : not (scheme.quasi_compact inf_union_spec_QQ)
-let proj_line_not_affine (X : Scheme) : not (scheme.affine (proj_line X))
+
+let open_complement {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Scheme
+let open_complement_inclusion {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Morphism (open_complement h) X
 
 end algebraic_geometry

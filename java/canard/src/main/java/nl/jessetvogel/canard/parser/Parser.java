@@ -25,6 +25,7 @@ public class Parser {
     private List<String> importedFiles;
 
     public enum Format {PLAIN, JSON}
+
     private Format format = Format.PLAIN;
     private boolean explicit = false;
 
@@ -83,7 +84,7 @@ public class Parser {
             currentToken = null;
             return token;
         } else {
-            throw new ParserException(currentToken, String.format("expected %s (%s) but found %s (%s)", data != null ? data : "\b", type, currentToken.data != null ? currentToken.data : "\b", currentToken.type));
+            throw new ParserException(currentToken, String.format("expected %s%s but found %s%s", type.toString().toLowerCase(), data != null ? " '" + data + "'" : "", currentToken.type.toString().toLowerCase(), currentToken.data != null ? " '" + currentToken.data + "'" : ""));
         }
     }
 
@@ -93,7 +94,7 @@ public class Parser {
         try {
             while (parseStatement()) ;
             if (!found(Token.Type.EOF))
-                throw new ParserException(currentToken, "expected statement, got " + consume().data);
+                throw new ParserException(currentToken, "expected statement, got '" + consume().data + "'");
             consume(Token.Type.EOF);
             return true;
         } catch (ParserException e) {
@@ -289,11 +290,11 @@ public class Parser {
         // Parse indeterminates
         List<Function> indeterminates = new ArrayList<>();
         Context subContext = new Context(currentNamespace.context);
-        while (found(Token.Type.SEPARATOR, "(")) {
-            consume();
+        do {
+            consume(Token.Type.SEPARATOR, "(");
             indeterminates.addAll(parseFunctions(subContext));
             consume(Token.Type.SEPARATOR, ")");
-        }
+        } while (found(Token.Type.SEPARATOR, "("));
 
         // Number of results wanted
         int N = found(Token.Type.NUMBER) ? Integer.parseInt(consume().data) : 1;

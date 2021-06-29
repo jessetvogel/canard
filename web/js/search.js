@@ -8,7 +8,7 @@ const types = {
     'Ring': [],
     'RingMorphism': [ 'Ring', 'Ring' ],
     'Module': [ 'Ring' ],
-    'ModuleMorphism': [ 'Module', 'Module' ],
+    'ModuleMorphism': [ 'Module \\w+', 'Module \\w+' ],
     'Scheme': [],
     'SchemeMorphism': [ 'Scheme', 'Scheme' ],
     'Sheaf': [ 'Scheme' ],
@@ -23,11 +23,23 @@ const properties = {
         'ring.artin': 'artin',
         'ring.gorenstein': 'Gorenstein',
         'ring.local': 'local',
+        'ring.euclidean': 'Euclidean',
+        'ring.valuation': 'valuation ring',
+        'ring.finite': 'finite',
+        'ring.dedekind': 'Dedekind',
+        'ring.pid': 'principal ideal domain',
+        'ring.ufd': 'unique factorization domain',
+        'ring.dvr': 'discrete valuation ring',
+        'ring.integrally_closed': 'integrally closed',
     },
     'Ring Morphism': {
         
     },
     'Module': {
+        'module.faithful': 'faithful',
+        'module.simple': 'simple',
+        'module.cyclic': 'cyclic',
+        'module.finitely_generated': 'finitely generated',
         'module.flat': 'flat',
         'module.free': 'free',
         'module.projective': 'projective',
@@ -36,8 +48,55 @@ const properties = {
     'Scheme': {
         'scheme.affine': 'affine',
         'scheme.quasi_compact': 'quasi-compact',
+        'scheme.regular': 'regular',
+        'scheme.noetherian': 'noetherian',
+        'scheme.locally_noetherian': 'locally noetherian',
+        'scheme.reduced': 'reduced',
+        'scheme.irreducible': 'irreducible',
+        'scheme.cohen_macaulay': 'cohen-macaulay',
+        'scheme.excellent': 'excellent',
         'scheme.separated': 'separated',
         'scheme.quasi_separated': 'quasi-separated',
+        'scheme.jacobson': 'jacobson',
+        'scheme.normal': 'normal',
+        'scheme.integral': 'integral',
+        'scheme.finite_dimensional': 'finite dimensional',
+        'scheme.connected' : 'connected'
+    },
+    'SchemeMorphism': {
+        'morphism.formally_etale': 'formally étale',
+        'morphism.formally_unramified': 'formally unramified',
+        'morphism.formally_smooth': 'formally smooth',
+        'morphism.proper': 'proper',
+        'morphism.finite': 'finite',
+        'morphism.quasi_finite': 'quasi-finite',
+        'morphism.flat': 'flat',
+        'morphism.affine': 'affine',
+        'morphism.quasi_compact': 'quasi-compact',
+        'morphism.separated': 'separated',
+        'morphism.quasi_separated': 'quasi-separated',
+        'morphism.regular': 'regular',
+        'morphism.finitely_presented': 'finitely-presented',
+        'morphism.locally_finite_type': 'locally finite type',
+        'morphism.locally_finitely_presented': 'locally finitely presented',
+        'morphism.etale': 'étale',
+        'morphism.smooth': 'smooth',
+        'morphism.unramified': 'unramified',
+        'morphism.finite_type': 'finite type',
+        'morphism.open_morphism': 'open morphism',
+        'morphism.universally_closed': 'universally closed',
+        'morphism.immersion': 'immersion',
+        'morphism.open_immersion': 'open immersion',
+        'morphism.closed_immersion': 'closed immersion',
+        'morphism.finite_fibers': 'finite fibers',
+        'morphism.surjective': 'surjective',
+        'morphism.zariski_cover': 'zariski cover',
+        'morphism.etale_cover': 'etale cover',
+        'morphism.smooth_cover': 'smooth cover',
+        'morphism.syntomic_cover': 'syntomic cover',
+        'morphism.fppf_cover': 'fppf cover',
+        'morphism.fpqc_cover': 'fpqc cover',
+        'morphism.faithfully_flat': 'faithfully flat'
     },
     'Sheaf': {
         'sheaf.quasi_coherent': 'quasi-coherent',
@@ -58,7 +117,7 @@ function toQuery(context) {
         query += `(${obj} : ${type}) `;
         // Object properties
         for(let property in context.properties[obj])
-            query += `(_h${i++} : ${context.properties[obj][property] ? property + ' ' + obj : 'not (' + property + ' ' + obj + ')'}) `;
+            query += `(h${i++} : ${context.properties[obj][property] ? property + ' ' + obj : 'not (' + property + ' ' + obj + ')'}) `;
     }
     return query.slice(0, -1);
 }
@@ -69,6 +128,10 @@ function toSearchQuery(context) {
 
 function toProveQuery(context, conclusion) {
     return `search (P ${toQuery(context)} : ${conclusion})` + `search (P ${toQuery(context)} : not (${conclusion}))`;
+}
+
+function toContradictionQuery(context) {
+    return `search (P (True : Prop) ${toQuery(context)} : not True)`;
 }
 
 // ------------------------------------------------------------
@@ -192,6 +255,9 @@ function selectObject(name) {
             }).catch(message => {
                 alert('Fail: ' + message);
             });
+
+            // Loading icon
+            setHTML($('#output'), '<div class="loading"></div>');
         });
 
         const div = create('div', '');
@@ -247,6 +313,14 @@ function init() {
 
     // Click search <button>
     onClick($('#button-search'), event => {
+        // If there are no objects, just clear output
+        if(context.objects.length == 0) {
+            clear($('#output'));
+            alert('Please provide some data');
+            return;
+        }
+
+        // Construct query and make API call
         const query = toSearchQuery(context);
         console.log(query);
 
@@ -268,14 +342,49 @@ function init() {
                     let output = '';
                     for(let solution of solutions) {
                         for(let X in solution)
-                            output += '<span style="font-size: 1.25rem;" class="tt"><span style="color: rgba(0, 0, 0, 0.5);">' + X + '</span>: '+ typeset(solution[X]) + '</span><br/>';
+                            output += '<span style="font-size: 1.125rem;" class="tt"><span style="color: rgba(0, 0, 0, 0.5);">' + X + '</span>: '+ typeset(solution[X]) + '</span><br/>';
                     }
                     setHTML($('#output'), output);
                     return;
             }
         }).catch(message => {
-            alert('Oops, something failed!');
-            console.log(message);
+            alert(message);
+        });
+
+        // Set loading icon
+        setHTML($('#output'), '<div class="loading"></div>');
+    });
+
+    // Click contradiction <button>
+    onClick($('#button-contradiction'), event => {
+        const query = toContradictionQuery(context);
+        console.log(query);
+
+        api(query).then(response => {
+            switch(response.status) {
+                case 'error':
+                    setText($('#output'), 'Error: ' + response.message);
+                    return;
+                case 'fail':
+                    setText($('#output'), 'Fail: ' + response.data);
+                    return;
+                case 'success':
+                    const solutions = response.data[0].data;
+                    if(solutions.length == 0) {
+                        setText($('#output'), 'No solutions found..');
+                        return;
+                    }
+                    
+                    let output = '';
+                    for(let solution of solutions) {
+                        for(let X in solution)
+                            output += '<span style="font-size: 1.125rem;" class="tt"><span style="color: rgba(0, 0, 0, 0.5);">' + X + '</span>: '+ typeset(solution[X]) + '</span><br/>';
+                    }
+                    setHTML($('#output'), output);
+                    return;
+            }
+        }).catch(message => {
+            alert(message);
         });
 
         // Set loading icon

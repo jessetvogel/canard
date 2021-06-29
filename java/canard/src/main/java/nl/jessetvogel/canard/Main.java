@@ -65,6 +65,6 @@ public class Main {
         parser.setFormat(format, explicit);
 
         // Keep parsing (until exit) via System.in
-        while (true) parser.parse();
+        parser.parse();
     }
 }

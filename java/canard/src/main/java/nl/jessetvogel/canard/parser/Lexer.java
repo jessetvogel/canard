@@ -69,6 +69,8 @@ class Lexer {
 
             // Block comments (/- * -/): do a similar thing as line comments
             if (c.equals('-') && scanner.prevChar() != null && scanner.prevChar().equals('/')) {
+                // Remove the '/' from the sb before making a token!
+                sb.setLength(sb.length() - 1);
                 Token token = (sb.length() != 0) ? makeToken() : null;
 
                 do {

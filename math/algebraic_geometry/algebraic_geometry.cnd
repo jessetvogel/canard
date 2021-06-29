@@ -22,7 +22,7 @@ namespace morphism
 let formally_etale formally_unramified formally_smooth proper finite quasi_finite flat affine quasi_compact separated quasi_separated regular finitely_presented locally_finite_type locally_finitely_presented etale smooth unramified finite_type open_morphism universally_closed immersion open_immersion closed_immersion finite_fibers surjective zariski_cover etale_cover smooth_cover syntomic_cover fppf_cover fpqc_cover faithfully_flat {X Y : Scheme} (f : Morphism X Y) : Prop
 
 -- Property properties
-let stable_composition (P {X Y : Scheme} (f : Morphism X Y) : Prop) : Prop
+let stable_composition stable_left (P {X Y : Scheme} (f : Morphism X Y) : Prop) : Prop
 end morphism
 
 -- Sheaves
