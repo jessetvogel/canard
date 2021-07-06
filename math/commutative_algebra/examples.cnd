@@ -6,7 +6,7 @@ open commutative_algebra.module
 namespace commutative_algebra
 
 -- Examples
-let ZZ QQ RR CC: Ring
+let ZZ QQ RR CC : Ring
 
 let ZZ_is_domain : domain ZZ
 let ZZ_not_field : not (field ZZ)

@@ -1,4 +1,4 @@
-package nl.jessetvogel.canard.search;
+package nl.jessetvogel.canard.searcher;
 
 import nl.jessetvogel.canard.core.Function;
 import nl.jessetvogel.canard.core.Matcher;
@@ -93,7 +93,9 @@ public class Query {
 
         // Thm arguments have same allowances as h (if there are any)
         if (hAllowed != null && !hAllowed.isEmpty()) {
-            Map<Function, Set<Function>> allowedLocalsCopy = new HashMap<>(allowedLocals);
+            // TODO: apparently it is slow to constantly copy the hashmap. Can we think of an alternative ??
+            //  - Maybe only check afterwards if the solution is actually allowed ?
+            Map<Function, Set<Function>> allowedLocalsCopy = new HierarchicalMap<>(allowedLocals);
             for (Function thmDep : thmDependencies)
                 allowedLocalsCopy.put(thmDep, hAllowed);
             matcher.setLocalVariables(locals, allowedLocalsCopy);
@@ -144,7 +146,7 @@ public class Query {
                 Function f = it.next();
                 // When f is an indeterminate of this query
                 if (indeterminates.contains(f)) {
-                    Function solution = matcher.mapSolution(f);
+                    Function solution = matcher.getSolution(f);
                     if (solution != null) {
                         // If f has a solution, the solution must not depend on any unmapped indeterminate
                         // And, in this case, we simply convert along the new matcher
@@ -170,6 +172,7 @@ public class Query {
                     // Store the solution, un-mark as unmapped, match, and indicate that changes are made
                     if (solution != f)
                         solutions.put(f, solution);
+
                     queryToSubQuery.assertMatch(f, solution);
                     it.remove();
                     changes = true;
@@ -177,7 +180,7 @@ public class Query {
                 }
                 // Case it is a dependency of thm:
                 else if (thmDependencies.contains(f)) {
-                    Function argument = matcher.mapSolution(f);
+                    Function argument = matcher.getSolution(f);
                     if (argument != null) {
                         // If the argument is set, the argument must not depend on unmapped stuff
                         // And, in that case, convert along the new matcher
@@ -288,15 +291,13 @@ public class Query {
                 g = matcher.convert(g);
 
                 // Case f = h, may need to convert the dependencies
-                if (f == h) {
-                    if (!h.getDependencies().isEmpty()) {
-                        try {
-                            g = g.specialize(Collections.emptyList(), h.getDependencies().stream().map(matcher::convert).collect(Collectors.toUnmodifiableList()));
-                        } catch (Function.SpecializationException e) {
-                            e.printStackTrace();
-                            assert (false);
-                            return null;
-                        }
+                if (f == h && !h.getDependencies().isEmpty()) {
+                    try {
+                        g = g.specialize(Collections.emptyList(), h.getDependencies().stream().map(matcher::convert).collect(Collectors.toUnmodifiableList()));
+                    } catch (Function.SpecializationException e) {
+                        e.printStackTrace();
+                        assert (false);
+                        return null;
                     }
                 }
 
@@ -336,35 +337,34 @@ public class Query {
 
 //        System.out.println("Does [" + this + "] inject into [" + other + "] ? ");
 
-        List<Function> unmapped = new ArrayList<>(indeterminates);
-        List<Function> allowed = new ArrayList<>(other.indeterminates);
-
-        // Removes the intersection of the two lists from both of them!
-        unmapped.removeIf(allowed::remove);
-
-        // So that we start at the back!
-        Collections.reverse(unmapped);
-        Collections.reverse(allowed);
-
-        if (!injectsIntoHelper(null, unmapped, allowed))
+        // Shortcut: if this is 'bigger' than other, it won't work
+        if (indeterminates.size() > other.indeterminates.size())
             return false;
 
+        return injectsIntoHelper(null, new ArrayList<>(indeterminates), new ArrayList<>(other.indeterminates));
 
-        // If all is done, match locals!
-        // TODO !!
-
-        return true;
+        // TODO: actually, we would probably also need to check for the local variables..
     }
 
     private boolean injectsIntoHelper(Matcher matcher, List<Function> unmapped, List<Function> allowed) {
         // Base case
-        if (unmapped.isEmpty())
+        int n = unmapped.size();
+        if (n == 0)
             return true;
 
-        // Try to map the first unmapped Function to some allowed Function
-        Function f = unmapped.get(0);
+        // Starting at the back, try to map some unmapped Function to some allowed Function
+        Function f = unmapped.get(n - 1);
+
+        // If f is contained in allowed as well, we will assume that should be the assignment!
+        if (allowed.remove(f)) {
+            unmapped.remove(n - 1);
+            return injectsIntoHelper(matcher, unmapped, allowed);
+        }
+
+        // Again starting at the back, find some allowed Function g to match our f
         loopG:
-        for (Function g : allowed) {
+        for (int j = allowed.size() - 1; j >= 0; j--) {
+            Function g = allowed.get(j);
             Matcher subMatcher = (matcher == null) ? new Matcher(unmapped) : new Matcher(matcher, unmapped);
             if (!subMatcher.matches(f, g))
                 continue;
@@ -373,22 +373,21 @@ public class Query {
             List<Function> newUnmapped = new ArrayList<>();
             List<Function> newAllowed = new ArrayList<>(allowed);
             for (Function h : unmapped) {
-                Function k = subMatcher.mapSolution(h);
+                Function k = subMatcher.getSolution(h);
                 if (k == null)
                     // Add those which are not yet mapped
                     newUnmapped.add(h);
                 else {
                     // If h -> k, remove k from allowed lists
-                    // If list does not contain k, there was some invalid mapping anyway
+                    // If list does not contain k, there was some invalid mapping anyway, so we continue
                     if (!newAllowed.remove(k))
                         continue loopG;
                 }
             }
-
+            // Now simply recursively find a match for the next unmapped
             if (injectsIntoHelper(subMatcher, newUnmapped, newAllowed))
                 return true;
         }
-
         return false;
     }
 
@@ -416,10 +415,23 @@ public class Query {
         return sb.toString();
     }
 
+    private Integer hashCode = null;
 
-//    @Override
-//    public int hashCode() {
-//        return 17;
-//    }
+    @Override
+    public int hashCode() {
+        // If hashCode was already computed return
+        if (hashCode != null)
+            return hashCode;
 
+        // TODO: do something more clever than this ? Although it should also not be too expensive!
+        hashCode = indeterminates.size();
+        for (Function f : indeterminates)
+            hashCode += f.getType().getBase().hashCode();
+
+        return hashCode;
+    }
+
+    public Function getLastIndeterminate() {
+        return indeterminates.get(indeterminates.size() - 1);
+    }
 }

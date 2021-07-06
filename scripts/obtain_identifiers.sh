@@ -1,3 +1,3 @@
-./list_identifiers.sh > ../doc/identifiers
+./list_identifiers.sh > ../web/doc/identifiers
 
 echo "Done!"

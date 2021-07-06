@@ -1,19 +1,14 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[2]:
-
-
+# To add a new cell, type '# %%'
+# To add a new markdown cell, type '# %% [markdown]'
+# %%
 import os
 from tex2html import Parser
 
 
-# In[3]:
-
-
+# %%
 # Specify paths
-doc_path = '../../web/doc'
 tex_path = '../../tex'
+doc_path = '../../web/doc'
 
 # Create parser
 parser = Parser(doc_path)
@@ -38,15 +33,11 @@ for f in os.listdir(tex_path):
     try:
         parser.parse(file_path)
     except Exception as e:
-        print('An error occured ' + str(e))
+        print('An error occured: ' + str(e))
         exit(0)
 
 
 # %%
-
-# In[14]:
-
-
 # Check for missing docs
 docs = sorted(parser.get_identifiers())
 missing = 0
@@ -58,8 +49,12 @@ if missing == 0:
     print('😁 No missing docs')
 
 
-# In[15]:
-
-
+# %%
 # Print stats
 print('📝 Compiled {} docs'.format(len(docs)))
+
+
+# %%
+
+
+

@@ -17,7 +17,7 @@ public class Matcher {
         this.indeterminates = indeterminates;
         this.solutions = new HashMap<>();
     }
-
+    
     public Matcher(Matcher parent, Collection<Function> indeterminates) {
         this.parent = parent;
         this.indeterminates = indeterminates;
@@ -36,14 +36,14 @@ public class Matcher {
 
         // Case y -> w: we map x -> w as well
         // noinspection SuspiciousNameCombination
-        Function w = mapSolution(y);
+        Function w = getSolution(y);
         if (w != null)
             return putSolution(x, w);
 
         // If x -> z already, do some checks
         // TODO: we must prevent loops "x -> y -> x"
-        Function z = solutions.get(x);
-        if(z != null) {
+        Function z = solutions.get(x); // NOTE: it is important this is solutions.get and NOT mapSolution! Because a subMatcher may overwrite a mapping
+        if (z != null) {
             if (z.equals(y))
                 return true;
 
@@ -53,7 +53,7 @@ public class Matcher {
                 return putSolution(y, z);
 
             // Finally, if y is an indeterminate, it was apparently not mapped before. Hence we will map y -> x instead
-            if(isIndeterminate(y))
+            if (isIndeterminate(y))
                 // noinspection SuspiciousNameCombination
                 return putSolution(y, x);
 
@@ -83,14 +83,14 @@ public class Matcher {
         return false;
     }
 
-    public Function mapSolution(Function x) {
+    public Function getSolution(Function x) {
         Function y = solutions.get(x);
         if (y == null)
-            return (parent == null) ? null : parent.mapSolution(x);
+            return (parent == null) ? null : parent.getSolution(x);
 
         // Case x -> y -> z
         // noinspection SuspiciousNameCombination
-        Function z = mapSolution(y);
+        Function z = getSolution(y);
         return (z == null) ? y : z;
     }
 
@@ -103,6 +103,8 @@ public class Matcher {
         if (f == g)
             return true;
 
+        // TODO: optimize matching by first checking with get_solution ?
+
         // Number of dependencies should agree
         List<Function.Dependency> fDependencies = f.getDependencies(), gDependencies = g.getDependencies();
         int n = fDependencies.size();
@@ -112,6 +114,9 @@ public class Matcher {
         }
 
         // Dependencies themselves should match
+
+        // TODO: .getDependenciesAsFunctions() is the bottleneck here! Can we change that?
+
         Matcher subMatcher = (n > 0) ? new Matcher(this, f.getDependenciesAsFunctions()) : this; // Note: there is no need for a subMatcher if f has no dependencies
         for (int i = 0; i < n; ++i) {
             Function.Dependency fDep = fDependencies.get(i);
@@ -130,13 +135,14 @@ public class Matcher {
 
         // At this point, f and g agree up to their signature, i.e. their dependencies and types match
 
-        // If f is an indeterminate, map f -> g
-        if (indeterminates.contains(f)) // TODO: maybe check if it is an indeterminate of a parent immediately here??
-            return putSolution(f, g);
-
-        // If g is an indeterminate, map g -> f
-        if (indeterminates.contains(g))
-            return putSolution(g, f);
+        // If f (resp. g) is an indeterminate, map f -> g (resp. g -> f).
+        // Also treat the case where f or g is an indeterminate of some parent
+        for (Matcher m = this; m != null; m = m.parent) {
+            if (m.indeterminates.contains(f))
+                return m.putSolution(f, g);
+            if (m.indeterminates.contains(g))
+                return m.putSolution(g, f);
+        }
 
         // If the bases match, simply match the arguments
         // Note that the bases themselves can be indeterminates, so we have to account for that first.
@@ -157,11 +163,6 @@ public class Matcher {
             return true;
         }
 
-        // Last chance: the parent might let them match, because f might be an indeterminate of some (grand)parent instead!
-        if (parent != null)
-            return parent.matches(f, g); // TODO: this is necessary, but can it be simplified ?? If it only applies when f or g is an indeterminate, can check for that instead?
-        //  otherwise we must check all the above once again (e.g. types) which is totally unnecessary!
-
 //        System.out.println("Oops, " + f + " does not match " + g);
 //        System.out.println("... while " + f + "");
         return false;
@@ -175,7 +176,7 @@ public class Matcher {
 
     public Function convert(Function x) {
         // If x -> y (we use .mapSolution because it may possibly be mapped by a parent!), return y
-        Function y = mapSolution(x);
+        Function y = getSolution(x);
         if (y != null)
             return y;
 
@@ -210,7 +211,7 @@ public class Matcher {
         }
 
         // Note: also possibly the base should be converted!
-        Function baseSolution = mapSolution(base);
+        Function baseSolution = getSolution(base);
         if (baseSolution != null && baseSolution != base) {
             base = baseSolution; // (silently change the base)
             changes = true;

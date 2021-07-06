@@ -31,7 +31,7 @@ public class Namespace {
         // Add me to the list of my parents children
         parent.children.put(name, this);
     }
-
+    
     public Function getFunction(String path) {
         int i = path.indexOf(".");
         if(i < 0) // if path is a genuine label

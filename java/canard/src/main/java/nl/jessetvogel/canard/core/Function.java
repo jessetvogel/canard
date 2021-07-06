@@ -29,20 +29,20 @@ public class Function {
     }
 
     public List<Function> getDependenciesAsFunctions() {
-        return getDependencies().stream().map(d -> d.function).collect(Collectors.toUnmodifiableList());
-//        List<Function> list = new ArrayList<>();
-//        for(Dependency dependency : dependencies)
-//            list.add(dependency.function);
-//        return list;
+//        return getDependencies().stream().map(d -> d.function).collect(Collectors.toUnmodifiableList());
+        List<Function> list = new ArrayList<>();
+        for(Dependency dependency : dependencies)
+            list.add(dependency.function);
+        return list;
     }
 
     public List<Function> getExplicitDependencies() {
-        return dependencies.stream().filter(d -> d.explicit).map(d -> d.function).collect(Collectors.toUnmodifiableList());
-//        List<Function> list = new ArrayList<>();
-//        for(Dependency dependency : dependencies)
-//            if(dependency.explicit)
-//                list.add(dependency.function);
-//        return list;
+//        return dependencies.stream().filter(d -> d.explicit).map(d -> d.function).collect(Collectors.toUnmodifiableList());
+        List<Function> list = new ArrayList<>();
+        for(Dependency dependency : dependencies)
+            if(dependency.explicit)
+                list.add(dependency.function);
+        return list;
     }
 
     public List<Function> getArguments() {
@@ -133,6 +133,7 @@ public class Function {
                 sb.append(path).append(".");
         }
 
+//        sb.append(label != null ? label : String.format("%04d", hashCode() % 10000));
         sb.append(label != null ? label : String.format("%04d", hashCode() % 10000));
 
         if (full) {

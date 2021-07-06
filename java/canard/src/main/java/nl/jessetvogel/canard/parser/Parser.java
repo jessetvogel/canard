@@ -4,8 +4,8 @@ import nl.jessetvogel.canard.core.Context;
 import nl.jessetvogel.canard.core.Function;
 import nl.jessetvogel.canard.core.Namespace;
 import nl.jessetvogel.canard.core.Session;
-import nl.jessetvogel.canard.search.Query;
-import nl.jessetvogel.canard.search.Searcher;
+import nl.jessetvogel.canard.searcher.Query;
+import nl.jessetvogel.canard.searcher.Searcher;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -297,7 +297,7 @@ public class Parser {
         } while (found(Token.Type.SEPARATOR, "("));
 
         // Number of results wanted
-        int N = found(Token.Type.NUMBER) ? Integer.parseInt(consume().data) : 1;
+//        int N = found(Token.Type.NUMBER) ? Integer.parseInt(consume().data) : 1;
 
         // Create searcher and specify the searching space
         Set<Namespace> searchSpace = new HashSet<>(openNamespaces);
@@ -305,21 +305,17 @@ public class Parser {
             searchSpace.add(space);
         Searcher searcher = new Searcher(searchSpace, 5); // TODO: watch out, its a magic number! 🪄
 
-        long startTime = System.nanoTime();
-
         // Make a query and do a search
         // Store the results in a list
         List<List<String>> results = new ArrayList<>();
         Query query = new Query(indeterminates);
-        List<Function> solution;
-        for (int i = 0; i < N; ++i) {
-            solution = (i == 0) ? searcher.search(query) : searcher.next();
-            if (solution == null)
-                break;
-            results.add(solution.stream().map(f -> f.toString(false, explicit)).collect(Collectors.toUnmodifiableList()));
-        }
 
+        long startTime = System.nanoTime();
+        List<Function> solution = searcher.search(query);
         long endTime = System.nanoTime();
+
+        if(solution != null)
+            results.add(solution.stream().map(f -> f.toString(false, explicit)).collect(Collectors.toUnmodifiableList()));
 
         // Print the solutions
         if (format == Format.JSON)
@@ -353,7 +349,7 @@ public class Parser {
         if (format == Format.JSON)
             output(Message.create(Message.Status.SUCCESS, f.toString(true, explicit)));
         else
-            output("\uD83E\uDD86 " + f.toString(true, explicit));
+            output("\uD83E\uDD86 " + f.toString(true, explicit) + " [hash = " + f.hashCode() + "]");
     }
 
     private void parseDeclaration() throws ParserException, IOException, Lexer.LexerException {
