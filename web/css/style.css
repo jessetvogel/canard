@@ -54,6 +54,7 @@ textarea {
 #content {
     max-width: var(--content-width);
     margin: 0 auto;
+    font-size: 18px;
 }
 
 /* Loading animation */

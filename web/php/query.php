@@ -19,7 +19,7 @@ $descriptorspec = array(
 // Create process
 $cwd = null;
 $env = array();
-$process = proc_open('java -jar ../../bin/canard-1.0.jar --json --explicit ../../math/main.cnd', $descriptorspec, $pipes, $cwd, $env);
+$process = proc_open('../../bin/canard --json --explicit', $descriptorspec, $pipes, $cwd, $env);
  
 if(!is_resource($process))
     response_server_error('failed to start canard');
@@ -31,6 +31,7 @@ if(!is_resource($process))
 // Any error output will be appended to /tmp/error-output.txt
 
 // Write commands to process
+fwrite($pipes[0], 'import "../../math/main.cnd";');
 fwrite($pipes[0], 'open commutative_algebra;');
 fwrite($pipes[0], 'open algebraic_geometry;');
 fwrite($pipes[0], $query);

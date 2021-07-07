@@ -12,9 +12,9 @@
 #include "../core/context.h"
 
 enum ParserFormat {
-    PLAIN = 0,
-    JSON = 1,
-    EXPLICIT = 2
+    PLAIN = 0b00,
+    JSON = 0b01,
+    EXPLICIT = 0b10
 };
 
 class Parser {
@@ -23,17 +23,15 @@ class Parser {
     Scanner m_scanner;
     Lexer m_lexer;
     std::string m_filename, m_directory;
-    Token m_current_token = { NONE };
+    Token m_current_token = {NONE};
     bool m_running;
 
     Session &m_session;
-    Namespace* m_current_namespace;
-    std::unordered_set<Namespace*> m_open_namespaces;
+    Namespace *m_current_namespace;
+    std::unordered_set<Namespace *> m_open_namespaces;
     std::unique_ptr<std::unordered_set<std::string>> m_imported_files;
 
     ParserFormat m_format = PLAIN;
-
-    void set_format(ParserFormat);
 
     void set_location(std::string &, std::string &);
 
@@ -43,13 +41,13 @@ class Parser {
 
     bool found(TokenType);
 
-    bool found(TokenType, const std::string&);
+    bool found(TokenType, const std::string &);
 
     Token consume();
 
     Token consume(TokenType);
 
-    Token consume(TokenType, const std::string&);
+    Token consume(TokenType, const std::string &);
 
     // parsing methods
     bool parse_statement();
@@ -87,13 +85,15 @@ class Parser {
     FunctionPtr parse_term(Context &);
 
     // output methods
-    void output(const std::string&);
+    void output(const std::string &);
 
-    void error(const std::string&);
+    void error(const std::string &);
 
 public:
 
     Parser(std::istream &, std::ostream &, Session &);
+
+    void set_format(ParserFormat);
 
     bool parse();
 
@@ -104,6 +104,7 @@ struct ParserException : public std::exception {
     const Token m_token;
     const std::string m_message;
 
-    explicit ParserException(Token token, std::string message) : m_token(std::move(token)), m_message(std::move(message)) {};
+    explicit ParserException(Token token, std::string message) : m_token(std::move(token)),
+                                                                 m_message(std::move(message)) {};
 
 };

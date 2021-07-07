@@ -13,7 +13,7 @@ public class Query {
     private final Map<Function, Function> solutions; // Maps the indeterminates of parent to stuff w.r.t. this query
     private final List<Integer> depths; // An integer per indeterminate, indicating how deep that determinate is used for
 
-    private final Set<Function> locals;
+    private final List<Function> locals;
     private final Map<Function, Set<Function>> allowedLocals;
 
     public Query(List<Function> indeterminates) {
@@ -21,7 +21,7 @@ public class Query {
         this.indeterminates = indeterminates;
         this.solutions = null;
         this.depths = indeterminates.stream().map(f -> 0).collect(Collectors.toUnmodifiableList());
-        this.locals = new HashSet<>();
+        this.locals = new ArrayList<>();
         this.allowedLocals = new HashMap<>();
     }
 
@@ -30,7 +30,7 @@ public class Query {
         this.indeterminates = indeterminates;
         this.solutions = solutions;
         this.depths = depths;
-        this.locals = new HashSet<>();
+        this.locals = new ArrayList<>();
         this.allowedLocals = new HashMap<>();
     }
 
@@ -399,7 +399,7 @@ public class Query {
         return Collections.max(depths);
     }
 
-    public Set<Function> getLocals() {
+    public Collection<Function> getLocals() {
         return locals;
     }
 

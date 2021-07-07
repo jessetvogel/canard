@@ -9,6 +9,8 @@
 #include <iostream>
 #include <sstream>
 
+FunctionPtr Matcher::null = nullptr;
+
 Matcher::Matcher(const std::vector<FunctionPtr> &indeterminates) : m_parent(nullptr),
                                                                    m_indeterminates(indeterminates) {}
 
@@ -20,7 +22,7 @@ bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
     if (f == g) return true;
 
     // Case g -> h: we map f -> h as well
-    FunctionPtr h = get_solution(g);
+    const FunctionPtr &h = get_solution(g);
     if (h != nullptr)
         return put_solution(f, h);
 
@@ -29,7 +31,7 @@ bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
     // NOTE: it is important we only look for solutions by THIS matcher, and not of any parent. This is because sub_matchers may overwrite certain indeterminates
     auto it_solution_f = m_solutions.find(f);
     if (it_solution_f != m_solutions.end()) {
-        FunctionPtr &k = it_solution_f->second;
+        const FunctionPtr &k = it_solution_f->second;
         if (k->equals(g)) return true;
 
         // If k is also an indeterminate (possibly of a parent!), then we are satisfied with mapping g -> k
@@ -42,37 +44,19 @@ bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
         return false;
     }
 
-    // If we are working with local variables, then it may be that g may not depend on some values.
-    // Check this.
-    if (m_locals != nullptr && !m_locals->empty()) {
-        auto it_local_f = m_locals_allowed->find(f);
-        if (it_local_f == m_locals_allowed->end()) {
-            if (g->depends_on(*m_locals))
-                return false;
-        } else {
-            std::unordered_set<FunctionPtr> disallowed;
-            for (auto &l : *m_locals) {
-                if (it_local_f->second->find(l) == it_local_f->second->end())
-                    disallowed.insert(l);
-            }
-            if (g->depends_on(disallowed))
-                return false;
-        }
-    }
-
     // If all is well, put f -> g.
-    m_solutions.insert(std::make_pair(f, g));
+    m_solutions.emplace(f, g);
     return true;
 }
 
-FunctionPtr Matcher::get_solution(const FunctionPtr &f) const {
-    auto it = m_solutions.find(f);
-    if (it == m_solutions.end())
-        return (m_parent == nullptr) ? nullptr : m_parent->get_solution(f);
+const FunctionPtr &Matcher::get_solution(const FunctionPtr &f) const {
+    auto it_f = m_solutions.find(f);
+    if (it_f == m_solutions.end())
+        return (m_parent == nullptr) ? null : m_parent->get_solution(f);
 
     // Case f -> g -> h
-    FunctionPtr h = get_solution(it->second);
-    return (h == nullptr) ? it->second : h;
+    const FunctionPtr &h = get_solution(it_f->second);
+    return (h == nullptr) ? it_f->second : h;
 }
 
 bool Matcher::is_indeterminate(const FunctionPtr &f) {
@@ -82,12 +66,6 @@ bool Matcher::is_indeterminate(const FunctionPtr &f) {
             return true;
     }
     return false;
-}
-
-void Matcher::set_locals(std::vector<FunctionPtr> *locals,
-                         std::unordered_map<FunctionPtr, std::shared_ptr<std::unordered_set<FunctionPtr>>> *locals_allowed) {
-    m_locals = locals;
-    m_locals_allowed = locals_allowed;
 }
 
 bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
@@ -131,7 +109,8 @@ bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
     // Note that the bases themselves can be indeterminates, so we have to account for that first.
     // Of course it can also be possible that fBase == gBase (this can be checked as Java Objects, since no base function
     // is represented by different Java Objects)
-    FunctionPtr f_base = f->get_base(), g_base = g->get_base();
+    const FunctionPtr &f_base = f->get_base();
+    const FunctionPtr &g_base = g->get_base();
 
     // TODO: what if fBase/gBase is an indeterminate, but also it has dependencies ?
     //  At some points problems appear, because there will be multiple solutions..
@@ -157,7 +136,7 @@ void Matcher::assert_matches(const FunctionPtr &f, const FunctionPtr &g) {
 
 FunctionPtr Matcher::convert(const FunctionPtr &f) {
     // If f -> g, return g
-    FunctionPtr g = get_solution(f);
+    const FunctionPtr &g = get_solution(f);
     if (g != nullptr) return g;
 
     FunctionPtr f_base = f->get_base();
@@ -221,7 +200,7 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     }
     FunctionPtr converted_type = sub_sub_matcher.convert(f->get_type());
 
-    return FunctionPtr(new Specialization(f_base, converted_arguments, converted_type, converted_dependencies));
+    return std::make_shared<Specialization>(f_base, std::move(converted_arguments), std::move(converted_type), std::move(converted_dependencies));
 }
 
 FunctionPtr Matcher::clone(const FunctionPtr &f) {

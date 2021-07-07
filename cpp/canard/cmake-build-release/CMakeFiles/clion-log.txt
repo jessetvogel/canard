@@ -1,0 +1,4 @@
+/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Release -G "CodeBlocks - Unix Makefiles" /Users/jessevogel/Projects/canard/cpp/canard
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/jessevogel/Projects/canard/cpp/canard/cmake-build-release

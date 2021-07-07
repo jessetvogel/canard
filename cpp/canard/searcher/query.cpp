@@ -22,16 +22,18 @@ Query::Query(std::shared_ptr<Query> parent, std::unordered_map<FunctionPtr, Func
 };
 
 int Query::get_depth() {
-    auto it = std::max(m_depths.begin(), m_depths.end());
-    if (it == m_depths.end()) return 0;
-    return *it;
+    int M = 0;
+    for (int &d : m_depths)
+        if (d > M)
+            M = d;
+    return M;
 }
 
-FunctionPtr Query::get_last_indeterminate() {
+const FunctionPtr &Query::get_last_indeterminate() {
     return m_indeterminates.back();
 }
 
-bool Query::is_indeterminate(FunctionPtr &f) {
+bool Query::is_indeterminate(const FunctionPtr &f) {
     return std::find(m_indeterminates.begin(), m_indeterminates.end(), f) != m_indeterminates.end();
 }
 
@@ -47,10 +49,10 @@ std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
     // This introduces new locals: the current dependencies of h
     std::vector<FunctionPtr> new_indeterminates = query->m_indeterminates;
     new_indeterminates.pop_back();
-    auto new_h = std::make_shared<Function>(h->get_type());
+    auto new_h = std::make_shared<Function>(h->get_type(), DependencyData());
     new_indeterminates.push_back(new_h);
     std::unordered_map<FunctionPtr, FunctionPtr> new_solutions;
-    new_solutions.insert(std::make_pair(h, new_h));
+    new_solutions.emplace(h, new_h);
 
     // just use the same depths, doesn't seem fair to charge for an normalize..
     std::shared_ptr<Query> sub_query(
@@ -73,14 +75,14 @@ std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
         new_h_allowed->insert(f);
     }
     sub_query->m_locals_allowed.erase(h);
-    sub_query->m_locals_allowed.insert(std::make_pair(new_h, new_h_allowed));
+    sub_query->m_locals_allowed.emplace(new_h, new_h_allowed);
 
     return sub_query;
 }
 
 std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const FunctionPtr &thm) {
     // Get last indeterminate
-    FunctionPtr h = query->get_last_indeterminate();
+    const FunctionPtr &h = query->get_last_indeterminate();
 
     // At this point, h is asserted to have no dependencies!
     assert (h->get_dependencies().size() == 0);
@@ -88,9 +90,9 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     // Get allowed locals for h
     auto h_allowed = query->m_locals_allowed.find(h);
 
-    // Check: if thm *itself* is a local: then require that it is allowed for h! This is very important.
-    auto it = std::find(query->m_locals.begin(), query->m_locals.end(), thm);
-    if (it != query->m_locals.end() &&
+    // Check: if thm *itself* is a local: then require that it_thm is allowed for h! This is very important.
+    auto it_thm = std::find(query->m_locals.begin(), query->m_locals.end(), thm);
+    if (it_thm != query->m_locals.end() &&
         (h_allowed == query->m_locals_allowed.end() || h_allowed->second->find(thm) == h_allowed->second->end()))
         return nullptr;
 
@@ -99,25 +101,6 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     const std::vector<FunctionPtr> &thm_dependencies = thm->get_dependencies().m_functions;
     all_indeterminates.insert(all_indeterminates.end(), thm_dependencies.begin(), thm_dependencies.end());
     Matcher matcher(all_indeterminates);
-
-    // Thm arguments have same allowances as h (if there are any)
-    std::unique_ptr<std::unordered_map<FunctionPtr, std::shared_ptr<std::unordered_set<FunctionPtr>>>> locals_allowed_copy;
-    if (h_allowed != query->m_locals_allowed.end() && !h_allowed->second->empty()) {
-        // TODO: apparently it is slow to constantly copy the hashmap. Can we think of an alternative ??
-        //  - Maybe only check afterwards if the solution is actually allowed ?
-        locals_allowed_copy = std::make_unique<std::unordered_map<FunctionPtr, std::shared_ptr<std::unordered_set<FunctionPtr>>>>(
-                query->m_locals_allowed);
-        for (auto &thm_dependency : thm_dependencies)
-            locals_allowed_copy->insert(std::make_pair(thm_dependency, h_allowed->second));
-        matcher.set_locals(&(query->m_locals), locals_allowed_copy.get());
-    } else {
-        // Note: this is important. Even though the current h does not have any allowed locals,
-        // still there can be locals, which are *disallowed* for h, so we must pass locals to the matcher
-        matcher.set_locals(&(query->m_locals), &(query->m_locals_allowed));
-    }
-
-//        System.out.println("Will '" + thm.toFullString() + "' satisfy '" + h.toFullString() + "' ?");
-//        System.out.println("(indeterminates are " + indeterminates.get(0) + " and more ...)");
 
     // Note that we do not match (h, thm) since they might not match!
     // (E.g. when thm has dependencies that require arguments, while h has not)
@@ -128,12 +111,6 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
 
 //    std::cerr << "valid reduction in [" << query->to_string() << "]" << std::endl;
 //    std::cerr << "  solve for " << h->to_string() << " with " << thm->to_string() << std::endl;
-//        System.out.println("--> solve for " + h.toFullString() + " with " + thm);
-//        System.out.println("This was done using the Matcher " + matcher);
-//        System.out.print("Btw, locals = { ");
-//        for(Function l : locals)
-//            System.out.print(" " + l.toFullString() + " ");
-//        System.out.println(" }");
 
     // Create the new subQuery, and keep track of the solutions (for indeterminates) and the arguments (for thm)
     // and the new indeterminates (for the subQuery)
@@ -167,10 +144,14 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     if (solution->depends_on(unmapped))
                         continue;
 
+                    // Check whether `solution` is allowed (w.r.t. the local variables)
+                    if(!query->is_allowed_solution(f, solution))
+                        return nullptr;
+
                     solution = query_to_sub_query.convert(solution);
                 } else {
                     // If f has no solution, this indeterminate remains an indeterminate.
-                    // Hence we duplicate it to the new query
+                    // Hence we duplicate it_thm to the new query
                     if (f->signature_depends_on(unmapped))
                         continue;
 
@@ -188,11 +169,11 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     auto it2 = query->m_locals_allowed.find(f);
                     // Pass on the allowed locals (if f has any) (Note: the locals will get replaced later on)
                     if (it2 != query->m_locals_allowed.end())
-                        new_locals_allowed.insert(std::make_pair(solution, it2->second));
+                        new_locals_allowed.emplace(solution, it2->second);
                 }
                 // Store the solution, un-mark as unmapped, match, and indicate that changes are made
                 if (solution != f)
-                    new_solutions.insert(std::make_pair(f, solution));
+                    new_solutions.emplace(f, solution);
 
                 query_to_sub_query.assert_matches(f, solution);
                 it = unmapped.erase(it);
@@ -200,7 +181,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                 changes = true;
                 break;
             }
-                // Case it is a dependency of thm:
+                // Case it_thm is a dependency of thm:
             else if (std::find(thm_dependencies.begin(), thm_dependencies.end(), f) != thm_dependencies.end()) {
                 FunctionPtr argument = matcher.get_solution(f);
                 if (argument != nullptr) {
@@ -208,10 +189,16 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     // And, in that case, convert along the new matcher
                     if (argument->depends_on(unmapped))
                         continue;
+
+                    // Check whether `argument` is allowed (w.r.t. the local variables)
+                    // Note that it has the same allowances as h, because it is used to solve for h
+                    if(!query->is_allowed_solution(*h_allowed->second, argument))
+                        return nullptr;
+
                     argument = query_to_sub_query.convert(argument);
                 } else {
-                    // If no argument is set, it becomes a new indeterminate
-                    // Hence we duplicate it to the new query
+                    // If no argument is set, it_thm becomes a new indeterminate
+                    // Hence we duplicate it_thm to the new query
                     if (f->signature_depends_on(unmapped))
                         continue;
                     // Note: no cheap clone here! This might cause confusion e.g. when theorems are applied twice
@@ -225,35 +212,36 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     // This new indeterminate may depend on the local variables that h was allowed to depend on
                     if (h_allowed != query->m_locals_allowed.end() && !h_allowed->second->empty())
                         // (Note: the locals will get replaced later on)
-                        new_locals_allowed.insert(std::make_pair(argument, h_allowed->second));
+                        new_locals_allowed.emplace(argument, h_allowed->second);
                 }
                 // Store the argument, un-mark as unmapped, match, and indicate that changes are made
                 assert (argument != f);
-                arguments.insert(std::make_pair(f, argument));
+                arguments.emplace(f, argument);
                 query_to_sub_query.assert_matches(f, argument);
                 it = unmapped.erase(it);
                 --it;
                 changes = true;
                 break;
             }
-                // Case f is a local
-            else if (std::find(query->m_locals.begin(), query->m_locals.end(), f) != query->m_locals.end()) {
+            // Case f is a local
+//            else if (std::find(query->m_locals.begin(), query->m_locals.end(), f) != query->m_locals.end()) {
+            else {
                 // If the signature of this local depends on something unmapped, we cannot know yet what to do
                 if (f->signature_depends_on(unmapped))
                     continue;
 
-                // We should clone this dependency (cheaply!) and add it as a local of subQuery
+                // We should clone this dependency (cheaply!) and add it_thm as a local of subQuery
                 FunctionPtr f_clone = query_to_sub_query.cheap_clone(f);
                 new_locals.push_back(f_clone);
                 if (f_clone != f) // if something changed, then add as a solution
-                    new_solutions.insert(std::make_pair(f, f_clone));
+                    new_solutions.emplace(f, f_clone);
                 query_to_sub_query.assert_matches(f, f_clone);
                 it = unmapped.erase(it);
                 --it;
                 changes = true;
                 break;
-            } else
-                assert (false);
+            } //else
+                //assert (false);
         }
     }
 
@@ -277,9 +265,9 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
         thm_arguments.push_back(arguments[f]);
 
     try {
-        // Note that thm itself must also be converted, since it might have changed along the way to subQuery!
+        // Note that thm itself must also be converted, since it_thm might have changed along the way to subQuery!
         // E.g. for `search (P {A B : Prop} (h (a : A) : B) (x : A) : B)`
-        new_solutions.insert(std::make_pair(h, query_to_sub_query.convert(thm)->specialize(thm_arguments, {})));
+        new_solutions.emplace(h, query_to_sub_query.convert(thm)->specialize(thm_arguments, {}));
     } catch (SpecializationException &e) {
         std::cerr << "ai ai ai! Not what was supposed to happen!" << std::endl;
         assert (false);
@@ -292,7 +280,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     return sub_query;
 }
 
-std::vector<FunctionPtr> Query::get_final_solutions(std::shared_ptr<Query> &query) {
+std::vector<FunctionPtr> Query::get_final_solutions(const std::shared_ptr<Query> &query) {
     // This can only be done if this query is solved
     assert(query->is_solved());
 
@@ -371,7 +359,7 @@ std::vector<FunctionPtr> Query::get_final_solutions(std::shared_ptr<Query> &quer
     return result;
 }
 
-bool Query::injects_into(std::shared_ptr<Query> &other) {
+bool Query::injects_into(const std::shared_ptr<Query> &other) {
     // Goal is to map (injectively) all my indeterminates to other.indeterminates, but all other.locals to my locals
     // That is, we are checking if this query searches for less with more information.
 
@@ -434,7 +422,8 @@ bool Query::injects_into_helper(Matcher *matcher, std::vector<FunctionPtr> unmap
         for (auto &h : unmapped) {
             auto k = sub_matcher.get_solution(h);
             if (k == nullptr) {
-                if(h == f) return false; // TODO: it may happen that g -> f, so that matches returns true, but k == nullptr.
+                if (h == f)
+                    return false; // TODO: it may happen that g -> f, so that matches returns true, but k == nullptr.
 
                 // Add those which are not yet mapped
                 new_unmapped.push_back(h);
@@ -454,6 +443,29 @@ bool Query::injects_into_helper(Matcher *matcher, std::vector<FunctionPtr> unmap
             return true;
     }
     return false;
+}
+
+bool Query::is_allowed_solution(const FunctionPtr &f, const FunctionPtr &solution) {
+    if (m_locals.empty()) return true;
+
+    auto it_allowed = m_locals_allowed.find(f);
+    std::vector<FunctionPtr> disallowed;
+    for (const FunctionPtr &l : m_locals) {
+        if (it_allowed->second->find(l) == it_allowed->second->end())
+            disallowed.push_back(l);
+    }
+    return disallowed.empty() || !solution->depends_on(disallowed);
+}
+
+bool Query::is_allowed_solution(const std::unordered_set<FunctionPtr> &allowed, const FunctionPtr &solution) {
+    if (m_locals.empty()) return true;
+
+    std::vector<FunctionPtr> disallowed;
+    for (const FunctionPtr &l : m_locals) {
+        if (allowed.find(l) == allowed.end())
+            disallowed.push_back(l);
+    }
+    return disallowed.empty() || !solution->depends_on(disallowed);
 }
 
 std::string Query::to_string() {

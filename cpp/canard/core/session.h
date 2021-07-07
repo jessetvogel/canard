@@ -6,6 +6,7 @@
 
 #include "namespace.h"
 #include "function.h"
+#include "specialization.h"
 
 class Session {
 

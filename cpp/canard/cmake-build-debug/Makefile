@@ -250,6 +250,33 @@ core/namespace.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/canard.dir/build.make CMakeFiles/canard.dir/core/namespace.cpp.s
 .PHONY : core/namespace.cpp.s
 
+core/pool.o: core/pool.cpp.o
+
+.PHONY : core/pool.o
+
+# target to build an object file
+core/pool.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/canard.dir/build.make CMakeFiles/canard.dir/core/pool.cpp.o
+.PHONY : core/pool.cpp.o
+
+core/pool.i: core/pool.cpp.i
+
+.PHONY : core/pool.i
+
+# target to preprocess a source file
+core/pool.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/canard.dir/build.make CMakeFiles/canard.dir/core/pool.cpp.i
+.PHONY : core/pool.cpp.i
+
+core/pool.s: core/pool.cpp.s
+
+.PHONY : core/pool.s
+
+# target to generate assembly for a file
+core/pool.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/canard.dir/build.make CMakeFiles/canard.dir/core/pool.cpp.s
+.PHONY : core/pool.cpp.s
+
 core/session.o: core/session.cpp.o
 
 .PHONY : core/session.o
@@ -514,6 +541,9 @@ help:
 	@echo "... core/namespace.o"
 	@echo "... core/namespace.i"
 	@echo "... core/namespace.s"
+	@echo "... core/pool.o"
+	@echo "... core/pool.i"
+	@echo "... core/pool.s"
 	@echo "... core/session.o"
 	@echo "... core/session.i"
 	@echo "... core/session.s"

@@ -9,7 +9,7 @@ public class Matcher {
     final Collection<Function> indeterminates;
     final Map<Function, Function> solutions;
 
-    private Set<Function> locals = null;
+    private List<Function> locals = null;
     private Map<Function, Set<Function>> allowedLocals = null;
 
     public Matcher(Collection<Function> indeterminates) {
@@ -24,8 +24,8 @@ public class Matcher {
         this.solutions = new HashMap<>();
     }
 
-    public void setLocalVariables(Set<Function> set, Map<Function, Set<Function>> map) {
-        locals = set;
+    public void setLocalVariables(List<Function> list, Map<Function, Set<Function>> map) {
+        locals = list;
         allowedLocals = map;
     }
 
@@ -65,7 +65,7 @@ public class Matcher {
         // Check this.
         if (locals != null && !locals.isEmpty()) {
             Set<Function> allowed = allowedLocals.get(x);
-            Set<Function> disallowed = (allowed == null) ? locals : locals.stream().filter(f -> !allowed.contains(f)).collect(Collectors.toUnmodifiableSet());
+            Collection<Function> disallowed = (allowed == null) ? locals : locals.stream().filter(f -> !allowed.contains(f)).collect(Collectors.toUnmodifiableSet());
             if (y.dependsOn(disallowed)) {
 //                    System.out.println("Oops, wanted to map " + x + " to " + y + " but it allows on some disallowed value!");
                 return false;

@@ -32,12 +32,10 @@ protected:
     Namespace *m_space = nullptr;
     std::string m_label;
 
-    const FunctionPtr m_type;
-    const DependencyData m_dependencies;
+    FunctionPtr m_type;
+    DependencyData m_dependencies;
 
 public:
-
-    Function(FunctionPtr);
 
     Function(FunctionPtr, DependencyData);
 

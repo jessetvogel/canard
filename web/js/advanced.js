@@ -48,7 +48,7 @@ function init() {
 
                             case 'success':
                                 if(message.data.length == 0) {
-                                    output += '<div class="result">No solutions found..</div>';
+                                    output += '<div class="result">no solutions found</div>';
                                     break;
                                 }
 

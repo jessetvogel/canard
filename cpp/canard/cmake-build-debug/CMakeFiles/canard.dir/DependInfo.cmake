@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/Users/jessevogel/Projects/canard/cpp/canard/core/function.cpp" "/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/canard.dir/core/function.cpp.o"
   "/Users/jessevogel/Projects/canard/cpp/canard/core/matcher.cpp" "/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/canard.dir/core/matcher.cpp.o"
   "/Users/jessevogel/Projects/canard/cpp/canard/core/namespace.cpp" "/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/canard.dir/core/namespace.cpp.o"
+  "/Users/jessevogel/Projects/canard/cpp/canard/core/pool.cpp" "/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/canard.dir/core/pool.cpp.o"
   "/Users/jessevogel/Projects/canard/cpp/canard/core/session.cpp" "/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/canard.dir/core/session.cpp.o"
   "/Users/jessevogel/Projects/canard/cpp/canard/core/specialization.cpp" "/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/canard.dir/core/specialization.cpp.o"
   "/Users/jessevogel/Projects/canard/cpp/canard/main.cpp" "/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/canard.dir/main.cpp.o"

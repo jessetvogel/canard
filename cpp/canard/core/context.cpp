@@ -15,7 +15,7 @@ bool Context::put_function(const std::string& label, const FunctionPtr& f) {
         return false;
 
     f->set_label(label);
-    m_labels.insert(std::make_pair(label, f));
+    m_labels.emplace(label, f);
     m_all_functions.push_back(f);
     return true;
 }

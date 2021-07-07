@@ -252,6 +252,7 @@ void Parser::parse_import() {
     // Create subParser to parse the file
     Parser sub_parser(ifstream, m_ostream, m_session);
     sub_parser.set_location(directory, file);
+    sub_parser.set_format(m_format);
     sub_parser.m_imported_files = std::move(m_imported_files);
     struct timeval time_now {};
     gettimeofday(&time_now, nullptr);
@@ -327,22 +328,28 @@ void Parser::parse_search() {
     gettimeofday(&time_now, nullptr);
     time_t time_end = (time_now.tv_sec * 1000) + (time_now.tv_usec / 1000);
 
-    if (!success) {
-        output("🥺 no solutions found");
-        return;
-    }
-
     auto result = searcher.get_result();
+
     if (m_format & JSON) {
-        std::vector<std::string> keys, values;
-        keys.reserve(indeterminates.size());
-        values.reserve(result.size());
-        for (auto &f : indeterminates)
-            keys.push_back(f->to_string());
-        for (auto &g : result)
-            values.push_back(g->to_string());
-        output(Message::create(SUCCESS, keys, values));
+        if(success) {
+            std::vector<std::string> keys, values;
+            keys.reserve(indeterminates.size());
+            values.reserve(result.size());
+            for (auto &f : indeterminates)
+                keys.push_back(f->to_string());
+            for (auto &g : result)
+                values.push_back(g->to_string(false, m_format & EXPLICIT));
+            output(Message::create(SUCCESS, keys, values));
+        }
+        else {
+            output(Message::create(SUCCESS, std::vector<std::string>()));
+        }
     } else {
+        if (!success) {
+            output("🥺 no solutions found");
+            return;
+        }
+
         std::stringstream ss;
         ss << "🔎 ";
         size_t n = result.size();
@@ -580,7 +587,7 @@ void Parser::output(const std::string &message) {
 void Parser::error(const std::string &message) {
     if (m_format & JSON)
         // TODO
-        output("something JSON");
+        output("{\"status\":\"error\",\"data\":\"" + message + "\"}");
     else
         output("⚠️ " + message);
 }

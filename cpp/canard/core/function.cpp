@@ -9,8 +9,6 @@
 #include <utility>
 #include <sstream>
 
-Function::Function(FunctionPtr type) : m_type(std::move(type)) {}
-
 Function::Function(FunctionPtr type, DependencyData dependencies) : m_type(std::move(type)),
                                                                     m_dependencies(std::move(dependencies)) {};
 
@@ -59,13 +57,13 @@ bool Function::depends_on(const std::unordered_set<FunctionPtr> &set) {
 bool Function::signature_depends_on(const std::vector<FunctionPtr> &list) {
     if (get_type()->depends_on(list))
         return true;
-    return std::any_of(m_dependencies.m_functions.begin(), m_dependencies.m_functions.end(),
-                       [list](auto &it) { return it->signature_depends_on(list); });
-//    for (auto &it : m_dependencies.m_functions) {
-//        if (it->signature_depends_on(list))
-//            return true;
-//    }
-//    return false;
+//    return std::any_of(m_dependencies.m_functions.begin(), m_dependencies.m_functions.end(),
+//                       [list](auto &it) { return it->signature_depends_on(list); });
+    for (auto &it : m_dependencies.m_functions) {
+        if (it->signature_depends_on(list))
+            return true;
+    }
+    return false;
 }
 
 FunctionPtr Function::specialize(std::vector<FunctionPtr> arguments, DependencyData dependencies) {

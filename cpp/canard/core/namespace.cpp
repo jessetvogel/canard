@@ -57,7 +57,7 @@ Context &Namespace::get_context() {
 Namespace *Namespace::create_subspace(const std::string& name) {
     auto subspace = new Namespace(*this, name);
     std::unique_ptr<Namespace> child(subspace);
-    m_children.insert(std::make_pair(name, std::move(child)));
+    m_children.emplace(name, std::move(child));
     return subspace;
 }
 

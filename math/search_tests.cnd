@@ -1,5 +1,13 @@
 import "/Users/jessevogel/Projects/canard/math/main.cnd"
 
+open algebraic_geometry;
+open algebraic_geometry.scheme;
+open algebraic_geometry.morphism;
+open commutative_algebra;
+open commutative_algebra.ring;
+search (P {X Y: Scheme} {f : Morphism X Y} (h : not (unramified f)) : not (etale f));
+
+
 -- Performance check: search (A B C D E F G H I J : Scheme) and profiler
 
 open algebraic_geometry;
@@ -7,6 +15,13 @@ open algebraic_geometry.scheme;
 open algebraic_geometry.morphism;
 open commutative_algebra;
 open commutative_algebra.ring;
+
+--search (P {X Y: Scheme} {f : Morphism X Y} (h : not (unramified f)) : not (etale f));
+--exit;
+
+
+--search (P {X Y: Scheme} {f : Morphism X Y} (h : not (unramified f)) : not (etale f));
+--exit;
 
 search (R : Ring);
 

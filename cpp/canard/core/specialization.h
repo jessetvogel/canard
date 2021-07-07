@@ -8,12 +8,12 @@
 
 class Specialization : public Function {
 
-    const FunctionPtr m_base;
-    const std::vector<FunctionPtr> m_arguments;
+    FunctionPtr m_base;
+    std::vector<FunctionPtr> m_arguments;
 
 public:
 
-    Specialization(FunctionPtr base, std::vector<FunctionPtr> arguments, FunctionPtr type, DependencyData dependencies);
+    Specialization(const FunctionPtr& base, std::vector<FunctionPtr> arguments, const FunctionPtr& type, DependencyData dependencies);
 
     FunctionPtr get_base() override;
     const std::vector<FunctionPtr>& get_arguments() override;
