@@ -19,21 +19,27 @@ class Namespace {
     const std::string m_name;
     Context m_context;
 
+    std::vector<FunctionPtr> m_all_functions;
+
 public:
 
     explicit Namespace(Session &);
 
-    explicit Namespace(Namespace&, std::string);
+    explicit Namespace(Namespace&, const std::string&);
 
     Context &get_context();
 
-    FunctionPtr get_function(std::string &);
+    FunctionPtr get_function(const std::string &);
+
+    void put_function(const FunctionPtr&);
+
+    const std::vector<FunctionPtr>& get_functions() { return m_all_functions; }
 
     Namespace* get_parent();
 
-    Namespace* get_namespace(std::string &);
+    Namespace* get_namespace(const std::string &);
 
-    Namespace *create_subspace(const std::string& basicString);
+    Namespace *create_subspace(const std::string&);
 
     std::string to_string();
 

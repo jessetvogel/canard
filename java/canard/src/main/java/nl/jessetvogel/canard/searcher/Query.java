@@ -115,8 +115,8 @@ public class Query {
         if (!matcher.matches(h.getType(), thm.getType()))
             return null;
 
-//        System.out.println("Valid reduction in " + this);
-//        System.out.println("--> solve for " + h.toFullString() + " with " + thm);
+        System.out.println("Valid reduction in " + this);
+        System.out.println("--> solve for " + h.toString(true, false) + " with " + thm);
 //        System.out.println("This was done using the Matcher " + matcher);
 //        System.out.print("Btw, locals = { ");
 //        for(Function l : locals)

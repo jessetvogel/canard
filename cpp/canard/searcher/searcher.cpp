@@ -10,7 +10,7 @@ Searcher::Searcher(const int max_depth) : m_max_depth(max_depth) {}
 void Searcher::add_namespace(Namespace &space) {
     // Make a list of lists of all functions that can be used during the search
     // We do this in advance so that we don't constantly create new arraylists
-    auto theorems = space.get_context().get_functions();
+    auto theorems = space.get_functions();
     m_all_theorems.insert(m_all_theorems.end(), theorems.begin(), theorems.end());
 
     for (FunctionPtr &thm : theorems) {
@@ -71,7 +71,7 @@ bool Searcher::search(std::shared_ptr<Query> &query) {
                         }
                     }
                     if (!should_remove)
-                        new_queue.push(r);
+                        new_queue.push(std::move(r));
                 }
                 m_queue = std::move(new_queue);
             }

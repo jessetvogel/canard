@@ -2,8 +2,7 @@
 // Created by Jesse Vogel on 01/07/2021.
 //
 
-#ifndef CANARD_LEXER_H
-#define CANARD_LEXER_H
+#pragma once
 
 #include <utility>
 #include <vector>
@@ -48,7 +47,7 @@ class Lexer {
 
     Scanner &m_scanner;
 
-    Token m_current_token = { NONE };
+    Token m_current_token = {NONE};
     std::stringstream m_sstream;
     int m_sstream_length = 0;
     int m_line = 0, m_position = 1;
@@ -70,10 +69,7 @@ struct LexerException : public std::exception {
     const int m_line, m_position;
     const std::string m_message;
 
-    explicit LexerException(int line, int position, std::string message) : m_line(line), m_position(position),
-                                                                           m_message(std::move(message)) {};
+    explicit LexerException(int line, int position, const std::string &message) : m_line(line), m_position(position),
+                                                                                  m_message(message) {};
 
 };
-
-
-#endif //CANARD_LEXER_H

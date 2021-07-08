@@ -8,11 +8,11 @@
 
 Namespace::Namespace(Session &session) : m_session(session), m_parent(nullptr), m_name(std::string()), m_context() {}
 
-Namespace::Namespace(Namespace &parent, std::string name) : m_session(parent.m_session),
+Namespace::Namespace(Namespace &parent, const std::string& name) : m_session(parent.m_session),
                                                             m_parent(&parent),
-                                                            m_name(std::move(name)), m_context() {}
+                                                            m_name(name), m_context() {}
 
-FunctionPtr Namespace::get_function(std::string &path) {
+FunctionPtr Namespace::get_function(const std::string &path) {
     size_t i = path.find('.');
     if (i == std::string::npos)
         return m_context.get_function(path);
@@ -26,11 +26,16 @@ FunctionPtr Namespace::get_function(std::string &path) {
     return it->second->get_function(sub_path);
 }
 
+void Namespace::put_function(const FunctionPtr &f) {
+    m_all_functions.push_back(f);
+    f->set_namespace(this);
+}
+
 Namespace *Namespace::get_parent() {
     return m_parent;
 }
 
-Namespace *Namespace::get_namespace(std::string &path) {
+Namespace *Namespace::get_namespace(const std::string &path) {
     if (path.empty())
         return this;
 

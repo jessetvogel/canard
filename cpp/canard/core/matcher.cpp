@@ -146,8 +146,8 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     // Convert dependencies if needed
     // E.g. something like "(f : Hom X X) => comp f f" must be converted under "X -> Spec R"
     // to "(f : Hom (Spec R) (Spec R)) => comp f f"
-    DependencyData converted_dependencies;
-    const DependencyData &f_dependencies = f->get_dependencies();
+    Function::Dependencies converted_dependencies;
+    const Function::Dependencies &f_dependencies = f->get_dependencies();
     size_t n = f_dependencies.size();
 
     Matcher matcher(this, f_dependencies.m_functions);
@@ -210,7 +210,7 @@ FunctionPtr Matcher::clone(const FunctionPtr &f) {
     // TODO: are there any shortcuts we can take so that we can simply immediately return x itself ?
 
     // Duplicate *its* dependencies
-    DependencyData converted_dependencies;
+    Function::Dependencies converted_dependencies;
     auto &f_dependencies = f->get_dependencies();
     size_t n = f_dependencies.size();
 
@@ -237,7 +237,7 @@ FunctionPtr Matcher::cheap_clone(const FunctionPtr &f) {
     // Should return x itself when x does not depend on any indeterminate (and neither on an indeterminate of some parent)
     for (Matcher *m = this; m != nullptr; m = m->m_parent) {
         if (f->signature_depends_on(m->m_indeterminates))
-            return clone(f); // TODO: m->clone(f) ?
+            return m->clone(f); // TODO: m->clone(f) ?
     }
     return f;
 }

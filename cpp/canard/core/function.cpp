@@ -9,25 +9,13 @@
 #include <utility>
 #include <sstream>
 
-Function::Function(FunctionPtr type, DependencyData dependencies) : m_type(std::move(type)),
-                                                                    m_dependencies(std::move(dependencies)) {};
+Function::Function(const FunctionPtr &type, Dependencies dependencies) : m_type(type),
+                                                                         m_dependencies(std::move(dependencies)) {};
 
 FunctionPtr Function::get_type() {
     // m_type == nullptr indicates that function is Type, it's type is itself
     // however, we don't store pointers to self, because then we never destruct
     return m_type != nullptr ? m_type : shared_from_this();
-}
-
-void Function::set_label(const std::string &label) {
-    m_label = label;
-}
-
-void Function::set_namespace(Namespace *space) {
-    m_space = space;
-}
-
-FunctionPtr Function::get_base() {
-    return shared_from_this();
 }
 
 std::vector<FunctionPtr> Function::get_explicit_dependencies() {
@@ -38,10 +26,6 @@ std::vector<FunctionPtr> Function::get_explicit_dependencies() {
             explicit_dependencies.push_back(m_dependencies.m_functions[i]);
     }
     return explicit_dependencies;
-}
-
-const std::vector<FunctionPtr> &Function::get_arguments() {
-    return m_dependencies.m_functions;
 }
 
 bool Function::depends_on(const std::vector<FunctionPtr> &list) {
@@ -66,13 +50,14 @@ bool Function::signature_depends_on(const std::vector<FunctionPtr> &list) {
     return false;
 }
 
-FunctionPtr Function::specialize(std::vector<FunctionPtr> arguments, DependencyData dependencies) {
+FunctionPtr Function::specialize(std::vector<FunctionPtr> arguments, Function::Dependencies dependencies) {
     // Check that the number of arguments equals the number of explicit dependencies
     size_t n = arguments.size();
     std::vector<FunctionPtr> explicit_dependencies = get_explicit_dependencies();
     size_t m = explicit_dependencies.size();
     if (n != m)
-        throw SpecializationException(to_string() + " expected " + std::to_string(m) + " arguments but received " + std::to_string(n));
+        throw SpecializationException(
+                to_string() + " expected " + std::to_string(m) + " arguments but received " + std::to_string(n));
 
     // Base case: if there are no arguments and no given dependencies, immediately return
     if (n == 0 && dependencies.empty())

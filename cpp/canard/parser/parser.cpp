@@ -22,9 +22,7 @@ Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session) :
 
 void Parser::next_token() {
     m_current_token = m_lexer.get_token();
-
-//    std::cerr << "next_token() = '" << m_current_token.m_data << "' (" << m_current_token.m_type << ")" << std::endl;
-
+    //    std::cerr << "next_token() = '" << m_current_token.m_data << "' (" << m_current_token.m_type << ")" << std::endl;
     if (m_current_token.m_type == NEWLINE) // skip newlines
         next_token();
 }
@@ -171,7 +169,7 @@ void Parser::parse_inspect() {
 
     // Construct list of labels
     std::vector<std::string> labels;
-    for (auto &f : space->get_context().get_functions()) {
+    for (auto &f : space->get_functions()) {
         std::string label = f->get_label();
         if (!label.empty())
             labels.push_back(label);
@@ -386,7 +384,7 @@ void Parser::parse_declaration() {
 
     consume(KEYWORD, "let");
     for (auto &f : parse_functions(m_current_namespace->get_context()))
-        f->set_namespace(m_current_namespace);
+        m_current_namespace->put_function(f);
 }
 
 void Parser::parse_definition() {
@@ -400,7 +398,7 @@ void Parser::parse_definition() {
     // Parse dependencies
     Context &context = m_current_namespace->get_context();
     Context sub_context(m_current_namespace->get_context());
-    DependencyData dependencies = parse_dependencies(sub_context);
+    Function::Dependencies dependencies = parse_dependencies(sub_context);
     // (if there are dependencies, we will use the sub_context for any further use)
     Context &use_context = (dependencies.size() > 0) ? sub_context : context;
 
@@ -410,7 +408,7 @@ void Parser::parse_definition() {
     if (!context.put_function(identifier, f))
         throw ParserException(t_def, "name " + identifier + " already used in this context");
 
-    f->set_namespace(m_current_namespace);
+    m_current_namespace->put_function(f);
 }
 
 std::string Parser::parse_path() {
@@ -445,7 +443,7 @@ std::vector<FunctionPtr> Parser::parse_functions(Context &context) {
 
     // Parse dependencies
     Context sub_context(context);
-    DependencyData dependencies = parse_dependencies(sub_context);
+    Function::Dependencies dependencies = parse_dependencies(sub_context);
     Context &use_context = (dependencies.size() > 0) ? sub_context : context;
 
     // Parse type
@@ -470,8 +468,8 @@ std::vector<FunctionPtr> Parser::parse_functions(Context &context) {
     return output;
 }
 
-DependencyData Parser::parse_dependencies(Context &context) {
-    DependencyData dependencies;
+Function::Dependencies Parser::parse_dependencies(Context &context) {
+    Function::Dependencies dependencies;
     bool is_explicit;
     while ((is_explicit = found(SEPARATOR, "(")) || found(SEPARATOR, "{")) {
         consume();
@@ -497,7 +495,7 @@ FunctionPtr Parser::parse_expression(Context &context) {
     return parse_expression(context, {});
 }
 
-FunctionPtr Parser::parse_expression(Context &context, DependencyData dependencies) {
+FunctionPtr Parser::parse_expression(Context &context, Function::Dependencies dependencies) {
     /* EXPRESSION =
         TERM | TERM TERM+
      */

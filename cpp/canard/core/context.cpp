@@ -16,7 +16,6 @@ bool Context::put_function(const std::string& label, const FunctionPtr& f) {
 
     f->set_label(label);
     m_labels.emplace(label, f);
-    m_all_functions.push_back(f);
     return true;
 }
 
@@ -35,8 +34,4 @@ FunctionPtr Context::get_function(const std::string &label) {
 
 bool Context::is_used(const FunctionPtr &f) {
     return m_used_functions.find(f) != m_used_functions.end();
-}
-
-std::vector<FunctionPtr>& Context::get_functions() {
-    return m_all_functions;
 }

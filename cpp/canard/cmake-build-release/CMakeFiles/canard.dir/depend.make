@@ -25,12 +25,7 @@ CMakeFiles/canard.dir/core/namespace.cpp.o: ../core/function.h
 CMakeFiles/canard.dir/core/namespace.cpp.o: ../core/namespace.cpp
 CMakeFiles/canard.dir/core/namespace.cpp.o: ../core/namespace.h
 
-CMakeFiles/canard.dir/core/pool.cpp.o: ../core/context.h
-CMakeFiles/canard.dir/core/pool.cpp.o: ../core/function.h
-CMakeFiles/canard.dir/core/pool.cpp.o: ../core/namespace.h
 CMakeFiles/canard.dir/core/pool.cpp.o: ../core/pool.cpp
-CMakeFiles/canard.dir/core/pool.cpp.o: ../core/pool.h
-CMakeFiles/canard.dir/core/pool.cpp.o: ../core/specialization.h
 
 CMakeFiles/canard.dir/core/session.cpp.o: ../core/context.h
 CMakeFiles/canard.dir/core/session.cpp.o: ../core/function.h

@@ -16,44 +16,46 @@ typedef std::shared_ptr<Function> FunctionPtr;
 
 #include "namespace.h"
 
-struct DependencyData {
-    std::vector<FunctionPtr> m_functions;
-    std::vector<bool> m_explicits;
-
-    inline size_t size() const { return m_functions.size(); }
-    inline size_t empty() const { return m_functions.empty(); }
-
-};
-
 class Function : public std::enable_shared_from_this<Function> {
+
+public:
+
+    struct Dependencies {
+        std::vector<FunctionPtr> m_functions;
+        std::vector<bool> m_explicits;
+
+        inline size_t size() const { return m_functions.size(); }
+        inline size_t empty() const { return m_functions.empty(); }
+
+    };
 
 protected:
 
     Namespace *m_space = nullptr;
     std::string m_label;
 
-    FunctionPtr m_type;
-    DependencyData m_dependencies;
+    const FunctionPtr m_type;
+    const Dependencies m_dependencies;
 
 public:
 
-    Function(FunctionPtr, DependencyData);
+    Function(const FunctionPtr&, Dependencies);
 
     FunctionPtr get_type();
 
-    const DependencyData &get_dependencies() { return m_dependencies; }
+    const Dependencies &get_dependencies() { return m_dependencies; }
 
     std::vector<FunctionPtr> get_explicit_dependencies();
 
     const std::string &get_label() { return m_label; }
 
-    void set_label(const std::string &label);
+    inline void set_label(const std::string &label) { m_label = label; }
 
-    void set_namespace(Namespace *space);
+    inline void set_namespace(Namespace *space) { m_space = space; }
 
-    virtual FunctionPtr get_base();
+    inline virtual FunctionPtr get_base() { return shared_from_this(); }
 
-    virtual const std::vector<FunctionPtr> &get_arguments();
+    inline virtual const std::vector<FunctionPtr> &get_arguments() { return m_dependencies.m_functions; }
 
     virtual bool depends_on(const std::vector<FunctionPtr> &);
 
@@ -65,7 +67,7 @@ public:
 
     virtual std::string to_string(bool, bool);
 
-    FunctionPtr specialize(std::vector<FunctionPtr>, DependencyData);
+    FunctionPtr specialize(std::vector<FunctionPtr>, Dependencies);
 
     bool equals(const FunctionPtr &);
 
@@ -73,8 +75,8 @@ public:
 
 struct SpecializationException : public std::exception {
 
-    std::string m_message;
+    const std::string m_message;
 
-    SpecializationException(std::string message) : m_message(std::move(message)) {};
+    SpecializationException(const std::string& message) : m_message(message) {};
 
 };

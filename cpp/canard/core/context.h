@@ -12,7 +12,6 @@
 class Context {
 
     Context *const m_parent;
-    std::vector<FunctionPtr> m_all_functions;
     std::unordered_map<std::string, FunctionPtr> m_labels;
     std::unordered_set<FunctionPtr> m_used_functions;
 
@@ -27,7 +26,5 @@ public:
     FunctionPtr get_function(const std::string &);
 
     bool is_used(const FunctionPtr &);
-
-    std::vector<FunctionPtr>& get_functions();
 
 };

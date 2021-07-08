@@ -76,11 +76,11 @@ class Parser {
 
     std::vector<FunctionPtr> parse_functions(Context &);
 
-    DependencyData parse_dependencies(Context &);
+    Function::Dependencies parse_dependencies(Context &);
 
     FunctionPtr parse_expression(Context &);
 
-    FunctionPtr parse_expression(Context &, DependencyData);
+    FunctionPtr parse_expression(Context &, Function::Dependencies);
 
     FunctionPtr parse_term(Context &);
 
