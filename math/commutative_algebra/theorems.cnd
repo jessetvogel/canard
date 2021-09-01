@@ -16,4 +16,16 @@ def flat_of_free_module {R : Ring} {M : Module R} (h : free M) := flat_of_proj_m
 let cyclic_module_self (R : Ring) : cyclic (module_self R)
 let free_module_self (R : Ring) : free (module_self R)
 
+let ufd_of_pid {R : Ring} (h : pid R) : ufd R
+let ic_of_ufd {R : Ring} (h : ufd R) : integrally_closed R
+let domain_of_ic {R : Ring} (h : integrally_closed R) : domain R
+let pid_of_eucl {R : Ring} (h : euclidean R) : pid R
+let eucl_of_field {R : Ring} (h : field R) : euclidean R
+let nt_of_art {R : Ring} (h : artin R) : noetherian R
+
+let exc_of_field {R : Ring} (h : field R) : excellent R
+let exc_of_nt_cmpl_lc {R : Ring} (h1 : noetherian R) (h2 : complete R) (h3 : local R) : excellent R
+
+let jcb_of_field {R : Ring} (h : field R) : jacobson R
+
 end commutative_algebra

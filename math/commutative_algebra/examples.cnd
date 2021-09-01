@@ -7,11 +7,22 @@ namespace commutative_algebra
 
 -- Examples
 let ZZ QQ RR CC : Ring
+let zero_ring : Ring
 
+-- ZZ
 let ZZ_is_domain : domain ZZ
+let ZZ_is_pid : pid ZZ
 let ZZ_not_field : not (field ZZ)
+let ZZ_noetherian : noetherian ZZ
+let ZZ_excellent : excellent ZZ
+
+-- QQ
 let QQ_is_field : field QQ
+
+-- RR
 let RR_is_field : field RR
+
+-- CC
 let CC_is_field : field CC
 
 let ZZ_to_QQ : Morphism ZZ QQ
@@ -20,6 +31,7 @@ let RR_to_CC : Morphism RR CC
 def ZZ_to_RR := comp QQ_to_RR ZZ_to_QQ
 def QQ_to_CC := comp RR_to_CC QQ_to_RR
 
+-- Finite field of 2 elements
 let FF2 : Ring
 let FF2_is_field : field FF2
 let FF2_is_finite : finite FF2
@@ -27,7 +39,16 @@ let FF2_is_finite : finite FF2
 let ZZ_to_FF2 : Morphism ZZ FF2
 
 let FF2_over_ZZ_not_flat : not (flat (module_of_ring_morphism ZZ_to_FF2))
+let QQ_over_ZZ_injective : injective (module_of_ring_morphism ZZ_to_QQ)
 
+-- ZZ[(1 + \sqrt{19}) / 2]
+let ZZ_quadr_19 : Ring
+let ZZ_quadr_19_pid : pid ZZ_quadr_19
+let ZZ_quadr_19_not_eucl : not (euclidean ZZ_quadr_19)
 
+-- ?
+let ufd_xy {R : Ring} (h : ufd R) : Ring
+let ufd_xy_of_ufd {R : Ring} (h : ufd R) : ufd (ufd_xy h)
+let ufd_xy_not_pid {R : Ring} (h : ufd R) : not (pid (ufd_xy h))
 
 end commutative_algebra

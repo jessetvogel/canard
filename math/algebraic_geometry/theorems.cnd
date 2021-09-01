@@ -4,13 +4,6 @@ open algebraic_geometry.morphism
 
 namespace algebraic_geometry
 
--- Other theorems
-let spec_is_affine (R : Ring) : scheme.affine (Spec R)
-let hilbert_basis_thm {X : Scheme} (h : locally_noetherian X) : locally_noetherian (affine_line X)
-let spec_noetherian {R : Ring} (h : ring.noetherian R) : noetherian (Spec R)
-let int_of_domain {R : Ring} (h : ring.domain R) : integral (Spec R)
-let rg_of_field {R : Ring} (h : ring.field R) : scheme.regular (Spec R)
-
 -- Theorems on schemes
 let qc_of_af {X : Scheme} (h : scheme.affine X) : scheme.quasi_compact X
 let lnt_of_rg {X : Scheme} (h : scheme.regular X) : locally_noetherian X

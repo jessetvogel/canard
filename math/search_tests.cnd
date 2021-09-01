@@ -1,5 +1,3 @@
-import "/Users/jessevogel/Projects/canard/math/main.cnd"
-
 open algebraic_geometry;
 open algebraic_geometry.scheme;
 open algebraic_geometry.morphism;

@@ -12,4 +12,5 @@ def homeomorphism {X Y : TopSpace} (f : Morphism X Y) := isomorphism f
 
 end topology
 
+import "theorems.cnd"
 import "examples.cnd"

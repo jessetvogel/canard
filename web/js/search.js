@@ -333,16 +333,25 @@ function init() {
                     setText($('#output'), 'Fail: ' + response.data);
                     return;
                 case 'success':
-                    const solutions = response.data[0].data;
-                    if(solutions.length == 0) {
-                        setText($('#output'), 'No solutions found..');
-                        return;
-                    }
-                    
                     let output = '';
-                    for(let solution of solutions) {
-                        for(let X in solution)
-                            output += '<span style="font-size: 1.125rem;" class="tt"><span style="color: rgba(0, 0, 0, 0.5);">' + X + '</span>: '+ typeset(solution[X]) + '</span><br/>';
+                    for(const message of response.data) {
+                        if(message.status == 'error')
+                            output += `<div class="result error">Error: ${message.data}</div>`;
+                        if(message.status == 'fail')
+                            output += `<div class="result error">Fail: ${message.data}</div>`;
+                        if(message.status == 'success') {
+                            const solutions = message.data;
+                            if(solutions.length == 0) {
+                                output = 'No solutions found..';
+                                break;
+                            }
+                            output += '<div class="result">';
+                            for(let solution of solutions) {
+                                for(let X in solution)
+                                    output += '<span style="font-size: 1.125rem;" class="tt"><span style="color: rgba(0, 0, 0, 0.5);">' + X + '</span>: '+ typeset(solution[X]) + '</span><br/>';
+                            }
+                            output += '</div>';
+                        }
                     }
                     setHTML($('#output'), output);
                     return;

@@ -19,29 +19,21 @@ $descriptorspec = array(
 // Create process
 $cwd = null;
 $env = array();
-$process = proc_open('../../bin/canard --json --explicit', $descriptorspec, $pipes, $cwd, $env);
+$process = proc_open('../../bin/canard --json --explicit ../../math/main.cnd', $descriptorspec, $pipes, $cwd, $env);
  
 if(!is_resource($process))
     response_server_error('failed to start canard');
 
-
-// $pipes now looks like this:
-// 0 => writeable handle connected to child stdin
-// 1 => readable handle connected to child stdout
-// Any error output will be appended to /tmp/error-output.txt
-
 // Write commands to process
-fwrite($pipes[0], 'import "../../math/main.cnd";');
 fwrite($pipes[0], 'open commutative_algebra;');
 fwrite($pipes[0], 'open algebraic_geometry;');
 fwrite($pipes[0], $query);
 fwrite($pipes[0], ";\n/--/;exit;");
 fclose($pipes[0]);
 
-
 header('Content-Type: application/json');
 
-$timeout = time() + 20; // Set a timeout of 3 seconds
+$timeout = time() + 10; // Set a timeout of 10 seconds
 while(true) {
     $status = proc_get_status($process);
     if($status == false) { // proc_get_status failed

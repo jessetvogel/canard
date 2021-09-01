@@ -33,8 +33,6 @@ class Parser {
 
     ParserFormat m_format = PLAIN;
 
-    void set_location(std::string &, std::string &);
-
     // token methods
 
     void next_token();
@@ -97,6 +95,7 @@ public:
 
     bool parse();
 
+    void set_location(std::string &, std::string &);
 };
 
 struct ParserException : public std::exception {

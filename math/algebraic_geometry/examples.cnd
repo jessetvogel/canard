@@ -3,29 +3,68 @@ open commutative_algebra
 
 open algebraic_geometry.scheme
 open algebraic_geometry.morphism
+open commutative_algebra.ring
 
 namespace algebraic_geometry
 
 def spec_ZZ := Spec ZZ -- Even though this is two steps, this is the simplest scheme, so we want to consider it as a first case
+def empty_scheme := Spec zero_ring
 
-let empty_scheme : Scheme
+-- Spec(R)
+let spec_af (R : Ring) : scheme.affine (Spec R)
+let spec_int {R : Ring} (h : ring.domain R) : integral (Spec R)
+let spec_nt {R : Ring} (h : ring.noetherian R) : scheme.noetherian (Spec R)
+let spec_rg {R : Ring} (h : ring.field R) : scheme.regular (Spec R)
+let spec_irr {R : Ring} (h : prime_ideal (nilradical R)) : irreducible (Spec R)
+let spec_nm {R : Ring} (h : integrally_closed R) : normal (Spec R)
+let spec_exc {R : Ring} (h : ring.excellent R) : scheme.excellent (Spec R)
+let spec_jcb {R : Ring} (h : ring.jacobson R) : scheme.jacobson (Spec R)
 
+-- AA^1_X
 let affine_line (X : Scheme) : Scheme
-let affine_line_to_base (X : Scheme) : Morphism (affine_line X) X
-let affine_line_affine (R : Ring) : scheme.affine (affine_line (Spec R))
-let affine_line_to_base_ff (X : Scheme) : faithfully_flat (affine_line_to_base X)
-let affine_line_to_base_smooth (X : Scheme) : smooth (affine_line_to_base X)
-let affine_line_to_base_fp (X : Scheme) : finitely_presented (affine_line_to_base X)
+let affine_line_af (R : Ring) : scheme.affine (affine_line (Spec R))
+let hilbert_basis_thm {X : Scheme} (h : locally_noetherian X) : locally_noetherian (affine_line X)
+let affine_line_rd {X : Scheme} (h : scheme.reduced X) : scheme.reduced (affine_line X)
+let affine_line_sp {X : Scheme} (h : scheme.separated X) : scheme.separated (affine_line X)
+let affine_line_qsp {X : Scheme} (h : scheme.quasi_separated X) : scheme.quasi_separated (affine_line X)
+let affine_line_jcb {X : Scheme} (h : scheme.jacobson X) : scheme.jacobson (affine_line X)
+let affine_line_int {X : Scheme} (h : scheme.integral X) : scheme.integral (affine_line X)
+let affine_line_nm {X : Scheme} (h : normal X) : normal (affine_line X)
+-- let affine_line_cn {X : Scheme} (h : scheme.connected X) : scheme.connected (affine_line X)
 
+-- AA^1_X \to X
+let affine_line_to_base (X : Scheme) : Morphism (affine_line X) X
+let affine_line_to_base_ff (X : Scheme) : faithfully_flat (affine_line_to_base X)
+let affine_line_to_base_sm (X : Scheme) : smooth (affine_line_to_base X)
+let affine_line_to_base_fp (X : Scheme) : finitely_presented (affine_line_to_base X)
+def affine_line_rg {X : Scheme} (h : scheme.regular X) := src_rg_of_sm_trg_rg h (affine_line_to_base_sm X)
+
+-- Projective line
 let proj_line (X : Scheme) : Scheme
-let proj_line_not_affine (X : Scheme) : not (scheme.affine (proj_line X)) -- only if the scheme is non-empty ..
+let proj_line_not_affine (X : Scheme) : not (scheme.affine (proj_line X)) -- only if X is non-empty ..
 let proj_line_integral {X : Scheme} (h : integral X) : integral (proj_line X)
 let proj_line_separated {X : Scheme} (h : scheme.separated X) : scheme.separated (proj_line X)
 
-let spec_ZZ_integral : integral (Spec ZZ)
+-- X \times Spec(ZZ[x]/(x^2))
+let thick (X : Scheme) : Scheme
+let thick_af {X : Scheme} (h : scheme.affine X) : scheme.affine (thick X)
+let thick_cn {X : Scheme} (h : scheme.connected X) : scheme.connected (thick X)
+let thick_lnt {X : Scheme} (h : scheme.locally_noetherian X) : scheme.locally_noetherian (thick X)
+let thick_not_rd (X : Scheme) : not (scheme.reduced (thick X)) -- only if X is non-empty ..
+let thick_sp {X : Scheme} (h : scheme.separated X) : scheme.separated (thick X)
+let thick_qsp {X : Scheme} (h : scheme.quasi_separated X) : scheme.quasi_separated (thick X)
 
-let inf_union_spec_QQ : Scheme
-let inf_union_spec_QQ_not_quasi_compact : not (scheme.quasi_compact inf_union_spec_QQ)
+-- (thick X) \to X
+let thick_to_base (X : Scheme) : Morphism (thick X) X
+let thick_to_base_fn (X : Scheme) : morphism.finite (thick_to_base X)
+let thick_to_base_fp (X : Scheme) : morphism.finitely_presented (thick_to_base X)
+let thick_to_base_not_ci (X : Scheme) : not (closed_immersion (thick_to_base X)) -- only if X is non-empty
+let thick_to_base_fl (X : Scheme) : flat (thick_to_base X)
+let thick_to_base_sj (X : Scheme) : surjective (thick_to_base X)
+
+-- infinite union of points over a field
+let inf_points {k : Ring} (h : field k) : Scheme
+let inf_points_not_qc {k : Ring} (h : field k) : not (scheme.quasi_compact (inf_points h))
 
 let open_complement {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Scheme
 let open_complement_inclusion {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Morphism (open_complement h) X

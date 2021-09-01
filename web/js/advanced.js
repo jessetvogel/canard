@@ -47,6 +47,12 @@ function init() {
                                 break;
 
                             case 'success':
+                                if(typeof message.data === 'string') {
+                                    output += `<div class="result"><span style="font-size: 1.25rem;" class="tt">${typeset(message.data)}</span></div>`;
+                                    console.log('test');
+                                    break;
+                                }
+
                                 if(message.data.length == 0) {
                                     output += '<div class="result">no solutions found</div>';
                                     break;

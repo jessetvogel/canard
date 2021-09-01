@@ -247,7 +247,7 @@ void Parser::parse_import() {
     std::string directory = path.substr(0, i + 1);
     std::string file = path.substr(i + 1);
 
-    // Create subParser to parse the file
+    // Create sub_parser to parse the file
     Parser sub_parser(ifstream, m_ostream, m_session);
     sub_parser.set_location(directory, file);
     sub_parser.set_format(m_format);

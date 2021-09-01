@@ -22,7 +22,6 @@ std::string Message::escape(const std::string &raw) {
         else if (c >= 0x20 && c <= 0x7E) ss << c;
         else if (c >= 0b11000000 && c <= 0b11011111) { // 2-char unicode character
             int u = ((c & 0b00011111) << 6) + (*(++it) & 0b00111111);
-            std::cerr << u << std::endl;
             snprintf(u_buf, sizeof(u_buf), "%04X", u);
             ss << "\\u" << u_buf;
         }
