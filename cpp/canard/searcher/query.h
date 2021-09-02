@@ -35,21 +35,17 @@ public:
     inline const std::vector<FunctionPtr> &get_locals() { return m_locals; }
 
     const FunctionPtr &get_last_indeterminate();
-
     int get_depth();
+
+    size_t get_indeterminates_size() { return m_indeterminates.size(); }
 
     inline bool is_solved() { return m_indeterminates.empty(); }
 
     bool is_indeterminate(const FunctionPtr &);
-
     static std::shared_ptr<Query> normalize(const std::shared_ptr<Query> &);
-
     static std::shared_ptr<Query> reduce(const std::shared_ptr<Query> &, const FunctionPtr &);
-
     static std::vector<FunctionPtr> get_final_solutions(const std::shared_ptr<Query> &);
-
     bool injects_into(const std::shared_ptr<Query> &);
-
     std::string to_string();
 
 //    int hash_code();

@@ -17,7 +17,7 @@ class Searcher {
 
     std::vector<FunctionPtr> m_result;
 
-    bool search_helper(std::shared_ptr<Query> &, FunctionPtr &);
+    bool search_helper(std::shared_ptr<Query> &, FunctionPtr &, std::vector<std::shared_ptr<Query>> &);
 
     bool is_redundant(const std::shared_ptr<Query> &, const std::shared_ptr<Query> &);
 

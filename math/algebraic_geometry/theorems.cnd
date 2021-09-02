@@ -37,6 +37,9 @@ let fsm_of_fet {X Y : Scheme} {f : Morphism X Y} (h : formally_etale f) : formal
 let fur_of_fet {X Y : Scheme} {f : Morphism X Y} (h : formally_etale f) : formally_unramified f
 let fet_of_fsm_fur {X Y : Scheme} {f : Morphism X Y} (h1 : formally_smooth f) (h2 : formally_unramified f) : formally_etale f
 let fp_of_lfp_qsp_qc {X Y : Scheme} {f : Morphism X Y} (h1 : locally_finitely_presented f) (h2 : morphism.quasi_separated f) (h3 : morphism.quasi_compact f) : finitely_presented f
+let lfp_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : locally_finitely_presented f
+let qsp_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : morphism.quasi_separated f
+let qc_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : morphism.quasi_compact f
 let lft_of_lfp {X Y : Scheme} {f : Morphism X Y} (h : locally_finitely_presented f) : locally_finite_type f
 let ft_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : finite_type f
 let ft_of_lft_qc {X Y : Scheme} {f : Morphism X Y} (h1 : locally_finite_type f) (h2 : morphism.quasi_compact f) : finite_type f
@@ -70,6 +73,8 @@ let sj_of_ffl {X Y : Scheme} {f : Morphism X Y} (h : faithfully_flat f) : surjec
 let sp_of_af_morph {X Y : Scheme} {f : Morphism X Y} (h : morphism.affine f) : morphism.separated f
 let qfn_of_fn {X Y : Scheme} {f : Morphism X Y} (h : finite f) : quasi_finite f
 let fl_of_sm {X Y : Scheme} {f : Morphism X Y} (h : smooth f) : flat f
+def ur_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := ur_of_fur_lft (fur_of_fet (fet_of_et h)) (lft_of_lfp (lfp_of_et h))
+def sm_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := sm_of_fsm_lfp (fsm_of_fet (fet_of_et h)) (lfp_of_et h)
 
 let src_af_of_af_trg_af {X Y : Scheme} {f : Morphism X Y} (h1: scheme.affine Y) (h2 : morphism.affine f) : scheme.affine X
 let af_of_src_af_trg_af {X Y : Scheme} (f : Morphism X Y) (h1 : scheme.affine X) (h2: scheme.affine Y) : morphism.affine f

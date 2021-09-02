@@ -16,6 +16,18 @@ unordered_set
 function.h
 /Users/jessevogel/Projects/canard/cpp/canard/core/function.h
 
+/Users/jessevogel/Projects/canard/cpp/canard/core/function.cpp
+function.h
+/Users/jessevogel/Projects/canard/cpp/canard/core/function.h
+matcher.h
+/Users/jessevogel/Projects/canard/cpp/canard/core/matcher.h
+specialization.h
+/Users/jessevogel/Projects/canard/cpp/canard/core/specialization.h
+utility
+-
+sstream
+-
+
 /Users/jessevogel/Projects/canard/cpp/canard/core/function.h
 utility
 -
@@ -39,6 +51,10 @@ string
 -
 context.h
 /Users/jessevogel/Projects/canard/cpp/canard/core/context.h
+
+/Users/jessevogel/Projects/canard/cpp/canard/core/specialization.h
+function.h
+/Users/jessevogel/Projects/canard/cpp/canard/core/function.h
 
 /Users/jessevogel/Projects/canard/cpp/canard/searcher/query.cpp
 query.h

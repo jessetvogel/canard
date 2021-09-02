@@ -40,7 +40,7 @@ bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
         // Finally, if g is an indeterminate, it was apparently not mapped before. Hence we will map g -> f instead
         if (is_indeterminate(g)) return put_solution(g, f);
 
-//        std::cerr << "cannot match " << f->to_string() << " to " << g->to_string() << " because already matched to " << k->to_string() << std::endl;
+//        std::cerr << "Cannot match " << f->to_string() << " to " << g->to_string() << " because already matched to " << k->to_string() << std::endl;
         return false;
     }
 

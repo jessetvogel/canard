@@ -62,6 +62,27 @@ let thick_to_base_not_ci (X : Scheme) : not (closed_immersion (thick_to_base X))
 let thick_to_base_fl (X : Scheme) : flat (thick_to_base X)
 let thick_to_base_sj (X : Scheme) : surjective (thick_to_base X)
 
+-- Elliptic curve over a field
+let ec {k : Ring} (h : field k) : Scheme
+let ec_not_af {k : Ring} (h : field k) : not (scheme.affine (ec h))
+let ec_sp {k : Ring} (h : field k) : scheme.separated (ec h)
+let ec_qc {k : Ring} (h : field k) : scheme.quasi_compact (ec h)
+let ec_int {k : Ring} (h : field k) : scheme.integral (ec h)
+let ec_rg {k : Ring} (h : field k) : scheme.regular (ec h)
+
+-- Elliptic curve --> P1 by x coordinate
+let ec_to_P1 {k : Ring} (h : field k) : Morphism (ec h) (proj_line (Spec k))
+let ec_to_P1_not_et {k : Ring} (h : field k) : not (etale (ec_to_P1 h))
+let ec_to_P1_fn {k : Ring} (h : field k) : morphism.finite (ec_to_P1 h)
+let ec_to_P1_fl {k : Ring} (h : field k) : morphism.flat (ec_to_P1 h)
+let ec_to_P1_sj {k : Ring} (h : field k) : morphism.surjective (ec_to_P1 h)
+let ec_to_P1_fp {k : Ring} (h : field k) : morphism.finitely_presented (ec_to_P1 h)
+
+
+
+
+
+
 -- infinite union of points over a field
 let inf_points {k : Ring} (h : field k) : Scheme
 let inf_points_not_qc {k : Ring} (h : field k) : not (scheme.quasi_compact (inf_points h))

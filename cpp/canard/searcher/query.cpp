@@ -3,7 +3,6 @@
 //
 
 #include "query.h"
-
 #include <utility>
 #include <iostream>
 #include <sstream>
@@ -19,11 +18,11 @@ Query::Query(std::shared_ptr<Query> parent, std::unordered_map<FunctionPtr, Func
                                                                                          std::move(indeterminates)),
                                                                                  m_depths(std::move(depths)) {
     m_solutions = std::move(solutions);
-};
+}
 
 int Query::get_depth() {
     int M = 0;
-    for (int &d : m_depths)
+    for (int &d: m_depths)
         if (d > M)
             M = d;
     return M;
@@ -45,7 +44,7 @@ std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
     if (h->get_dependencies().size() == 0)
         return query;
 
-    // Create a subQuery where h is replaced by a dependency-less version of h
+    // Create a sub_query where h is replaced by a dependency-less version of h
     // This introduces new locals: the current dependencies of h
     std::vector<FunctionPtr> new_indeterminates = query->m_indeterminates;
     new_indeterminates.pop_back();
@@ -61,16 +60,15 @@ std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
     sub_query->m_locals = query->m_locals;
     sub_query->m_locals_allowed = query->m_locals_allowed;
 
-    // Add the dependencies of h to the locals of subQuery
+    // Add the dependencies of h to the locals of sub_query
     // Then hNew may depend on these new locals
     std::shared_ptr<std::unordered_set<FunctionPtr>> new_h_allowed;
     auto it = query->m_locals_allowed.find(h);
     if (it != query->m_locals_allowed.end()) // add all that h was allowed to
-        new_h_allowed = std::shared_ptr<std::unordered_set<FunctionPtr>>(
-                new std::unordered_set<FunctionPtr>(*(it->second)));
+        new_h_allowed = std::make_shared<std::unordered_set<FunctionPtr>>(*(it->second));
     else
-        new_h_allowed = std::shared_ptr<std::unordered_set<FunctionPtr>>(new std::unordered_set<FunctionPtr>());
-    for (auto &f : h->get_dependencies().m_functions) {
+        new_h_allowed = std::make_shared<std::unordered_set<FunctionPtr>>();
+    for (auto &f: h->get_dependencies().m_functions) {
         sub_query->m_locals.push_back(f);
         new_h_allowed->insert(f);
     }
@@ -147,8 +145,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
 
                     // Check whether `solution` is allowed (w.r.t. the local variables)
                     if (!query->is_allowed_solution(f, solution)) {
-                        std::cerr << "nope " << solution->to_string() << " is not an allowed solution for "
-                                  << f->to_string(true, false) << std::endl;
+//                        std::cerr << "nope " << solution->to_string() << " is not an allowed solution for " << f->to_string(true, false) << std::endl;
                         return nullptr;
                     }
 
@@ -197,8 +194,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     // Check whether `argument` is allowed (w.r.t. the local variables)
                     // Note that it has the same allowances as h, because it is used to solve for h
                     if (h_has_allowed && !query->is_allowed_solution(*it_h_allowed->second, argument)) {
-                        std::cerr << "nope " << argument->to_string() << " is not an allowed argument for "
-                                  << f->to_string(true, false) << std::endl;
+//                        std::cerr << "nope " << argument->to_string() << " is not an allowed argument for " << f->to_string(true, false) << std::endl;
                         return nullptr;
                     }
 
@@ -259,16 +255,16 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
 
     // Now, sub_query.locals is set.
     // Also sub_query.locals_allowed is set, but with the OLD locals. We simply need to replace those!
-    for (auto &it : new_locals_allowed) {
+    for (auto &it: new_locals_allowed) {
         auto converted_set = std::make_shared<std::unordered_set<FunctionPtr>>();
-        for (const FunctionPtr &f : *it.second)
+        for (const FunctionPtr &f: *it.second)
             converted_set->insert(query_to_sub_query.convert(f));
         it.second = converted_set;
     }
 
     // Finally, set solution of h, as specialization of thm
     std::vector<FunctionPtr> thm_arguments;
-    for (FunctionPtr &f : thm->get_explicit_dependencies())
+    for (FunctionPtr &f: thm->get_explicit_dependencies())
         thm_arguments.push_back(arguments[f]);
 
     try {
@@ -284,6 +280,9 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     std::shared_ptr<Query> sub_query(new Query(query, new_solutions, new_indeterminates, new_depths));
     sub_query->m_locals = std::move(new_locals);
     sub_query->m_locals_allowed = std::move(new_locals_allowed);
+
+//    std::cerr << "... to " << sub_query->to_string() << std::endl;
+
     return sub_query;
 }
 
@@ -314,18 +313,28 @@ std::vector<FunctionPtr> Query::get_final_solutions(const std::shared_ptr<Query>
 
         // Obtain key set
         auto indeterminates = std::make_unique<std::vector<FunctionPtr>>();
-        for (auto &it : q->m_solutions)
+        for (auto &it: q->m_solutions)
             indeterminates->push_back(it.first);
         auto next_matcher = (i == 0) ? std::make_unique<Matcher>(*indeterminates) : std::make_unique<Matcher>(
                 matchers.back().get(), *indeterminates);
         matchers_indeterminates.push_back(std::move(indeterminates));
 
         auto h = q->get_parent()->get_last_indeterminate();
-        for (auto &it : q->m_solutions) { // TODO: reason is that locals can also be mapped to solutions, and potentially not all indeterminates need to have solutions at each step ?
+        for (auto &it: q->m_solutions) { // TODO: reason is that locals can also be mapped to solutions, and potentially not all indeterminates need to have solutions at each step ?
             auto f = it.first;
             auto g = it.second;
+
             // First convert the solution along the previous matcher
-            if (i > 0) g = matchers.back()->convert(g);
+            if (i > 0) {
+                bool is_local = (
+                        std::find(q->get_parent()->m_locals.begin(), q->get_parent()->m_locals.end(), it.first) !=
+                        q->get_parent()->m_locals.end());
+                if (is_local)
+                    // locals must be cloned, because their type may depend on indeterminates, while their expression may not
+                    g = matchers.back()->cheap_clone(g);
+                else
+                    g = matchers.back()->convert(g); // non-locals can simply be converted
+            }
 
             // Case f = h, may need to convert the dependencies
             if (f == h) {
@@ -361,7 +370,7 @@ std::vector<FunctionPtr> Query::get_final_solutions(const std::shared_ptr<Query>
     // Note: this is the parent of the last query in the chain (because the initial query does not have a parent,
     // so it is not in the chain)
     std::vector<FunctionPtr> result;
-    for (auto &f : chain.back()->get_parent()->m_indeterminates)
+    for (auto &f: chain.back()->get_parent()->m_indeterminates)
         result.push_back(matchers.back()->convert(f));
     return result;
 }
@@ -427,8 +436,8 @@ bool Query::injects_into_helper(Matcher *matcher, std::vector<FunctionPtr> unmap
 
         // Create new unmapped and allowed lists, by removing those which are mapped and to which they are mapped
         std::vector<FunctionPtr> new_unmapped, new_allowed = allowed;
-        for (auto &h : unmapped) {
-            const auto& k = sub_matcher.get_solution(h);
+        for (auto &h: unmapped) {
+            const auto &k = sub_matcher.get_solution(h);
             if (k == nullptr) {
                 if (h == f)
                     return false; // TODO: it may happen that g -> f, so that matches returns true, but k == nullptr.
@@ -466,7 +475,7 @@ bool Query::is_allowed_solution(const std::unordered_set<FunctionPtr> &allowed, 
     if (m_locals.empty()) return true;
 
     std::vector<FunctionPtr> disallowed;
-    for (const FunctionPtr &l : m_locals) {
+    for (const FunctionPtr &l: m_locals) {
         if (allowed.find(l) == allowed.end())
             disallowed.push_back(l);
     }
@@ -476,7 +485,7 @@ bool Query::is_allowed_solution(const std::unordered_set<FunctionPtr> &allowed, 
 std::string Query::to_string() {
     std::ostringstream ss;
     ss << "Query";
-    for (auto &f : m_indeterminates)
+    for (auto &f: m_indeterminates)
         ss << " (" << f->to_string(true, false) << ")";
     return ss.str();
 }

@@ -13,7 +13,7 @@ void Searcher::add_namespace(Namespace &space) {
     auto theorems = space.get_functions();
     m_all_theorems.insert(m_all_theorems.end(), theorems.begin(), theorems.end());
 
-    for (FunctionPtr &thm : theorems) {
+    for (FunctionPtr &thm: theorems) {
         auto thm_type_base = thm->get_type()->get_base();
 
         // If the thmTypeBase is a dependency of the theorem, then store in the 'general' category
@@ -54,57 +54,82 @@ bool Searcher::search(std::shared_ptr<Query> &query) {
         if (is_redundant(q, q->get_parent()))
             continue;
 
-        // If subQuery injects into the parent p, then we can safely delete all other branches coming from that parent p
+        // If sub_query injects into the parent p, then we can safely delete all other branches coming from that parent p
         // since any solution of the parent will yield a solution for q
-        // TODO: reverse order of iterating, and whenever we have a match, break the for-loop
-        for (std::shared_ptr<Query> p = q->get_parent(); p != nullptr; p = p->get_parent()) {
-            if (q->injects_into(p)) {
-                std::queue<std::shared_ptr<Query>> new_queue;
-                while (!m_queue.empty()) {
-                    auto r = m_queue.front();
-                    m_queue.pop();
-                    bool should_remove = false;
-                    for (auto s = r->get_parent(); s != nullptr; s = s->get_parent()) {
-                        if (s == p) {
-                            should_remove = true;
-                            break;
-                        }
+        // TODO: reverse order of iterating, and whenever we have a match, break the for-loop ?
+        // TODO: this 'optimization' is not quite valid: if some parent gets 'strictly solved' by some query which was very slow (i.e. high depth), it should not be allowed to remove another query which already solved the query much more / earlier, just because it is a child of that parent..
+        for (auto p = q->get_parent(); p != nullptr; p = p->get_parent()) {
+            if (!q->injects_into(p))
+                continue;
+
+            std::queue<std::shared_ptr<Query>> new_queue;
+            while (!m_queue.empty()) {
+                auto r = m_queue.front();
+                m_queue.pop();
+                bool should_remove = false;
+                for (auto s = r->get_parent(); s != nullptr; s = s->get_parent()) {
+                    if (s == p) {
+                        should_remove = true;
+                        break;
                     }
-                    if (!should_remove)
-                        new_queue.push(std::move(r));
                 }
-                m_queue = std::move(new_queue);
+                if (!should_remove)
+                    new_queue.push(std::move(r));
+
+//                else
+//                    std::cerr << "Removed [" << r->to_string() << "] because its parent [" << p->to_string()
+//                              << "] was strictly solved by [" << q->to_string() << "]" << std::endl;
             }
+            m_queue = std::move(new_queue);
         }
 
+        // Now we are going to look for reductions. Before pushing to the queue, we will store all reductions
+        // in a list `reductions`. Then we will sort this list based on the number of indeterminates, which is
+        // some form of optimization
+        std::vector<std::shared_ptr<Query>> reductions;
+
         // First list to search through is the list of local variables of q
-        for (auto thm : q->get_locals())
-            if (search_helper(q, thm)) return true;
+        for (auto thm: q->get_locals())
+            if (search_helper(q, thm, reductions))
+                return true;
 
         // If the type base is an indeterminate of q, there is nothing better to do then to try all theorems
         FunctionPtr h_type_base = q->get_last_indeterminate()->get_type()->get_base();
         if (q->is_indeterminate(h_type_base)) {
-            for (auto &thm : m_all_theorems)
-                if (search_helper(q, thm)) return true;
-            continue;
+            for (auto &thm: m_all_theorems)
+                if (search_helper(q, thm, reductions))
+                    return true;
+        } else {
+            // If the type base is known to the index, try the corresponding list of theorems
+            auto it = m_index.find(h_type_base);
+            if (it != m_index.end()) {
+                for (auto &thm: it->second)
+                    if (search_helper(q, thm, reductions))
+                        return true;
+            }
+
+            // Also try the general theorems
+            for (auto &thm: m_generic_theorems)
+                if (search_helper(q, thm, reductions))
+                    return true;
         }
 
-        // If the type base is known to the index, try the corresponding list of theorems
-        auto it = m_index.find(h_type_base);
-        if (it != m_index.end()) {
-            for (auto &thm : it->second)
-                if (search_helper(q, thm)) return true;
-        }
+        // Now sort the list of reductions based on the number of indeterminates
+        // Then add them to the queue
+        std::sort(reductions.begin(), reductions.end(),
+                  [](const std::shared_ptr<Query> &q1, const std::shared_ptr<Query> &q2) {
+                      return q1->get_indeterminates_size() < q2->get_indeterminates_size();
+                  });
 
-        // Also try the general theorems
-        for (auto &thm : m_generic_theorems)
-            if (search_helper(q, thm)) return true;
+        for (auto &r: reductions)
+            m_queue.push(std::move(r));
     }
 
     return false;
 }
 
-bool Searcher::search_helper(std::shared_ptr<Query> &query, FunctionPtr &thm) {
+bool Searcher::search_helper(std::shared_ptr<Query> &query, FunctionPtr &thm,
+                             std::vector<std::shared_ptr<Query>> &reductions) {
     // Try reducing query using thm
     auto sub_query = Query::reduce(query, thm);
     if (sub_query == nullptr)
@@ -123,7 +148,7 @@ bool Searcher::search_helper(std::shared_ptr<Query> &query, FunctionPtr &thm) {
         return false;
 
     // Add sub_query to queue
-    m_queue.push(sub_query);
+    reductions.push_back(std::move(sub_query));
     return false;
 }
 
