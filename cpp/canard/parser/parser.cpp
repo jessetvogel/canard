@@ -3,15 +3,14 @@
 //
 
 #include "parser.h"
-#include "../searcher/searcher.h"
 #include "message.h"
+#include "../searcher/searcher.h"
+#include "../core/macros.h"
 #include <algorithm>
-#include <ctime>
-#include <iostream>
 #include <climits>
 #include <cstdlib>
 #include <fstream>
-#include <sys/time.h>
+#include <chrono>
 
 Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session) : m_ostream(ostream), m_scanner(istream),
                                                                                  m_lexer(m_scanner),
@@ -22,7 +21,6 @@ Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session) :
 
 void Parser::next_token() {
     m_current_token = m_lexer.get_token();
-    //    std::cerr << "next_token() = '" << m_current_token.m_data << "' (" << m_current_token.m_type << ")" << std::endl;
     if (m_current_token.m_type == NEWLINE) // skip newlines
         next_token();
 }
@@ -169,7 +167,7 @@ void Parser::parse_inspect() {
 
     // Construct list of labels
     std::vector<std::string> labels;
-    for (auto &f : space->get_functions()) {
+    for (auto &f: space->get_functions()) {
         std::string label = f->get_label();
         if (!label.empty())
             labels.push_back(label);
@@ -179,7 +177,7 @@ void Parser::parse_inspect() {
     if (m_format & JSON)
         output(Message::create(SUCCESS, labels));
     else
-        for (auto &label : labels)
+        for (auto &label: labels)
             output(label);
 }
 
@@ -252,18 +250,17 @@ void Parser::parse_import() {
     sub_parser.set_location(directory, file);
     sub_parser.set_format(m_format);
     sub_parser.m_imported_files = std::move(m_imported_files);
-    struct timeval time_now {};
-    gettimeofday(&time_now, nullptr);
-    time_t time_start = (time_now.tv_sec * 1000) + (time_now.tv_usec / 1000);
+    auto start_time = std::chrono::system_clock::now();
     bool success = sub_parser.parse();
-    gettimeofday(&time_now, nullptr);
-    time_t time_end = (time_now.tv_sec * 1000) + (time_now.tv_usec / 1000);
+    auto end_time = std::chrono::system_clock::now();
     m_imported_files = std::move(sub_parser.m_imported_files);
 
     if (!success)
         throw ParserException(t_import, "error in importing '" + filename + "'");
 
-    std::cerr << "importing '" << path << "' took " << (time_end - time_start) << "ms" << std::endl;
+    CANARD_LOG("Importing '" << path << "' took "
+                             << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
+                             << "ms");
 }
 
 void Parser::parse_namespace() {
@@ -310,7 +307,7 @@ void Parser::parse_search() {
         searcher.add_namespace(*space);
         added_namespaces.insert(space);
     }
-    for (auto &space : m_open_namespaces) {
+    for (auto &space: m_open_namespaces) {
         if (added_namespaces.find(space) == added_namespaces.end())
             searcher.add_namespace(*space);
     }
@@ -319,27 +316,23 @@ void Parser::parse_search() {
     // Store the results in a list
     auto query = std::make_shared<Query>(indeterminates);
 
-    struct timeval time_now {};
-    gettimeofday(&time_now, nullptr);
-    time_t time_start = (time_now.tv_sec * 1000) + (time_now.tv_usec / 1000);
+    auto start_time = std::chrono::system_clock::now();
     bool success = searcher.search(query);
-    gettimeofday(&time_now, nullptr);
-    time_t time_end = (time_now.tv_sec * 1000) + (time_now.tv_usec / 1000);
+    auto end_time = std::chrono::system_clock::now();
 
-    auto result = searcher.get_result();
+    auto result = searcher.result();
 
     if (m_format & JSON) {
-        if(success) {
+        if (success) {
             std::vector<std::string> keys, values;
             keys.reserve(indeterminates.size());
             values.reserve(result.size());
-            for (auto &f : indeterminates)
+            for (auto &f: indeterminates)
                 keys.push_back(f->to_string());
-            for (auto &g : result)
+            for (auto &g: result)
                 values.push_back(g->to_string(false, m_format & EXPLICIT));
             output(Message::create(SUCCESS, keys, values));
-        }
-        else {
+        } else {
             output(Message::create(SUCCESS, std::vector<std::string>()));
         }
     } else {
@@ -360,7 +353,8 @@ void Parser::parse_search() {
         output(ss.str());
     }
 
-    std::cerr << "Search took " + std::to_string(time_end - time_start) + " ms" << std::endl;
+    CANARD_LOG("Search took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
+                              << " ms");
 }
 
 void Parser::parse_check() {
@@ -383,7 +377,7 @@ void Parser::parse_declaration() {
      */
 
     consume(KEYWORD, "let");
-    for (auto &f : parse_functions(m_current_namespace->get_context()))
+    for (auto &f: parse_functions(m_current_namespace->get_context()))
         m_current_namespace->put_function(f);
 }
 
@@ -457,7 +451,7 @@ std::vector<FunctionPtr> Parser::parse_functions(Context &context) {
 
     // Actually create the functions
     std::vector<FunctionPtr> output;
-    for (std::string &identifier : identifiers) {
+    for (std::string &identifier: identifiers) {
         // don't move, since we use the dependencies multiple times. Could make it shared in the future?
         auto f = std::make_shared<Function>(type, dependencies);
         if (!context.put_function(identifier, f))
@@ -473,7 +467,7 @@ Function::Dependencies Parser::parse_dependencies(Context &context) {
     bool is_explicit;
     while ((is_explicit = found(SEPARATOR, "(")) || found(SEPARATOR, "{")) {
         consume();
-        for (auto &f : parse_functions(context)) {
+        for (auto &f: parse_functions(context)) {
             dependencies.m_functions.push_back(f);
             dependencies.m_explicits.push_back(is_explicit);
         }
@@ -520,7 +514,7 @@ FunctionPtr Parser::parse_expression(Context &context, Function::Dependencies de
         try {
             return base->specialize(base->get_arguments(), std::move(dependencies));
         } catch (SpecializationException &e) {
-            throw ParserException(m_current_token, std::move(e.m_message));
+            throw ParserException(m_current_token, e.m_message);
         }
     }
 
@@ -529,7 +523,7 @@ FunctionPtr Parser::parse_expression(Context &context, Function::Dependencies de
     try {
         return base->specialize(terms, std::move(dependencies));
     } catch (SpecializationException &e) {
-        throw ParserException(m_current_token, std::move(e.m_message));
+        throw ParserException(m_current_token, e.m_message);
     }
 }
 
@@ -552,7 +546,7 @@ FunctionPtr Parser::parse_term(Context &context) {
         }
         // If that failed, look through the other open namespaces
         std::vector<FunctionPtr> candidates;
-        for (auto &space : m_open_namespaces) {
+        for (auto &space: m_open_namespaces) {
             f = space->get_function(path);
             if (f != nullptr) candidates.push_back(f);
         }

@@ -3,33 +3,28 @@
 //
 
 #include "query.h"
+#include "../core/macros.h"
 #include <utility>
-#include <iostream>
 #include <sstream>
 
-Query::Query(std::vector<FunctionPtr> indeterminates) : m_parent(nullptr),
-                                                        m_indeterminates(std::move(indeterminates)) {
+Query::Query(std::vector<FunctionPtr> indeterminates) : m_parent(nullptr), m_indeterminates(std::move(indeterminates)) {
     m_depths.insert(m_depths.begin(), m_indeterminates.size(), 0); // initial depth is 0
 }
 
-Query::Query(std::shared_ptr<Query> parent, std::unordered_map<FunctionPtr, FunctionPtr> solutions,
-             std::vector<FunctionPtr> indeterminates, std::vector<int> depths) : m_parent(std::move(parent)),
-                                                                                 m_indeterminates(
-                                                                                         std::move(indeterminates)),
-                                                                                 m_depths(std::move(depths)) {
+Query::Query(std::shared_ptr<Query> parent, std::unordered_map<FunctionPtr,
+        FunctionPtr> solutions, std::vector<FunctionPtr> indeterminates,
+             std::vector<int> depths) : m_parent(std::move(parent)),
+                                        m_indeterminates(std::move(indeterminates)),
+                                        m_depths(std::move(depths)) {
     m_solutions = std::move(solutions);
 }
 
-int Query::get_depth() {
+int Query::depth() {
     int M = 0;
     for (int &d: m_depths)
         if (d > M)
             M = d;
     return M;
-}
-
-const FunctionPtr &Query::get_last_indeterminate() {
-    return m_indeterminates.back();
 }
 
 bool Query::is_indeterminate(const FunctionPtr &f) {
@@ -38,7 +33,7 @@ bool Query::is_indeterminate(const FunctionPtr &f) {
 
 std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
     // Get last indeterminate
-    FunctionPtr h = query->get_last_indeterminate();
+    FunctionPtr h = query->last_indeterminate();
 
     // If h has no dependencies, nothing to do here
     if (h->get_dependencies().size() == 0)
@@ -80,39 +75,40 @@ std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
 
 std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const FunctionPtr &thm) {
     // Get last indeterminate
-    const FunctionPtr &h = query->get_last_indeterminate();
+    const FunctionPtr &h = query->last_indeterminate();
 
     // At this point, h is asserted to have no dependencies!
     assert (h->get_dependencies().empty());
 
     // Get allowed locals for h
-    auto it_h_allowed = query->m_locals_allowed.find(h);
-    bool h_has_allowed = (it_h_allowed != query->m_locals_allowed.end());
+    auto it_h_allowed_locals = query->m_locals_allowed.find(h);
+    bool h_has_allowed_locals = (it_h_allowed_locals != query->m_locals_allowed.end());
 
     // Check: if thm *itself* is a local: then require that it_thm is allowed for h! This is very important.
     auto it_thm = std::find(query->m_locals.begin(), query->m_locals.end(), thm);
     if (it_thm != query->m_locals.end() &&
-        (!h_has_allowed || it_h_allowed->second->find(thm) == it_h_allowed->second->end()))
+        (!h_has_allowed_locals || it_h_allowed_locals->second->find(thm) == it_h_allowed_locals->second->end()))
         return nullptr;
 
-    // Create matcher with indeterminates from query and thm
+    // Create matcher with indeterminates from both query and thm
     std::vector<FunctionPtr> all_indeterminates = query->m_indeterminates;
-    const std::vector<FunctionPtr> &thm_dependencies = thm->get_dependencies().m_functions;
+    const auto &thm_dependencies = thm->get_dependencies().m_functions;
     all_indeterminates.insert(all_indeterminates.end(), thm_dependencies.begin(), thm_dependencies.end());
     Matcher matcher(all_indeterminates);
 
     // Note that we do not match (h, thm) since they might not match!
-    // (E.g. when thm has dependencies that require arguments, while h has not)
-    // // (Also, e.g. when h has dependencies, but we are constructing lambda-style)
-    // Therefore we just match the types of h and thm
+    // (E.g. when thm has dependencies that require arguments, while h has not, there will be no match for h and thm, but still
+    // thm could be applied to get a solution for h)
+    // (Also, e.g. when h has dependencies, but we are constructing lambda-style)
+    // Therefore we will just match the types of h and thm
     if (!matcher.matches(h->get_type(), thm->get_type()))
         return nullptr;
 
-//    std::cerr << "valid reduction in [" << query->to_string() << "]" << std::endl;
-//    std::cerr << "  solve for " << h->to_string() << " with " << thm->to_string() << std::endl;
+    CANARD_DEBUG("Valid reduction in [" << query->to_string() << "]");
+    CANARD_DEBUG("=> Solve for " << h->to_string() << " with " << thm->to_string());
 
-    // Create the new subQuery, and keep track of the solutions (for indeterminates) and the arguments (for thm)
-    // and the new indeterminates (for the subQuery)
+    // Create the new sub_query, and keep track of the solutions (for indeterminates) and the arguments (for thm)
+    // and the new indeterminates (for the sub_query)
     std::vector<FunctionPtr> new_indeterminates;
     std::unordered_map<FunctionPtr, FunctionPtr> new_solutions, arguments;
     std::vector<int> new_depths;
@@ -122,7 +118,14 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     const int h_depth = query->m_depths.back();
 
     std::vector<FunctionPtr> mappable = all_indeterminates;
+
+    // The motivation here is that NOTHING should depend on h, as it is the last indeterminate.
+    // It might happen that some local variable is depends on h, but in that case we should just throw it away
+    // (because it cannot be that another indeterminate will depend on that local variable, as it would then in turn
+    // depend on h again). So in conclusion, we can just forget about h for now, and then in the end construct
+    // the value/solution for h!
     mappable.erase(std::find(mappable.begin(), mappable.end(), h));
+
     mappable.insert(mappable.end(), query->m_locals.begin(), query->m_locals.end()); // locals might need mapping too!
 
     Matcher query_to_sub_query(mappable);
@@ -132,7 +135,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     while (changes && !unmapped.empty()) {
         changes = false;
         for (auto it = unmapped.begin(); it != unmapped.end(); ++it) {
-            auto f = *it;
+            const auto f = *it;
             // When f is an indeterminate of this query
             auto it_f = std::find(query->m_indeterminates.begin(), query->m_indeterminates.end(), f);
             if (it_f != query->m_indeterminates.end()) {
@@ -145,14 +148,15 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
 
                     // Check whether `solution` is allowed (w.r.t. the local variables)
                     if (!query->is_allowed_solution(f, solution)) {
-//                        std::cerr << "nope " << solution->to_string() << " is not an allowed solution for " << f->to_string(true, false) << std::endl;
+                        CANARD_DEBUG("Nope, " << solution->to_string() << " is not an allowed solution for "
+                                              << f->to_string(true, false));
                         return nullptr;
                     }
 
                     solution = query_to_sub_query.convert(solution);
                 } else {
                     // If f has no solution, this indeterminate remains an indeterminate.
-                    // Hence we duplicate it_thm to the new query
+                    // Hence, we duplicate it_thm to the new query
                     if (f->signature_depends_on(unmapped))
                         continue;
 
@@ -193,8 +197,9 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
 
                     // Check whether `argument` is allowed (w.r.t. the local variables)
                     // Note that it has the same allowances as h, because it is used to solve for h
-                    if (h_has_allowed && !query->is_allowed_solution(*it_h_allowed->second, argument)) {
-//                        std::cerr << "nope " << argument->to_string() << " is not an allowed argument for " << f->to_string(true, false) << std::endl;
+                    if (h_has_allowed_locals && !query->is_allowed_solution(*it_h_allowed_locals->second, argument)) {
+                        CANARD_DEBUG("Nope, " << argument->to_string() << " is not an allowed argument for "
+                                              << f->to_string(true, false));
                         return nullptr;
                     }
 
@@ -213,12 +218,12 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     new_depths.push_back(h_depth + 1); // indeterminate was introduced because of h, so h_depth + 1
 
                     // This new indeterminate may depend on the local variables that h was allowed to depend on
-                    if (h_has_allowed && !it_h_allowed->second->empty())
+                    if (h_has_allowed_locals && !it_h_allowed_locals->second->empty())
                         // (Note: the locals will get replaced later on)
-                        new_locals_allowed.emplace(argument, it_h_allowed->second);
+                        new_locals_allowed.emplace(argument, it_h_allowed_locals->second);
                 }
                 // Store the argument, un-mark as unmapped, match, and indicate that changes are made
-                assert (argument != f);
+                CANARD_ASSERT(argument != f, "Argument cannot be f");
                 arguments.emplace(f, argument);
                 query_to_sub_query.assert_matches(f, argument);
                 it = unmapped.erase(it);
@@ -233,8 +238,21 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                 if (f->signature_depends_on(unmapped))
                     continue;
 
-                // We should clone this dependency (cheaply!) and add it_thm as a local of subQuery
+                // If the local variable depends on h, we simply throw it away (for justification see above)
+                // TODO: make this cleaner ?
+                if (f->signature_depends_on({h})) {
+                    it = unmapped.erase(it);
+                    --it;
+                    changes = true;
+                    CANARD_DEBUG("Throwing away local " << f->to_string(true, false) << " because it depends on h!");
+                    break;
+                }
+
+                // We should clone this dependency (cheaply!) and add it_thm as a local of sub_query
                 FunctionPtr f_clone = query_to_sub_query.cheap_clone(f);
+                // Note: we do not yet push this local to new_locals, because it might be that none of the indeterminates actually are allowed to use it.
+                // In that case it makes more sense to just omit the local. Hence, later, when converting the locals (something that needs to be done anyway)
+                // we will set new_locals
                 new_locals.push_back(f_clone);
                 if (f_clone != f) // if something changed, then add as a solution
                     new_solutions.emplace(f, f_clone);
@@ -243,22 +261,29 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                 --it;
                 changes = true;
                 break;
-            } else
-                assert (false);
+            }
+
+            CANARD_ASSERT(false, "Unmapped function which is neither indeterminate, thm dependency nor local variable");
         }
     }
 
-    // If there are still unmapped indeterminates, there must be some dependency loop, so we concede and say
-    // we cannot reduce to a subQuery
-    if (!unmapped.empty())
+    // If there are still unmapped indeterminates, there must be some dependency-loop, so we concede and say
+    // we cannot reduce to a sub_query
+    if (!unmapped.empty()) {
+        CANARD_DEBUG("Circular dependence!");
         return nullptr;
+    }
 
     // Now, sub_query.locals is set.
     // Also sub_query.locals_allowed is set, but with the OLD locals. We simply need to replace those!
+    // Meanwhile, we set new_locals here, because here we know which locals actually get used
     for (auto &it: new_locals_allowed) {
         auto converted_set = std::make_shared<std::unordered_set<FunctionPtr>>();
-        for (const FunctionPtr &f: *it.second)
-            converted_set->insert(query_to_sub_query.convert(f));
+        for (const FunctionPtr &f: *it.second) {
+            auto converted_local = query_to_sub_query.convert(f);
+            converted_set->insert(converted_local);
+//            new_locals.insert(converted_local); // We add this to new_locals, because apparently it gets used!
+        }
         it.second = converted_set;
     }
 
@@ -268,35 +293,31 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
         thm_arguments.push_back(arguments[f]);
 
     try {
-        // Note that thm itself must also be converted, since it_thm might have changed along the way to subQuery!
+        // Note that thm itself must also be converted, since it_thm might have changed along the way to sub_query!
         // E.g. for `search (P {A B : Prop} (h (a : A) : B) (x : A) : B)`
-        new_solutions.emplace(h, query_to_sub_query.convert(thm)->specialize(thm_arguments, {}));
+        new_solutions.emplace(h, query_to_sub_query.convert(thm)->specialize(std::move(thm_arguments), {}));
     } catch (SpecializationException &e) {
-        std::cerr << "ai ai ai! Not what was supposed to happen!" << std::endl;
-        assert (false);
+        CANARD_ASSERT(false, "Ai ai ai! Not what was supposed to happen!");
     }
 
     // Create the reduced query based on the solutions and new indeterminates
     std::shared_ptr<Query> sub_query(new Query(query, new_solutions, new_indeterminates, new_depths));
     sub_query->m_locals = std::move(new_locals);
     sub_query->m_locals_allowed = std::move(new_locals_allowed);
-
-//    std::cerr << "... to " << sub_query->to_string() << std::endl;
-
     return sub_query;
 }
 
-std::vector<FunctionPtr> Query::get_final_solutions(const std::shared_ptr<Query> &query) {
+std::vector<FunctionPtr> Query::final_solutions(const std::shared_ptr<Query> &query) {
     // This can only be done if this query is solved
-    assert(query->is_solved());
+    CANARD_ASSERT(query->is_solved(), "Cannot call final_solutions on unsolved query");
 
-    // Create chain of subQueries, starting at the bottom, all the way up to the top
+    // Create chain of sub-queries, starting at the bottom, all the way up to the top
     // Note: we include every query which has a parent, so the initial query will not be included
     std::vector<std::shared_ptr<Query>> chain;
-    for (auto q = query; q->get_parent() != nullptr; q = q->get_parent())
+    for (auto q = query; q->parent() != nullptr; q = q->parent())
         chain.push_back(q);
 
-    /* The idea is as follows: starting at the back, `matcher` will map from Query 4, 3, 2, 1 to the solution,
+    /* The idea is as follows: starting at the back, `matcher` will map from Query ..., 4, 3, 2, 1 to the solution,
        at each step using the previous matcher
 
         Query 1 -> Query 2 -> Query 3 -> Query 4
@@ -304,31 +325,32 @@ std::vector<FunctionPtr> Query::get_final_solutions(const std::shared_ptr<Query>
              ----->      ----->     -> Solution
     */
 
-    size_t n = chain.size();
+    const size_t n = chain.size();
     std::vector<std::unique_ptr<Matcher>> matchers;
     std::vector<std::unique_ptr<std::vector<FunctionPtr>>> matchers_indeterminates;
     for (int i = 0; i < n; ++i) {
         auto &q = chain[i];
-        assert (q->get_parent() != nullptr); // (just to be sure)
+        CANARD_ASSERT(q->parent() != nullptr,
+                      "Chain should only contain queries which have a parent"); // (just to be sure)
 
         // Obtain key set
         auto indeterminates = std::make_unique<std::vector<FunctionPtr>>();
         for (auto &it: q->m_solutions)
             indeterminates->push_back(it.first);
-        auto next_matcher = (i == 0) ? std::make_unique<Matcher>(*indeterminates) : std::make_unique<Matcher>(
-                matchers.back().get(), *indeterminates);
+        auto next_matcher = (i == 0)
+                            ? std::make_unique<Matcher>(*indeterminates)
+                            : std::make_unique<Matcher>(matchers.back().get(), *indeterminates);
         matchers_indeterminates.push_back(std::move(indeterminates));
 
-        auto h = q->get_parent()->get_last_indeterminate();
+        auto h = q->parent()->last_indeterminate();
         for (auto &it: q->m_solutions) { // TODO: reason is that locals can also be mapped to solutions, and potentially not all indeterminates need to have solutions at each step ?
             auto f = it.first;
             auto g = it.second;
 
             // First convert the solution along the previous matcher
             if (i > 0) {
-                bool is_local = (
-                        std::find(q->get_parent()->m_locals.begin(), q->get_parent()->m_locals.end(), it.first) !=
-                        q->get_parent()->m_locals.end());
+                bool is_local = (std::find(q->parent()->m_locals.begin(), q->parent()->m_locals.end(), it.first) !=
+                                 q->parent()->m_locals.end());
                 if (is_local)
                     // locals must be cloned, because their type may depend on indeterminates, while their expression may not
                     g = matchers.back()->cheap_clone(g);
@@ -353,7 +375,7 @@ std::vector<FunctionPtr> Query::get_final_solutions(const std::shared_ptr<Query>
                         g = g->specialize({}, std::move(new_dependencies));
                     }
                     catch (SpecializationException &e) {
-                        assert (false);
+                        CANARD_ASSERT(false, e.m_message);
                     }
                 }
             }
@@ -370,7 +392,7 @@ std::vector<FunctionPtr> Query::get_final_solutions(const std::shared_ptr<Query>
     // Note: this is the parent of the last query in the chain (because the initial query does not have a parent,
     // so it is not in the chain)
     std::vector<FunctionPtr> result;
-    for (auto &f: chain.back()->get_parent()->m_indeterminates)
+    for (auto &f: chain.back()->parent()->m_indeterminates)
         result.push_back(matchers.back()->convert(f));
     return result;
 }
@@ -386,7 +408,7 @@ bool Query::injects_into(const std::shared_ptr<Query> &other) {
 
     // 1. let f = indeterminates[-1]
     // 2. for each g in other.indeterminates:
-    //   2.1. Create subMatcher with f -> g. If fail, continue with next g
+    //   2.1. Create sub_matcher with f -> g. If fail, continue with next g
     //   2.2. If succeeded, see what indeterminates are mapped, and update the lists of which to map and which are still allowed from other
     //   2.3. Continue recursively to the next (not yet mapped (also not induced mapped)) indeterminate (from the end, remember)
 
@@ -484,8 +506,18 @@ bool Query::is_allowed_solution(const std::unordered_set<FunctionPtr> &allowed, 
 
 std::string Query::to_string() {
     std::ostringstream ss;
-    ss << "Query";
+    ss << "Query@" << depth() << " {";
+    for (auto &f: m_locals)
+        ss << " (" << f->to_string(true, false) << ")";
+    ss << " } ";
     for (auto &f: m_indeterminates)
         ss << " (" << f->to_string(true, false) << ")";
     return ss.str();
+}
+
+bool Query::has_parent(const std::shared_ptr<Query> &p) const {
+    for (std::shared_ptr<Query> r = parent(); r != nullptr; r = r->parent())
+        if (r == p)
+            return true;
+    return false;
 }

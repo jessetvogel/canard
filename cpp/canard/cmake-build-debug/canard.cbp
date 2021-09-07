@@ -92,6 +92,9 @@
 		<Unit filename="/Users/jessevogel/Projects/canard/cpp/canard/core/function.h">
 			<Option target="canard"/>
 		</Unit>
+		<Unit filename="/Users/jessevogel/Projects/canard/cpp/canard/core/macros.h">
+			<Option target="canard"/>
+		</Unit>
 		<Unit filename="/Users/jessevogel/Projects/canard/cpp/canard/core/matcher.cpp">
 			<Option target="canard"/>
 		</Unit>

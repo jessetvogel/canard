@@ -57,20 +57,20 @@ Token Lexer::get_token() {
             return make_token();
         }
 
-        // Whitespace: always marks the end of a token (if there currently is one)
+        // Whitespace: always marks the end of a get_token (if there currently is one)
         if (c == ' ' || c == '\t') {
             if (m_sstream_length == 0)
                 continue;
             return make_token();
         }
 
-        // Line comments (--): mark the end of a token (if there currently is one),
+        // Line comments (--): mark the end of a get_token (if there currently is one),
         // then continue discarding characters until a newline appears
         if (c == '-' && m_scanner.get_previous_char() == '-') {
             m_sstream.seekp(-1, m_sstream.cur);
             m_sstream_length--; // Remove the first '-'
 
-            // TODO: maybe this is unnecessary ?? after the first '-' one would already have made a token
+            // TODO: maybe this is unnecessary ?? after the first '-' one would already have made a get_token
             Token token;
             bool token_before = (m_sstream_length > 0);
             if (token_before)
@@ -94,7 +94,7 @@ Token Lexer::get_token() {
 
         // Block comments (/- * -/): do a similar thing as line comments
         if (c == '-' && m_scanner.get_previous_char() == '/') {
-            // Remove the '/' from the sb before making a token!
+            // Remove the '/' from the sb before making a get_token!
             m_sstream.seekp(-1, m_sstream.cur);
             m_sstream_length--; // Remove the first '/'
 
@@ -114,13 +114,13 @@ Token Lexer::get_token() {
             return token_before ? token : get_token();
         }
 
-        // If string buffer is empty, set line and column of next token
+        // If string buffer is empty, set line and column of next get_token
         if (m_sstream_length == 0) {
             m_line = m_scanner.get_line();
             m_position = m_scanner.get_position();
         }
 
-        // Enlarge the token if possible
+        // Enlarge the get_token if possible
         m_sstream << (char) c;
         m_sstream_length++;
 
@@ -132,7 +132,7 @@ Token Lexer::get_token() {
         if (m_current_token.m_type == NONE)
             continue;
 
-        // Return the last valid token
+        // Return the last valid get_token
         Token token = make_token();
         m_sstream << (char) c;
         m_sstream_length++;
@@ -171,7 +171,7 @@ bool Lexer::tokenize(std::string str) {
 
 Token Lexer::make_token() {
     if (m_current_token.m_type == NONE) {
-        std::string message = "unknown token '" + m_sstream.str() + "'";
+        std::string message = "unknown get_token '" + m_sstream.str() + "'";
         m_sstream.str(std::string());
         m_sstream_length = 0;
         throw LexerException(m_line, m_position, message);

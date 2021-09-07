@@ -25,6 +25,7 @@ let RR_is_field : field RR
 -- CC
 let CC_is_field : field CC
 
+-- Inclusion of numbers
 let ZZ_to_QQ : Morphism ZZ QQ
 let QQ_to_RR : Morphism QQ RR
 let RR_to_CC : Morphism RR CC
@@ -50,5 +51,16 @@ let ZZ_quadr_19_not_eucl : not (euclidean ZZ_quadr_19)
 let ufd_xy {R : Ring} (h : ufd R) : Ring
 let ufd_xy_of_ufd {R : Ring} (h : ufd R) : ufd (ufd_xy h)
 let ufd_xy_not_pid {R : Ring} (h : ufd R) : not (pid (ufd_xy h))
+
+-- Integral closure ZZ in \bar{QQ}
+let ZZ_bar : Ring
+
+-- QQ[\sqrt{2}]
+let QQ_sqrt2 : Ring
+let QQ_sqrt2_dm : domain QQ_sqrt2
+let QQ_sqrt2_nt : noetherian QQ_sqrt2
+
+-- QQ \to QQ[\sqrt{2}]
+let QQ_to_QQ_sqrt2 : Morphism QQ QQ_sqrt2
 
 end commutative_algebra

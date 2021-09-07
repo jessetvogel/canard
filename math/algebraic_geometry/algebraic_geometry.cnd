@@ -34,6 +34,7 @@ end sheaf
 
 -- General constructions
 let Spec (R : Ring) : Scheme
+let mSpec {A B : Ring} (f : Morphism A B) : Morphism (Spec B) (Spec A)
 let sheaf_of_module {R : Ring} (M : Module R) : Sheaf (Spec R)
 
 end algebraic_geometry

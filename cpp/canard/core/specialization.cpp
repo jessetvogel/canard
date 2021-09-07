@@ -7,9 +7,9 @@
 #include <utility>
 #include <sstream>
 
-Specialization::Specialization(const FunctionPtr &base, std::vector<FunctionPtr> arguments, const FunctionPtr &type,
-                               Function::Dependencies dependencies) : Function(type, std::move(dependencies)),
-                                                              m_base(base),
+Specialization::Specialization(FunctionPtr base, std::vector<FunctionPtr> arguments, FunctionPtr type,
+                               Function::Dependencies dependencies) : Function(std::move(type), std::move(dependencies)),
+                                                              m_base(std::move(base)),
                                                               m_arguments(std::move(arguments)) {
     // TODO: maybe some assertions here
 }

@@ -20,6 +20,8 @@ class Function : public std::enable_shared_from_this<Function> {
 
 public:
 
+    const int m_id;
+
     struct Dependencies {
         std::vector<FunctionPtr> m_functions;
         std::vector<bool> m_explicits;
@@ -39,7 +41,7 @@ protected:
 
 public:
 
-    Function(const FunctionPtr&, Dependencies);
+    Function(FunctionPtr , Dependencies);
 
     FunctionPtr get_type();
 

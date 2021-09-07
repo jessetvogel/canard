@@ -4,6 +4,7 @@
 
 #include "matcher.h"
 #include "specialization.h"
+#include "macros.h"
 
 #include <utility>
 #include <iostream>
@@ -18,13 +19,12 @@ Matcher::Matcher(Matcher *parent, const std::vector<FunctionPtr> &indeterminates
                                                                                     m_indeterminates(indeterminates) {}
 
 bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
-    // Case f = g: we are not going to map f -> f, but we will return true nonetheless
+    // Case f = g: we are not going to map f -> f (causes infinite loops), but we will return true nonetheless
     if (f == g) return true;
 
     // Case g -> h: we map f -> h as well
     const FunctionPtr &h = get_solution(g);
-    if (h != nullptr)
-        return put_solution(f, h);
+    if (h != nullptr) return put_solution(f, h);
 
     // If f -> k already, do some checks
     // TODO: we must prevent loops "f -> g -> f"
@@ -34,14 +34,14 @@ bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
         const FunctionPtr &k = it_solution_f->second;
         if (k->equals(g)) return true;
 
-        // If k is also an indeterminate (possibly of a parent!), then we are satisfied with mapping g -> k
-        if (is_indeterminate(k)) return put_solution(g, k);
+        // If k is also an indeterminate (possibly of a parent!), then we are satisfied with mapping k -> g
+        if (is_indeterminate(k)) return put_solution(k, g);
 
-        // Finally, if g is an indeterminate, it was apparently not mapped before. Hence we will map g -> f instead
-        if (is_indeterminate(g)) return put_solution(g, f);
+        // If g is an indeterminate, it was apparently not mapped before (because we checked for that). Hence, we will map g -> f -> k instead
+        if (is_indeterminate(g)) return put_solution(g, k); // Since f -> k, we might as well map g -> k directly!
 
-//        std::cerr << "Cannot match " << f->to_string() << " to " << g->to_string() << " because already matched to " << k->to_string() << std::endl;
-        return false;
+        // In case g and k are both *not* indeterminates, they may still match! Let's check this:
+        return matches(k, g);
     }
 
     // If all is well, put f -> g.
@@ -50,16 +50,18 @@ bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
 }
 
 const FunctionPtr &Matcher::get_solution(const FunctionPtr &f) const {
-    auto it_f = m_solutions.find(f);
-    if (it_f == m_solutions.end())
+    // Look for solution for f, it not found, ask parent
+    auto it_solution_f = m_solutions.find(f);
+    if (it_solution_f == m_solutions.end())
         return (m_parent == nullptr) ? null : m_parent->get_solution(f);
 
-    // Case f -> g -> h
-    const FunctionPtr &h = get_solution(it_f->second);
-    return (h == nullptr) ? it_f->second : h;
+    // To deal with cases like f -> g -> h, call get_solution recursively
+    const FunctionPtr &h = get_solution(it_solution_f->second);
+    return (h == nullptr) ? it_solution_f->second : h;
 }
 
 bool Matcher::is_indeterminate(const FunctionPtr &f) {
+    // Checks whether f is an indeterminate of this or some parent
     for (Matcher *matcher = this; matcher != nullptr; matcher = matcher->m_parent) {
         auto &indeterminates = matcher->m_indeterminates;
         if (std::find(indeterminates.begin(), indeterminates.end(), f) != indeterminates.end())
@@ -107,10 +109,8 @@ bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
 
     // If the bases match, simply match the arguments
     // Note that the bases themselves can be indeterminates, so we have to account for that first.
-    // Of course it can also be possible that fBase == gBase (this can be checked as Java Objects, since no base function
-    // is represented by different Java Objects)
-    const FunctionPtr &f_base = f->get_base();
-    const FunctionPtr &g_base = g->get_base();
+    const auto &f_base = f->get_base();
+    const auto &g_base = g->get_base();
 
     // TODO: what if fBase/gBase is an indeterminate, but also it has dependencies ?
     //  At some points problems appear, because there will be multiple solutions..
@@ -123,15 +123,14 @@ bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
         }
         return true;
     }
+
+//    std::cerr << f->to_string() << " does not match " << g->to_string() << std::endl;
     return false;
 }
 
 void Matcher::assert_matches(const FunctionPtr &f, const FunctionPtr &g) {
-    if (!matches(f, g)) {
-        std::cerr << "Failed assertion: matching " << f->to_string(true, false) << " to " << g->to_string(true, false)
-                  << "!" << std::endl;
-        assert(false);
-    }
+    bool match = matches(f, g);
+    CANARD_ASSERT(match, "Matching " << f->to_string(true, false) << " to " << g->to_string(true, false));
 }
 
 FunctionPtr Matcher::convert(const FunctionPtr &f) {
@@ -140,12 +139,11 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     if (g != nullptr) return g;
 
     FunctionPtr f_base = f->get_base();
-    if (f == f_base) // Note that this is actually a special case of the next step!
-        return f;
+    if (f == f_base) return f; // Note that this is actually a special case of the next step!
 
     // Convert dependencies if needed
-    // E.g. something like "(f : Hom X X) => comp f f" must be converted under "X -> Spec R"
-    // to "(f : Hom (Spec R) (Spec R)) => comp f f"
+    // E.g. something like "λ (f : Hom X X) := comp f f" must be converted under "X -> Spec R"
+    // to "λ (f : Hom (Spec R) (Spec R)) := comp f f"
     Function::Dependencies converted_dependencies;
     const Function::Dependencies &f_dependencies = f->get_dependencies();
     size_t n = f_dependencies.size();
@@ -154,7 +152,7 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     Matcher &sub_matcher = (n > 0) ? matcher : *this;
     for (int i = 0; i < n; ++i) {
         auto &x = f_dependencies.m_functions[i];
-        FunctionPtr clone = sub_matcher.clone(x);
+        auto clone = sub_matcher.clone(x);
         sub_matcher.assert_matches(x, clone);
 
         converted_dependencies.m_functions.push_back(clone);
@@ -164,8 +162,8 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     // Otherwise, when f is a specialization, we convert each argument of f
     bool changes = false;
     std::vector<FunctionPtr> converted_arguments;
-    for (auto &arg : f->get_arguments()) {
-        FunctionPtr converted_argument = sub_matcher.convert(arg);
+    for (auto &arg: f->get_arguments()) {
+        auto converted_argument = sub_matcher.convert(arg);
         if (!changes && !converted_argument->equals(arg))
             changes = true;
         converted_arguments.push_back(converted_argument);
@@ -182,11 +180,9 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     if (!changes)
         return f;
 
-    // Now we must convert the type of f, this requires another subMatcher!
+    // Now we must convert the type of f, this requires another sub_matcher!
     // Because the type is determined by the arguments provided to the base Function,
     // since we replace those now, the type should be re-determined
-//    auto& base_dependencies = f_base->get_dependencies().m_functions;
-//    List <Function> baseExplicitDependencies = base.getExplicitDependencies();
     auto &f_base_dependencies = f_base->get_dependencies();
     Matcher sub_sub_matcher(&sub_matcher, f_base_dependencies.m_functions);
     size_t m = f_base_dependencies.size();
@@ -200,12 +196,13 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     }
     FunctionPtr converted_type = sub_sub_matcher.convert(f->get_type());
 
-    return std::make_shared<Specialization>(f_base, std::move(converted_arguments), std::move(converted_type), std::move(converted_dependencies));
+    return std::make_shared<Specialization>(f_base, std::move(converted_arguments), std::move(converted_type),
+                                            std::move(converted_dependencies));
 }
 
 FunctionPtr Matcher::clone(const FunctionPtr &f) {
     // Since we only use this for duplicating dependencies, and dependencies are always their own base function!
-    assert (f == f->get_base());
+    CANARD_ASSERT(f == f->get_base(), "Can only clone base functions");
     // TODO: does it make sense to duplicate a specialization ?
     // TODO: are there any shortcuts we can take so that we can simply immediately return x itself ?
 
@@ -224,12 +221,14 @@ FunctionPtr Matcher::clone(const FunctionPtr &f) {
     }
     converted_dependencies.m_explicits = f_dependencies.m_explicits;
 
-    // Convert the type (according to the subMatcher!)
+    // Convert the type (according to the sub_matcher!)
     auto converted_type = sub_matcher.convert(f->get_type());
 
     // Create a new Function
     auto g = std::make_shared<Function>(converted_type, std::move(converted_dependencies));
     g->set_label(f->get_label());
+
+//    std::cerr << "Cloned " << f->to_string(true, false) << " to " << g->to_string(true, false) << std::endl;
     return g;
 }
 
@@ -237,7 +236,7 @@ FunctionPtr Matcher::cheap_clone(const FunctionPtr &f) {
     // Should return x itself when x does not depend on any indeterminate (and neither on an indeterminate of some parent)
     for (Matcher *m = this; m != nullptr; m = m->m_parent) {
         if (f->signature_depends_on(m->m_indeterminates))
-            return m->clone(f); // TODO: m->clone(f) ?
+            return m->clone(f);
     }
     return f;
 }
@@ -246,7 +245,7 @@ std::string Matcher::to_string() {
     std::stringstream ss;
     ss << "{[";
     bool first = true;
-    for (auto &f : m_indeterminates) {
+    for (auto &f: m_indeterminates) {
         if (!first)
             ss << ", ";
         first = false;
@@ -255,7 +254,7 @@ std::string Matcher::to_string() {
     ss << "] ";
 
     first = true;
-    for (auto &m_solution : m_solutions) {
+    for (auto &m_solution: m_solutions) {
         if (!first)
             ss << ", ";
         first = false;

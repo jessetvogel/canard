@@ -3,7 +3,7 @@
 //
 
 #include "searcher.h"
-#include <iostream>
+#include "../core/macros.h"
 
 Searcher::Searcher(const int max_depth) : m_max_depth(max_depth) {}
 
@@ -34,54 +34,41 @@ void Searcher::add_namespace(Namespace &space) {
     }
 }
 
-bool Searcher::search(std::shared_ptr<Query> &query) {
-    // Clear the queue of queries, and add the query we want to solve for
-    m_queue = std::queue<std::shared_ptr<Query>>();
-    m_queue.push(query);
+bool Searcher::search(const std::shared_ptr<Query> &query) {
+    // Create a queue of queries for each depth (of queries). The strategy is to first handle the low-depth queries, and then the
+    // higher-depth queries.
+    m_depth_queues.clear();
+    for (int depth = 0; depth < m_max_depth; ++depth)
+        m_depth_queues.emplace_back();
 
-    while (!m_queue.empty()) {
-        // Take the first query from the queue, and try to reduce it
-        // Note that we peek, and not poll, because we might need it for the next .next()
-        auto q = m_queue.front();
-        m_queue.pop();
+    // The initial query has depth 0
+    m_depth_queues[0].push(query);
 
-//        std::cerr << "current query [" << q->to_string() << "]" << std::endl;
+    while (true) {
+        // Take the first query from the first (non-empty) queue, i.e. the one with the lowest depth
+        std::shared_ptr<Query> q = nullptr;
+        for (auto &queue: m_depth_queues) {
+            if (!queue.empty()) {
+                q = queue.front();
+                queue.pop();
+                break;
+            }
+        }
+        // When no more queries, stop searching
+        if (q == nullptr)
+            break;
+
+        CANARD_DEBUG("Current query [" << q->to_string() << "]");
 
         // Normalize the query before reducing: convert dependencies of indeterminates to local variables
         q = Query::normalize(q);
 
         // Check for redundancies
-        if (is_redundant(q, q->get_parent()))
+        if (is_redundant(q, q->parent()))
             continue;
 
-        // If sub_query injects into the parent p, then we can safely delete all other branches coming from that parent p
-        // since any solution of the parent will yield a solution for q
-        // TODO: reverse order of iterating, and whenever we have a match, break the for-loop ?
-        // TODO: this 'optimization' is not quite valid: if some parent gets 'strictly solved' by some query which was very slow (i.e. high depth), it should not be allowed to remove another query which already solved the query much more / earlier, just because it is a child of that parent..
-        for (auto p = q->get_parent(); p != nullptr; p = p->get_parent()) {
-            if (!q->injects_into(p))
-                continue;
-
-            std::queue<std::shared_ptr<Query>> new_queue;
-            while (!m_queue.empty()) {
-                auto r = m_queue.front();
-                m_queue.pop();
-                bool should_remove = false;
-                for (auto s = r->get_parent(); s != nullptr; s = s->get_parent()) {
-                    if (s == p) {
-                        should_remove = true;
-                        break;
-                    }
-                }
-                if (!should_remove)
-                    new_queue.push(std::move(r));
-
-//                else
-//                    std::cerr << "Removed [" << r->to_string() << "] because its parent [" << p->to_string()
-//                              << "] was strictly solved by [" << q->to_string() << "]" << std::endl;
-            }
-            m_queue = std::move(new_queue);
-        }
+        // Do some optimization TODO: this does not work correctly!
+//        optimize(q);
 
         // Now we are going to look for reductions. Before pushing to the queue, we will store all reductions
         // in a list `reductions`. Then we will sort this list based on the number of indeterminates, which is
@@ -89,12 +76,12 @@ bool Searcher::search(std::shared_ptr<Query> &query) {
         std::vector<std::shared_ptr<Query>> reductions;
 
         // First list to search through is the list of local variables of q
-        for (auto thm: q->get_locals())
+        for (auto thm: q->locals())
             if (search_helper(q, thm, reductions))
                 return true;
 
         // If the type base is an indeterminate of q, there is nothing better to do then to try all theorems
-        FunctionPtr h_type_base = q->get_last_indeterminate()->get_type()->get_base();
+        FunctionPtr h_type_base = q->last_indeterminate()->get_type()->get_base();
         if (q->is_indeterminate(h_type_base)) {
             for (auto &thm: m_all_theorems)
                 if (search_helper(q, thm, reductions))
@@ -118,11 +105,13 @@ bool Searcher::search(std::shared_ptr<Query> &query) {
         // Then add them to the queue
         std::sort(reductions.begin(), reductions.end(),
                   [](const std::shared_ptr<Query> &q1, const std::shared_ptr<Query> &q2) {
-                      return q1->get_indeterminates_size() < q2->get_indeterminates_size();
+                      return q1->indeterminates_size() < q2->indeterminates_size();
                   });
 
-        for (auto &r: reductions)
-            m_queue.push(std::move(r));
+        for (auto &r: reductions) {
+            assert(r->depth() < m_max_depth);
+            m_depth_queues[r->depth()].push(std::move(r));
+        }
     }
 
     return false;
@@ -135,16 +124,16 @@ bool Searcher::search_helper(std::shared_ptr<Query> &query, FunctionPtr &thm,
     if (sub_query == nullptr)
         return false;
 
-//    std::cerr << "reduced query [" << sub_query->to_string() << "]" << std::endl;
+    CANARD_DEBUG("Reduced query [" << sub_query->to_string() << "]");
 
     // If the sub_query is completely solved (i.e. no more indeterminates) we are done!
     if (sub_query->is_solved()) {
-        m_result = Query::get_final_solutions(sub_query);
+        m_result = Query::final_solutions(sub_query);
         return true;
     }
 
     // If the maximum depth was reached, omit this sub_query
-    if (sub_query->get_depth() >= m_max_depth)
+    if (sub_query->depth() >= m_max_depth)
         return false;
 
     // Add sub_query to queue
@@ -155,5 +144,34 @@ bool Searcher::search_helper(std::shared_ptr<Query> &query, FunctionPtr &thm,
 bool Searcher::is_redundant(const std::shared_ptr<Query> &q, const std::shared_ptr<Query> &p) {
     if (p == nullptr) return false;
     if (p->injects_into(q)) return true;
-    return is_redundant(q, p->get_parent());
+    return is_redundant(q, p->parent());
+}
+
+void Searcher::optimize(const std::shared_ptr<Query> &q) {
+    // If sub_query injects into the parent p, then we can safely delete all other branches coming from that parent p
+    // since any solution of the parent will yield a solution for q
+    // TODO: reverse order of iterating, and whenever we have a match, break the for-loop ?
+    // TODO: this 'optimization' is not quite valid: if some parent gets 'strictly solved' by some query which was very slow (i.e. high depth), it should not be allowed to remove another query which already solved the query much more / earlier, just because it is a child of that parent..
+    for (auto p = q->parent(); p != nullptr; p = nullptr) { //p = p->parent()) {
+        if (!q->injects_into(p))
+            continue;
+
+        for (auto &queue: m_depth_queues) {
+            std::queue<std::shared_ptr<Query>> new_queue;
+            while (!queue.empty()) {
+                auto r = queue.front();
+                queue.pop();
+                bool should_remove = r->has_parent(p);
+
+//                if (should_remove) // && r->injects_into(p)) // exception: if r is also a strict solution, don't remove r
+//                    should_remove = false;
+
+                if (!should_remove)
+                    new_queue.push(std::move(r));
+                CANARD_DEBUG("Removed [" << r->to_string() << "] because its parent [" << p->to_string() << "] was strictly solved by [" << q->to_string() << "]");
+            }
+            // Replace the old queue with the new queue (this works as queue is given by reference)
+            queue = std::move(new_queue);
+        }
+    }
 }

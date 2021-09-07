@@ -21,30 +21,28 @@ class Query {
           std::vector<int>);
 
     bool injects_into_helper(Matcher *, std::vector<FunctionPtr>, std::vector<FunctionPtr>);
-
     bool is_allowed_solution(const FunctionPtr &, const FunctionPtr &);
-
     bool is_allowed_solution(const std::unordered_set<FunctionPtr> &, const FunctionPtr &);
 
 public:
 
     explicit Query(std::vector<FunctionPtr>);
 
-    inline const std::shared_ptr<Query> &get_parent() { return m_parent; };
+    inline const std::shared_ptr<Query> &parent() const { return m_parent; }
+    inline const std::vector<FunctionPtr> &locals() const { return m_locals; }
+    const FunctionPtr &last_indeterminate() const { return m_indeterminates.back(); }
 
-    inline const std::vector<FunctionPtr> &get_locals() { return m_locals; }
+    int depth();
 
-    const FunctionPtr &get_last_indeterminate();
-    int get_depth();
-
-    size_t get_indeterminates_size() { return m_indeterminates.size(); }
+    size_t indeterminates_size() { return m_indeterminates.size(); }
 
     inline bool is_solved() { return m_indeterminates.empty(); }
+    bool has_parent(const std::shared_ptr<Query>&) const;
 
     bool is_indeterminate(const FunctionPtr &);
     static std::shared_ptr<Query> normalize(const std::shared_ptr<Query> &);
     static std::shared_ptr<Query> reduce(const std::shared_ptr<Query> &, const FunctionPtr &);
-    static std::vector<FunctionPtr> get_final_solutions(const std::shared_ptr<Query> &);
+    static std::vector<FunctionPtr> final_solutions(const std::shared_ptr<Query> &);
     bool injects_into(const std::shared_ptr<Query> &);
     std::string to_string();
 

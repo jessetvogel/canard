@@ -9,8 +9,11 @@
 #include <utility>
 #include <sstream>
 
-Function::Function(const FunctionPtr &type, Dependencies dependencies) : m_type(type),
-                                                                         m_dependencies(std::move(dependencies)) {};
+int id_counter = 0;
+
+Function::Function(FunctionPtr type, Dependencies dependencies) : m_type(std::move(type)),
+                                                                  m_dependencies(std::move(dependencies)),
+                                                                  m_id(id_counter++) {}
 
 FunctionPtr Function::get_type() {
     // m_type == nullptr indicates that function is Type, it's type is itself
@@ -43,7 +46,7 @@ bool Function::signature_depends_on(const std::vector<FunctionPtr> &list) {
         return true;
 //    return std::any_of(m_dependencies.m_functions.begin(), m_dependencies.m_functions.end(),
 //                       [list](auto &it) { return it->signature_depends_on(list); });
-    for (auto &it : m_dependencies.m_functions) {
+    for (auto &it: m_dependencies.m_functions) {
         if (it->signature_depends_on(list))
             return true;
     }
@@ -80,7 +83,7 @@ FunctionPtr Function::specialize(std::vector<FunctionPtr> arguments, Function::D
     FunctionPtr base = get_base();
     if (base.get() != this) {
         std::vector<FunctionPtr> base_arguments;
-        for (auto &f : get_arguments())
+        for (auto &f: get_arguments())
             base_arguments.push_back(matcher.convert(f));
         return matcher.convert(base)->specialize(base_arguments, std::move(dependencies));
     }
@@ -111,7 +114,7 @@ std::string Function::to_string(bool full, bool with_namespaces) {
 
     ss << (m_label.empty() ? "?" : m_label);
 
-//    ss << "[" << (((size_t) this) % 10000) << "]";
+//    ss << "[" << m_id << "]";
 
     if (full) {
         size_t n = m_dependencies.m_functions.size();

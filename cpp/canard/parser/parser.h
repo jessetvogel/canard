@@ -33,7 +33,7 @@ class Parser {
 
     ParserFormat m_format = PLAIN;
 
-    // token methods
+    // get_token methods
 
     void next_token();
 

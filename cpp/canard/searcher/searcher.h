@@ -11,7 +11,7 @@ class Searcher {
 
     const int m_max_depth;
 
-    std::queue<std::shared_ptr<Query>> m_queue;
+    std::vector<std::queue<std::shared_ptr<Query>>> m_depth_queues;
     std::vector<FunctionPtr> m_all_theorems, m_generic_theorems;
     std::unordered_map<FunctionPtr, std::vector<FunctionPtr>> m_index;
 
@@ -26,9 +26,9 @@ public:
     explicit Searcher(int);
 
     void add_namespace(Namespace &);
+    bool search(const std::shared_ptr<Query> &);
+    void optimize(const std::shared_ptr<Query> &);
 
-    bool search(std::shared_ptr<Query> &);
-
-    std::vector<FunctionPtr> get_result() { return m_result; }
+    std::vector<FunctionPtr> result() const { return m_result; }
 
 };

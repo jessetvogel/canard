@@ -69,7 +69,7 @@ struct LexerException : public std::exception {
     const int m_line, m_position;
     const std::string m_message;
 
-    explicit LexerException(int line, int position, const std::string &message) : m_line(line), m_position(position),
-                                                                                  m_message(message) {};
+    explicit LexerException(int line, int position, std::string message) : m_line(line), m_position(position),
+                                                                           m_message(std::move(message)) {};
 
 };

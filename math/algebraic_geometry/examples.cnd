@@ -7,7 +7,7 @@ open commutative_algebra.ring
 
 namespace algebraic_geometry
 
-def spec_ZZ := Spec ZZ -- Even though this is two steps, this is the simplest scheme, so we want to consider it as a first case
+def Spec_ZZ := Spec ZZ -- Even though this is two steps, this is the simplest scheme, so we want to consider it as a first case
 def empty_scheme := Spec zero_ring
 
 -- Spec(R)
@@ -78,10 +78,30 @@ let ec_to_P1_fl {k : Ring} (h : field k) : morphism.flat (ec_to_P1 h)
 let ec_to_P1_sj {k : Ring} (h : field k) : morphism.surjective (ec_to_P1 h)
 let ec_to_P1_fp {k : Ring} (h : field k) : morphism.finitely_presented (ec_to_P1 h)
 
+-- Integral closure ZZ in \bar{QQ}
+def Spec_ZZ_bar := Spec ZZ_bar
+let ZZ_bar_not_cm : not (scheme.cohen_macaulay Spec_ZZ_bar)
+let ZZ_bar_int : scheme.integral Spec_ZZ_bar
+let ZZ_bar_not_lnt : not (scheme.locally_noetherian Spec_ZZ_bar)
+let ZZ_bar_nm : scheme.normal Spec_ZZ_bar
 
+-- Spec CC \to Spec RR
+def Spec_CC_to_Spec_RR := mSpec RR_to_CC
+let Spec_CC_to_Spec_RR_not_ci : not (closed_immersion Spec_CC_to_Spec_RR)
+let Spec_CC_to_Spec_RR_et : etale Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_fn : morphism.finite Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_fl : morphism.flat Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_not_imm : not (morphism.immersion Spec_CC_to_Spec_RR)
+let Spec_CC_to_Spec_RR_fp : morphism.finitely_presented Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_af : morphism.finitely_presented Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_sj : morphism.surjective Spec_CC_to_Spec_RR
 
-
-
+-- Spec QQ \sqcup Spec QQ = Spec (QQ x QQ)
+let two_pts {k : Ring} (h : field k) : Scheme
+let two_pts_af {k : Ring} (h : field k) : scheme.affine (two_pts h)
+let two_pts_not_cn {k : Ring} (h : field k) : not (scheme.connected (two_pts h))
+let two_pts_rg {k : Ring} (h : field k) : scheme.regular (two_pts h)
+let two_pts_nt {k : Ring} (h : field k) : scheme.noetherian (two_pts h)
 
 -- infinite union of points over a field
 let inf_points {k : Ring} (h : field k) : Scheme
@@ -89,5 +109,15 @@ let inf_points_not_qc {k : Ring} (h : field k) : not (scheme.quasi_compact (inf_
 
 let open_complement {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Scheme
 let open_complement_inclusion {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Morphism (open_complement h) X
+
+-- Spec QQ[sqrt{2}]
+def Spec_QQ_sqrt2 := Spec QQ_sqrt2
+
+-- Spec QQ[sqrt{2}] \to Spec QQ
+def Spec_QQ_sqrt2_to_Spec_QQ := mSpec QQ_to_QQ_sqrt2
+let Spec_QQ_sqrt2_to_Spec_QQ_not_zrc : not (zariski_cover Spec_QQ_sqrt2_to_Spec_QQ)
+let Spec_QQ_sqrt2_to_Spec_QQ_etc : etale_cover Spec_QQ_sqrt2_to_Spec_QQ
+let Spec_QQ_sqrt2_to_Spec_QQ_fn : morphism.finite Spec_QQ_sqrt2_to_Spec_QQ
+let Spec_QQ_sqrt2_to_Spec_QQ_not_ci : not (morphism.closed_immersion Spec_QQ_sqrt2_to_Spec_QQ)
 
 end algebraic_geometry

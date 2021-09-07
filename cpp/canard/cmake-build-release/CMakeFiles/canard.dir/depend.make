@@ -16,6 +16,7 @@ CMakeFiles/canard.dir/core/function.cpp.o: \
 CMakeFiles/canard.dir/core/matcher.cpp.o: \
  ../core/context.h \
  ../core/function.h \
+ ../core/macros.h \
  ../core/matcher.cpp \
  ../core/matcher.h \
  ../core/namespace.h \
@@ -60,6 +61,7 @@ CMakeFiles/canard.dir/parser/message.cpp.o: \
 CMakeFiles/canard.dir/parser/parser.cpp.o: \
  ../core/context.h \
  ../core/function.h \
+ ../core/macros.h \
  ../core/matcher.h \
  ../core/namespace.h \
  ../core/session.h \
@@ -77,6 +79,7 @@ CMakeFiles/canard.dir/parser/scanner.cpp.o: \
 CMakeFiles/canard.dir/searcher/query.cpp.o: \
  ../core/context.h \
  ../core/function.h \
+ ../core/macros.h \
  ../core/matcher.h \
  ../core/namespace.h \
  ../searcher/query.cpp \
@@ -84,6 +87,7 @@ CMakeFiles/canard.dir/searcher/query.cpp.o: \
 CMakeFiles/canard.dir/searcher/searcher.cpp.o: \
  ../core/context.h \
  ../core/function.h \
+ ../core/macros.h \
  ../core/matcher.h \
  ../core/namespace.h \
  ../searcher/query.h \
