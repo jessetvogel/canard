@@ -28,15 +28,15 @@ public:
 
     explicit Query(std::vector<FunctionPtr>);
 
-    inline const std::shared_ptr<Query> &parent() const { return m_parent; }
-    inline const std::vector<FunctionPtr> &locals() const { return m_locals; }
+    const std::shared_ptr<Query> &parent() const { return m_parent; }
+    const std::vector<FunctionPtr> &locals() const { return m_locals; }
     const FunctionPtr &last_indeterminate() const { return m_indeterminates.back(); }
 
     int depth();
 
     size_t indeterminates_size() { return m_indeterminates.size(); }
 
-    inline bool is_solved() { return m_indeterminates.empty(); }
+    bool is_solved() { return m_indeterminates.empty(); }
     bool has_parent(const std::shared_ptr<Query>&) const;
 
     bool is_indeterminate(const FunctionPtr &);

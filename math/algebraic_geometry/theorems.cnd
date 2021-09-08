@@ -104,6 +104,7 @@ let sj_of_fppf {X Y : Scheme} {f : Morphism X Y} (h : fppf_cover f) : surjective
 let lfp_of_fppf {X Y : Scheme} {f : Morphism X Y} (h : fppf_cover f) : locally_finitely_presented f
 let fppf_of_fl_sj_lfp {X Y : Scheme} {f : Morphism X Y} (h1 : flat f) (h2 : surjective f) (h3 : locally_finitely_presented f) : fppf_cover f
 let zrc_of_iso {X Y : Scheme} {f : Morphism X Y} (h : isomorphism f) : zariski_cover f
+let zrc_of_sj_oi {X Y : Scheme} {f : Morphism X Y} (h1 : surjective f) (h2 : open_immersion f) : zariski_cover f
 let fl_of_fpqc {X Y : Scheme} {f : Morphism X Y} (h : fpqc_cover f) : flat f
 let sj_of_fpqc {X Y : Scheme} {f : Morphism X Y} (h : fpqc_cover f) : surjective f
 

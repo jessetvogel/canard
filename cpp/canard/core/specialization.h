@@ -16,8 +16,8 @@ public:
     Specialization(FunctionPtr base, std::vector<FunctionPtr> arguments, FunctionPtr type,
                    Function::Dependencies dependencies);
 
-    FunctionPtr get_base() override;
-    const std::vector<FunctionPtr> &get_arguments() override;
+    FunctionPtr base() override;
+    const std::vector<FunctionPtr> &arguments() override;
     bool depends_on(const std::vector<FunctionPtr> &) override;
     bool depends_on(const std::unordered_set<FunctionPtr> &) override;
     std::string to_string(bool, bool) override;

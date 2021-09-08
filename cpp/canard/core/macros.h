@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-// #define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #define CANARD_DEBUG(m) do { std::cerr << "[🦆 DEBUG] " << m << std::endl; } while(false)

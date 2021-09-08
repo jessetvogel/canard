@@ -34,8 +34,11 @@ end sheaf
 
 -- General constructions
 let Spec (R : Ring) : Scheme
-let mSpec {A B : Ring} (f : Morphism A B) : Morphism (Spec B) (Spec A)
+let Spec_contravariant : Contravariant Spec
+def mSpec {A B : Ring} (f : Morphism A B) := contramap Spec_contravariant f
 let sheaf_of_module {R : Ring} (M : Module R) : Sheaf (Spec R)
+
+def Spec_ZZ := Spec ZZ -- Even though this is a single step, this is the simplest scheme, so we want to consider it as a first case
 
 end algebraic_geometry
 

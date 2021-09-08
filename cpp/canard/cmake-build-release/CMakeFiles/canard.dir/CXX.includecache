@@ -16,6 +16,18 @@ unordered_set
 function.h
 /Users/jessevogel/Projects/canard/cpp/canard/core/function.h
 
+/Users/jessevogel/Projects/canard/cpp/canard/core/function.cpp
+function.h
+/Users/jessevogel/Projects/canard/cpp/canard/core/function.h
+matcher.h
+/Users/jessevogel/Projects/canard/cpp/canard/core/matcher.h
+specialization.h
+/Users/jessevogel/Projects/canard/cpp/canard/core/specialization.h
+utility
+-
+sstream
+-
+
 /Users/jessevogel/Projects/canard/cpp/canard/core/function.h
 utility
 -
@@ -25,10 +37,6 @@ vector
 -
 namespace.h
 /Users/jessevogel/Projects/canard/cpp/canard/core/namespace.h
-
-/Users/jessevogel/Projects/canard/cpp/canard/core/macros.h
-iostream
--
 
 /Users/jessevogel/Projects/canard/cpp/canard/core/matcher.h
 vector
@@ -44,21 +52,7 @@ string
 context.h
 /Users/jessevogel/Projects/canard/cpp/canard/core/context.h
 
-/Users/jessevogel/Projects/canard/cpp/canard/searcher/query.cpp
-query.h
-/Users/jessevogel/Projects/canard/cpp/canard/searcher/query.h
-../core/macros.h
-/Users/jessevogel/Projects/canard/cpp/canard/core/macros.h
-utility
--
-sstream
--
-
-/Users/jessevogel/Projects/canard/cpp/canard/searcher/query.h
-../core/function.h
+/Users/jessevogel/Projects/canard/cpp/canard/core/specialization.h
+function.h
 /Users/jessevogel/Projects/canard/cpp/canard/core/function.h
-../core/matcher.h
-/Users/jessevogel/Projects/canard/cpp/canard/core/matcher.h
-memory
--
 

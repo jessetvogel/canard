@@ -8,22 +8,23 @@
 #include <sstream>
 
 Specialization::Specialization(FunctionPtr base, std::vector<FunctionPtr> arguments, FunctionPtr type,
-                               Function::Dependencies dependencies) : Function(std::move(type), std::move(dependencies)),
-                                                              m_base(std::move(base)),
-                                                              m_arguments(std::move(arguments)) {
+                               Function::Dependencies dependencies) : Function(std::move(type),
+                                                                               std::move(dependencies)),
+                                                                      m_base(std::move(base)),
+                                                                      m_arguments(std::move(arguments)) {
     // TODO: maybe some assertions here
 }
 
-FunctionPtr Specialization::get_base() {
+FunctionPtr Specialization::base() {
     return m_base;
 }
 
-const std::vector<FunctionPtr> &Specialization::get_arguments() {
+const std::vector<FunctionPtr> &Specialization::arguments() {
     return m_arguments;
 }
 
 bool Specialization::depends_on(const std::vector<FunctionPtr> &list) {
-    for (auto &arg : m_arguments) {
+    for (auto &arg: m_arguments) {
         if (arg->depends_on(list))
             return true;
     }
@@ -31,7 +32,7 @@ bool Specialization::depends_on(const std::vector<FunctionPtr> &list) {
 }
 
 bool Specialization::depends_on(const std::unordered_set<FunctionPtr> &set) {
-    for (auto &arg : m_arguments) {
+    for (auto &arg: m_arguments) {
         if (arg->depends_on(set))
             return true;
     }
@@ -39,6 +40,7 @@ bool Specialization::depends_on(const std::unordered_set<FunctionPtr> &set) {
 }
 
 std::string Specialization::to_string(bool full, bool with_namespaces) {
+//    if(full && !m_label.empty()) return m_label;
     std::ostringstream ss;
 
     size_t n = m_dependencies.m_functions.size();
@@ -61,9 +63,9 @@ std::string Specialization::to_string(bool full, bool with_namespaces) {
         ss << " := ";
     }
 
-    ss << get_base()->to_string(false, with_namespaces);
+    ss << base()->to_string(false, with_namespaces);
 
-    for (auto &f : m_arguments) {
+    for (auto &f: m_arguments) {
         std::string str_argument = f->to_string(false, with_namespaces);
         bool should_enclose = (str_argument.find(' ') != std::string::npos);
         ss << ' ';

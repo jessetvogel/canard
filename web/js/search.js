@@ -322,8 +322,6 @@ function init() {
 
         // Construct query and make API call
         const query = toSearchQuery(context);
-        console.log(query);
-
         api(query).then(response => {
             switch(response.status) {
                 case 'error':

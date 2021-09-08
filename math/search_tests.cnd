@@ -4,6 +4,8 @@ open algebraic_geometry.morphism;
 open commutative_algebra;
 open commutative_algebra.ring;
 
+-- Bugs above, usual tests below
+
 search (R : Ring);
 
 search (X : Scheme) (h : scheme.affine X);
@@ -39,3 +41,5 @@ search (P {U V W : Scheme} {g : Morphism U V} {h : Morphism V W} (gClosedImm : c
 search (X Y : Scheme) (f : Morphism X Y) (h : not (zariski_cover f));
 search (h1 : not (morphism.formally_etale (ec_to_P1 QQ_is_field))) (h2 : not (morphism.open_immersion (ec_to_P1 QQ_is_field)));
 search (h : not (morphism.open_immersion (mSpec QQ_to_QQ_sqrt2)));
+
+search (P (T_ S_ : Type) (F_ (t_ : T_) : S_) (h_ : Functor F_) (X_ Y_ : T_) (f_ : Morphism X_ Y_) : Morphism (F_ X_) (F_ Y_));

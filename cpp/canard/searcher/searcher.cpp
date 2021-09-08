@@ -14,10 +14,10 @@ void Searcher::add_namespace(Namespace &space) {
     m_all_theorems.insert(m_all_theorems.end(), theorems.begin(), theorems.end());
 
     for (FunctionPtr &thm: theorems) {
-        auto thm_type_base = thm->get_type()->get_base();
+        auto thm_type_base = thm->type()->base();
 
         // If the thmTypeBase is a dependency of the theorem, then store in the 'general' category
-        auto &thm_dependencies = thm->get_dependencies().m_functions;
+        auto &thm_dependencies = thm->dependencies().m_functions;
         if (std::find(thm_dependencies.begin(), thm_dependencies.end(), thm_type_base) != thm_dependencies.end()) {
             m_generic_theorems.push_back(thm);
             continue;
@@ -81,7 +81,7 @@ bool Searcher::search(const std::shared_ptr<Query> &query) {
                 return true;
 
         // If the type base is an indeterminate of q, there is nothing better to do then to try all theorems
-        FunctionPtr h_type_base = q->last_indeterminate()->get_type()->get_base();
+        FunctionPtr h_type_base = q->last_indeterminate()->type()->base();
         if (q->is_indeterminate(h_type_base)) {
             for (auto &thm: m_all_theorems)
                 if (search_helper(q, thm, reductions))

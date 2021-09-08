@@ -10,11 +10,13 @@ let ZZ QQ RR CC : Ring
 let zero_ring : Ring
 
 -- ZZ
-let ZZ_is_domain : domain ZZ
+let ZZ_is_dm : domain ZZ
 let ZZ_is_pid : pid ZZ
 let ZZ_not_field : not (field ZZ)
-let ZZ_noetherian : noetherian ZZ
-let ZZ_excellent : excellent ZZ
+let ZZ_nt : noetherian ZZ
+let ZZ_exc : excellent ZZ
+let ZZ_not_art : not (artin ZZ)
+let ZZ_not_lc : not (local ZZ)
 
 -- QQ
 let QQ_is_field : field QQ
@@ -62,5 +64,13 @@ let QQ_sqrt2_nt : noetherian QQ_sqrt2
 
 -- QQ \to QQ[\sqrt{2}]
 let QQ_to_QQ_sqrt2 : Morphism QQ QQ_sqrt2
+
+-- k[x, y] / (x^2 - y^3)
+let cusp_ring {k : Ring} (h : field k) : Ring
+let cusp_ring_not_ic {k : Ring} (h : field k) : not (integrally_closed (cusp_ring h))
+let cusp_ring_dm {k : Ring} (h : field k) : domain (cusp_ring h)
+let cusp_ring_nt {k : Ring} (h : field k) : noetherian (cusp_ring h)
+let cusp_ring_not_art {k : Ring} (h : field k) : not (artin (cusp_ring h))
+let cusp_ring_not_lc  {k : Ring} (h : field k) : not (local (cusp_ring h))
 
 end commutative_algebra

@@ -26,8 +26,6 @@ CMakeFiles/canard.dir/core/namespace.cpp.o: \
  ../core/function.h \
  ../core/namespace.cpp \
  ../core/namespace.h
-CMakeFiles/canard.dir/core/pool.cpp.o: \
- ../core/pool.cpp
 CMakeFiles/canard.dir/core/session.cpp.o: \
  ../core/context.h \
  ../core/function.h \

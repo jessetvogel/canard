@@ -7,7 +7,6 @@ open commutative_algebra.ring
 
 namespace algebraic_geometry
 
-def Spec_ZZ := Spec ZZ -- Even though this is two steps, this is the simplest scheme, so we want to consider it as a first case
 def empty_scheme := Spec zero_ring
 
 -- Spec(R)
@@ -17,6 +16,7 @@ let spec_nt {R : Ring} (h : ring.noetherian R) : scheme.noetherian (Spec R)
 let spec_rg {R : Ring} (h : ring.field R) : scheme.regular (Spec R)
 let spec_irr {R : Ring} (h : prime_ideal (nilradical R)) : irreducible (Spec R)
 let spec_nm {R : Ring} (h : integrally_closed R) : normal (Spec R)
+let spec_not_nm {R : Ring} (h : not (integrally_closed R)) : not (normal (Spec R))
 let spec_exc {R : Ring} (h : ring.excellent R) : scheme.excellent (Spec R)
 let spec_jcb {R : Ring} (h : ring.jacobson R) : scheme.jacobson (Spec R)
 
@@ -106,6 +106,11 @@ let two_pts_nt {k : Ring} (h : field k) : scheme.noetherian (two_pts h)
 -- infinite union of points over a field
 let inf_points {k : Ring} (h : field k) : Scheme
 let inf_points_not_qc {k : Ring} (h : field k) : not (scheme.quasi_compact (inf_points h))
+let inf_points_not_nt {k : Ring} (h : field k) : not (scheme.noetherian (inf_points h))
+let inf_points_lnt {k : Ring} (h : field k) : scheme.locally_noetherian (inf_points h)
+let inf_points_rg {k : Ring} (h : field k) : scheme.regular (inf_points h)
+let inf_points_sp {k : Ring} (h : field k) : scheme.separated (inf_points h)
+let inf_points_not_cn {k : Ring} (h : field k) : not (scheme.connected (inf_points h))
 
 let open_complement {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Scheme
 let open_complement_inclusion {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Morphism (open_complement h) X

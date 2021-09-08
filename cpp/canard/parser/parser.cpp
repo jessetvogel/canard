@@ -168,7 +168,7 @@ void Parser::parse_inspect() {
     // Construct list of labels
     std::vector<std::string> labels;
     for (auto &f: space->get_functions()) {
-        std::string label = f->get_label();
+        std::string label = f->label();
         if (!label.empty())
             labels.push_back(label);
     }
@@ -444,9 +444,9 @@ std::vector<FunctionPtr> Parser::parse_functions(Context &context) {
     consume(SEPARATOR, ":");
     Token token = m_current_token;
     auto type = parse_expression(use_context);
-    if (type->get_type() != m_session.TYPE && type->get_type() != m_session.PROP)
+    if (type->type() != m_session.TYPE && type->type() != m_session.PROP)
         throw ParserException(token, "expected a Type or Prop");
-    if (type->get_dependencies().size() > 0) // TODO: I don't think this is expected behaviour..
+    if (type->dependencies().size() > 0) // TODO: I don't think this is expected behaviour..
         throw ParserException(token, "forgot arguments");
 
     // Actually create the functions
@@ -512,7 +512,7 @@ FunctionPtr Parser::parse_expression(Context &context, Function::Dependencies de
         if (dependencies.size() == 0)
             return base;
         try {
-            return base->specialize(base->get_arguments(), std::move(dependencies));
+            return base->specialize(base->arguments(), std::move(dependencies));
         } catch (SpecializationException &e) {
             throw ParserException(m_current_token, e.m_message);
         }

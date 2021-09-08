@@ -33,40 +33,43 @@ bool Query::is_indeterminate(const FunctionPtr &f) {
 
 std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
     // Get last indeterminate
-    FunctionPtr h = query->last_indeterminate();
+    const FunctionPtr &h = query->last_indeterminate();
 
     // If h has no dependencies, nothing to do here
-    if (h->get_dependencies().size() == 0)
+    if (h->dependencies().size() == 0)
         return query;
 
     // Create a sub_query where h is replaced by a dependency-less version of h
     // This introduces new locals: the current dependencies of h
     std::vector<FunctionPtr> new_indeterminates = query->m_indeterminates;
-    new_indeterminates.pop_back();
-    auto new_h = std::make_shared<Function>(h->get_type(), Function::Dependencies());
-    new_indeterminates.push_back(new_h);
+    auto new_h = std::make_shared<Function>(h->type(), Function::Dependencies());
+    new_indeterminates.back() = new_h;
     std::unordered_map<FunctionPtr, FunctionPtr> new_solutions;
     new_solutions.emplace(h, new_h);
 
-    // just use the same depths, doesn't seem fair to charge for an normalize..
-    std::shared_ptr<Query> sub_query(
-            new Query(query, std::move(new_solutions), std::move(new_indeterminates), query->m_depths));
+    // Just use the same depths, doesn't seem fair to charge for a normalize-step
+    std::shared_ptr<Query> sub_query(new Query(
+            query,
+            std::move(new_solutions),
+            std::move(new_indeterminates),
+            query->m_depths));
 
     sub_query->m_locals = query->m_locals;
     sub_query->m_locals_allowed = query->m_locals_allowed;
 
     // Add the dependencies of h to the locals of sub_query
     // Then hNew may depend on these new locals
-    std::shared_ptr<std::unordered_set<FunctionPtr>> new_h_allowed;
     auto it = query->m_locals_allowed.find(h);
-    if (it != query->m_locals_allowed.end()) // add all that h was allowed to
-        new_h_allowed = std::make_shared<std::unordered_set<FunctionPtr>>(*(it->second));
-    else
-        new_h_allowed = std::make_shared<std::unordered_set<FunctionPtr>>();
-    for (auto &f: h->get_dependencies().m_functions) {
+    std::shared_ptr<std::unordered_set<FunctionPtr>> new_h_allowed =
+            (it != query->m_locals_allowed.end())
+            ? std::make_shared<std::unordered_set<FunctionPtr>>(*(it->second)) // add all that h was allowed to
+            : std::make_shared<std::unordered_set<FunctionPtr>>();
+
+    for (auto &f: h->dependencies().m_functions) {
         sub_query->m_locals.push_back(f);
         new_h_allowed->insert(f);
     }
+
     sub_query->m_locals_allowed.erase(h);
     sub_query->m_locals_allowed.emplace(new_h, new_h_allowed);
 
@@ -78,7 +81,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     const FunctionPtr &h = query->last_indeterminate();
 
     // At this point, h is asserted to have no dependencies!
-    assert (h->get_dependencies().empty());
+    assert (h->dependencies().empty());
 
     // Get allowed locals for h
     auto it_h_allowed_locals = query->m_locals_allowed.find(h);
@@ -92,7 +95,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
 
     // Create matcher with indeterminates from both query and thm
     std::vector<FunctionPtr> all_indeterminates = query->m_indeterminates;
-    const auto &thm_dependencies = thm->get_dependencies().m_functions;
+    const auto &thm_dependencies = thm->dependencies().m_functions;
     all_indeterminates.insert(all_indeterminates.end(), thm_dependencies.begin(), thm_dependencies.end());
     Matcher matcher(all_indeterminates);
 
@@ -101,7 +104,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     // thm could be applied to get a solution for h)
     // (Also, e.g. when h has dependencies, but we are constructing lambda-style)
     // Therefore we will just match the types of h and thm
-    if (!matcher.matches(h->get_type(), thm->get_type()))
+    if (!matcher.matches(h->type(), thm->type()))
         return nullptr;
 
     CANARD_DEBUG("Valid reduction in [" << query->to_string() << "]");
@@ -125,7 +128,6 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     // depend on h again). So in conclusion, we can just forget about h for now, and then in the end construct
     // the value/solution for h!
     mappable.erase(std::find(mappable.begin(), mappable.end(), h));
-
     mappable.insert(mappable.end(), query->m_locals.begin(), query->m_locals.end()); // locals might need mapping too!
 
     Matcher query_to_sub_query(mappable);
@@ -163,7 +165,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     // This can be done cheaply, i.e. might preserve f as an indeterminate
                     solution = query_to_sub_query.cheap_clone(f);
                     if (solution != f)
-                        solution->set_label(f->get_label()); // not really needed, but pretty for debugging
+                        solution->set_label(f->label()); // not really needed, but pretty for debugging
 
                     new_indeterminates.push_back(solution);
 
@@ -212,7 +214,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     // Note: no cheap clone here! This might cause confusion e.g. when theorems are applied twice
                     argument = query_to_sub_query.clone(f);
                     if (argument != f)
-                        argument->set_label(f->get_label()); // not really needed, but pretty for debugging
+                        argument->set_label(f->label()); // not really needed, but pretty for debugging
 
                     new_indeterminates.push_back(argument);
                     new_depths.push_back(h_depth + 1); // indeterminate was introduced because of h, so h_depth + 1
@@ -288,9 +290,9 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     }
 
     // Finally, set solution of h, as specialization of thm
-    std::vector<FunctionPtr> thm_arguments;
-    for (FunctionPtr &f: thm->get_explicit_dependencies())
-        thm_arguments.push_back(arguments[f]);
+    std::vector<FunctionPtr> thm_arguments = thm->explicit_dependencies();
+    for (FunctionPtr &f: thm_arguments)
+        f = arguments[f];
 
     try {
         // Note that thm itself must also be converted, since it_thm might have changed along the way to sub_query!
@@ -360,17 +362,17 @@ std::vector<FunctionPtr> Query::final_solutions(const std::shared_ptr<Query> &qu
 
             // Case f = h, may need to convert the dependencies
             if (f == h) {
-                size_t m = h->get_dependencies().size();
+                const size_t m = h->dependencies().size();
                 if (m > 0) {
                     try {
                         Function::Dependencies new_dependencies;
                         if (i == 0)
-                            new_dependencies = h->get_dependencies();
+                            new_dependencies = h->dependencies();
                         else {
-                            new_dependencies.m_explicits = h->get_dependencies().m_explicits;
+                            new_dependencies.m_explicits = h->dependencies().m_explicits;
                             for (int j = 0; j < m; ++j)
                                 new_dependencies.m_functions.push_back(
-                                        matchers.back()->convert(h->get_dependencies().m_functions[j]));
+                                        matchers.back()->convert(h->dependencies().m_functions[j]));
                         }
                         g = g->specialize({}, std::move(new_dependencies));
                     }

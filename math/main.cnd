@@ -9,6 +9,11 @@ let isomorphism {T : Type} {X Y : T} (f : Morphism X Y) : Prop
 -- def dom {T : Type} {X Y : T} (f : Morphism X Y) := X
 -- def cod {T : Type} {X Y : T} (f : Morphism X Y) := Y
 
+let Functor {T S : Type} (F (t : T) : S) : Prop
+let Contravariant {T S : Type} (F (t : T) : S) : Prop
+let fmap {T S : Type} {F (t : T) : S} (h : Functor F) {X Y : T} (f : Morphism X Y) : Morphism (F X) (F Y)
+let contramap {T S : Type} {F (t : T) : S} (h : Contravariant F) {X Y : T} (f : Morphism X Y) : Morphism (F Y) (F X)
+
 import "logic.cnd"
 import "algebraic_geometry/algebraic_geometry.cnd"
 import "commutative_algebra/commutative_algebra.cnd"
@@ -16,9 +21,6 @@ import "topology/topology.cnd"
 
 open commutative_algebra
 open algebraic_geometry
-
--- Checks
--- check red_irred_imp_int (int_imp_red SpecZZIntegral) (int_imp_irred SpecZZIntegral) ;
 
 -- close commutative_algebra
 -- close algebraic_geometry
