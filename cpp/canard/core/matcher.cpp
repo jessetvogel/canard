@@ -9,6 +9,7 @@
 #include <utility>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 FunctionPtr Matcher::null = nullptr;
 
@@ -83,7 +84,7 @@ bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
         return false;
 
     // Dependencies themselves should match
-    auto sub_matcher = (n > 0) ? std::make_unique<Matcher>(this, f_dependencies.m_functions) : nullptr;
+    auto sub_matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_dependencies.m_functions)) : nullptr;
     Matcher &use_matcher = (n > 0) ? *sub_matcher : *this;
     for (int i = 0; i < n; ++i) {
         // Explicitness must match

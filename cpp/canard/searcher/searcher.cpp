@@ -3,6 +3,7 @@
 //
 
 #include "searcher.h"
+#include <algorithm>
 #include "../core/macros.h"
 
 Searcher::Searcher(const int max_depth) : m_max_depth(max_depth) {}

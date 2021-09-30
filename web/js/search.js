@@ -90,7 +90,7 @@ const properties = {
         'morphism.closed_immersion': 'closed immersion',
         'morphism.finite_fibers': 'finite fibers',
         'morphism.surjective': 'surjective',
-        'morphism.zariski_cover': 'zariski cover',
+        'morphism.zariski_cover': 'Zariski cover',
         'morphism.etale_cover': 'etale cover',
         'morphism.smooth_cover': 'smooth cover',
         'morphism.syntomic_cover': 'syntomic cover',

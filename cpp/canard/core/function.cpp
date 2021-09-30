@@ -8,6 +8,7 @@
 
 #include <utility>
 #include <sstream>
+#include <algorithm>
 
 int id_counter = 0;
 

@@ -44,21 +44,21 @@ function response_forbidden() {
 function response_method_not_allowed() {
     header('Status: 405 Method Not Allowed');
     header('Content-Type: application/json');
-    print('{{"status":"error","data":"Method not allowed"}');
+    print('{"status":"error","data":"Method not allowed"}');
     exit(0);
 }
 
 function response_payload_too_large() {
     header('Status: 413 Payload Too Large');
     header('Content-Type: application/json');
-    print('{{"status":"error","data":"Payload too large"}');
+    print('{"status":"error","data":"Payload too large"}');
     exit(0);
 }
 
 function response_server_error($message = '') {
     header('Status: 500 Internal Server Error');
     header('Content-Type: application/json');
-    print('{{"status":"error","data":"500 Internal Server Error' . ($message == '' ? '' : ' (' . $message . ')') . '"}');
+    print('{"status":"error","data":"500 Internal Server Error' . ($message == '' ? '' : ' (' . $message . ')') . '"}');
     exit(0);
 }
 

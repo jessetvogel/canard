@@ -17,5 +17,5 @@ function request(endpoint, data) {
 
 function api(query) {
     console.log(query);
-    return request('/php/query.php', { 'query': query });
+    return request('php/query.php', { 'query': query });
 }

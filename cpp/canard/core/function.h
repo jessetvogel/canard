@@ -7,6 +7,7 @@
 #include <utility>
 #include <string>
 #include <vector>
+#include <memory>
 
 class Function;
 

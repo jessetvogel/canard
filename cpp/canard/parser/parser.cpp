@@ -16,7 +16,7 @@ Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session) :
                                                                                  m_lexer(m_scanner),
                                                                                  m_session(session) {
     m_current_namespace = &session.get_global_namespace();
-    m_imported_files = std::make_unique<std::unordered_set<std::string>>();
+    m_imported_files = std::unique_ptr<std::unordered_set<std::string>>(new std::unordered_set<std::string>());
 }
 
 void Parser::next_token() {
@@ -412,8 +412,10 @@ std::string Parser::parse_path() {
 
     std::ostringstream ss;
     ss << consume(IDENTIFIER).m_data;
-    while (found(SEPARATOR, "."))
-        ss << consume().m_data << consume(IDENTIFIER).m_data;
+    while (found(SEPARATOR, ".")) {
+        ss << consume().m_data;
+        ss << consume(IDENTIFIER).m_data;
+    }
     return ss.str();
 }
 

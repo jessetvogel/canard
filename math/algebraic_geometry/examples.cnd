@@ -125,4 +125,24 @@ let Spec_QQ_sqrt2_to_Spec_QQ_etc : etale_cover Spec_QQ_sqrt2_to_Spec_QQ
 let Spec_QQ_sqrt2_to_Spec_QQ_fn : morphism.finite Spec_QQ_sqrt2_to_Spec_QQ
 let Spec_QQ_sqrt2_to_Spec_QQ_not_ci : not (morphism.closed_immersion Spec_QQ_sqrt2_to_Spec_QQ)
 
+-- Plane minus origin
+let plane_no_origin {k : Ring} (h : field k) : Scheme
+let plane_no_origin_not_af {k : Ring} (h : field k) : not (scheme.affine (plane_no_origin h))
+let plane_no_origin_int {k : Ring} (h : field k) : scheme.integral (plane_no_origin h)
+let plane_no_origin_qc {k : Ring} (h : field k) : scheme.quasi_compact (plane_no_origin h)
+let plane_no_origin_rg {k : Ring} (h : field k) : scheme.regular (plane_no_origin h)
+let plane_no_origin_sp {k : Ring} (h : field k) : scheme.separated (plane_no_origin h)
+
+-- Plane minus origin to Spec k
+let plane_no_origin_to_Spec_k {k : Ring} (h : field k) : Morphism (plane_no_origin h) (Spec k)
+let plane_no_origin_to_Spec_k_not_et {k : Ring} (h : field k) : not (etale (plane_no_origin_to_Spec_k h))
+let plane_no_origin_to_Spec_k_ffl {k : Ring} (h : field k) : faithfully_flat (plane_no_origin_to_Spec_k h)
+let plane_no_origin_to_Spec_k_not_ff {k : Ring} (h : field k) : not (finite_fibers (plane_no_origin_to_Spec_k h))
+let plane_no_origin_to_Spec_k_fp {k : Ring} (h : field k) : finitely_presented (plane_no_origin_to_Spec_k h)
+let plane_no_origin_to_Spec_k_not_pr {k : Ring} (h : field k) : not (proper (plane_no_origin_to_Spec_k h))
+let plane_no_origin_to_Spec_k_sm {k : Ring} (h : field k) : smooth (plane_no_origin_to_Spec_k h)
+let plane_no_origin_to_Spec_k_sp {k : Ring} (h : field k) : morphism.separated (plane_no_origin_to_Spec_k h)
+let plane_no_origin_to_Spec_k_not_ur {k : Ring} (h : field k) : not (morphism.unramified (plane_no_origin_to_Spec_k h))
+-- let plane_no_origin_to_Spec_k_not_ci {k : Ring} (h : field k) : not (closed_immersion (plane_no_origin_to_Spec_k h))
+
 end algebraic_geometry

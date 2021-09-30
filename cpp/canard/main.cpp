@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include "core/session.h"
 #include "parser/parser.h"
 
@@ -36,6 +37,10 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 
 bool parse_file(Session& session, ParserFormat format, const char* path) {
     // Convert path to normalized path

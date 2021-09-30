@@ -18,14 +18,14 @@ bool Lexer::is_separator(std::string &str) {
 }
 
 bool Lexer::is_number(std::string &str) {
-    for (char &c : str)
+    for (char &c: str)
         if (!(c >= '0' && c <= '9'))
             return false;
     return true;
 }
 
 bool Lexer::is_word(std::string &str) {
-    for (char &c : str)
+    for (char &c: str)
         if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && c != '_' && !(c >= '0' && c <= '9'))
             return false;
     return true;

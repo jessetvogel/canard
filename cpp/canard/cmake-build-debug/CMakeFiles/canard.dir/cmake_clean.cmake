@@ -3,7 +3,6 @@ file(REMOVE_RECURSE
   "CMakeFiles/canard.dir/core/function.cpp.o"
   "CMakeFiles/canard.dir/core/matcher.cpp.o"
   "CMakeFiles/canard.dir/core/namespace.cpp.o"
-  "CMakeFiles/canard.dir/core/pool.cpp.o"
   "CMakeFiles/canard.dir/core/session.cpp.o"
   "CMakeFiles/canard.dir/core/specialization.cpp.o"
   "CMakeFiles/canard.dir/main.cpp.o"

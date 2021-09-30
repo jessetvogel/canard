@@ -6,6 +6,7 @@
 #include "../core/macros.h"
 #include <utility>
 #include <sstream>
+#include <algorithm>
 
 Query::Query(std::vector<FunctionPtr> indeterminates) : m_parent(nullptr), m_indeterminates(std::move(indeterminates)) {
     m_depths.insert(m_depths.begin(), m_indeterminates.size(), 0); // initial depth is 0
@@ -336,12 +337,12 @@ std::vector<FunctionPtr> Query::final_solutions(const std::shared_ptr<Query> &qu
                       "Chain should only contain queries which have a parent"); // (just to be sure)
 
         // Obtain key set
-        auto indeterminates = std::make_unique<std::vector<FunctionPtr>>();
+        auto indeterminates = std::unique_ptr<std::vector<FunctionPtr>>(new std::vector<FunctionPtr>());
         for (auto &it: q->m_solutions)
             indeterminates->push_back(it.first);
         auto next_matcher = (i == 0)
-                            ? std::make_unique<Matcher>(*indeterminates)
-                            : std::make_unique<Matcher>(matchers.back().get(), *indeterminates);
+                            ? std::unique_ptr<Matcher>(new Matcher(*indeterminates))
+                            : std::unique_ptr<Matcher>(new Matcher(matchers.back().get(), *indeterminates));
         matchers_indeterminates.push_back(std::move(indeterminates));
 
         auto h = q->parent()->last_indeterminate();
