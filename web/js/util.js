@@ -1,16 +1,11 @@
 function $(id) {
-    let elements = document.querySelectorAll(id);
-    if(elements.length == 0)
-        return undefined;
-    if(elements.length == 1)
-        return elements[0];
-    return elements;
+    return document.getElementById(id);
 }
 
 function create(tag, content = '', attr = {}) {
     let elem = document.createElement(tag);
     elem.innerHTML = content;
-    for(a in attr)
+    for (a in attr)
         elem.setAttribute(a, attr[a]);
     return elem;
 }
@@ -69,4 +64,25 @@ function setHTML(elem, html) {
 
 function setText(elem, text) {
     elem.innerText = text;
+}
+
+function requestGET(url) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = function () { resolve(this.responseText); };
+        xhr.onerror = reject;
+        xhr.open('GET', url);
+        xhr.send();
+    });
+}
+
+function requestPOST(url, data) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = function () { resolve(JSON.parse(this.responseText)); };
+        xhr.onerror = reject;
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(data);
+    });
 }

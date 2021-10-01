@@ -2,12 +2,16 @@
 -- def type {T : Type} (x : T) := T;
 
 -- Stuff on morphisms
+
+/- Test -/
 let Morphism {T : Type} (X Y : T) : Type -- maybe a bit too general ?
 let id {T : Type} (X : T) : Morphism X X
 let comp {T : Type} {X Y Z : T} (g : Morphism Y Z) (f : Morphism X Y) : Morphism X Z
 let isomorphism {T : Type} {X Y : T} (f : Morphism X Y) : Prop
 -- def dom {T : Type} {X Y : T} (f : Morphism X Y) := X
--- def cod {T : Type} {X Y : T} (f : Morphism X Y) := Y
+/- def cod {T : Type} {X Y : T} (f : Morphism X Y) := Y -/
+/-What about now?-/
+
 
 let Functor {T S : Type} (F (t : T) : S) : Prop
 let Contravariant {T S : Type} (F (t : T) : S) : Prop

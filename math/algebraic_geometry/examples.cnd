@@ -9,18 +9,21 @@ namespace algebraic_geometry
 
 def empty_scheme := Spec zero_ring
 
--- Spec(R)
+-- The scheme $\Spec(R)$ is affine for any ring $R$.
 let spec_af (R : Ring) : scheme.affine (Spec R)
+-- The scheme $\Spec(R)$ is integral whenever $R$ is a domain.
 let spec_int {R : Ring} (h : ring.domain R) : integral (Spec R)
+-- The scheme $\Spec(R)$ is noetherian whenever $R$ is noetherian.
 let spec_nt {R : Ring} (h : ring.noetherian R) : scheme.noetherian (Spec R)
-let spec_rg {R : Ring} (h : ring.field R) : scheme.regular (Spec R)
+-- The scheme $\Spec(k)$ is regular whenever $k$ is field.
+let spec_rg {k : Ring} (h : ring.field k) : scheme.regular (Spec k)
 let spec_irr {R : Ring} (h : prime_ideal (nilradical R)) : irreducible (Spec R)
 let spec_nm {R : Ring} (h : integrally_closed R) : normal (Spec R)
 let spec_not_nm {R : Ring} (h : not (integrally_closed R)) : not (normal (Spec R))
 let spec_exc {R : Ring} (h : ring.excellent R) : scheme.excellent (Spec R)
 let spec_jcb {R : Ring} (h : ring.jacobson R) : scheme.jacobson (Spec R)
 
--- AA^1_X
+-- The affine line $\AA^1_X = \AA^1 \times X$ over a given scheme $X$.
 let affine_line (X : Scheme) : Scheme
 let affine_line_af (R : Ring) : scheme.affine (affine_line (Spec R))
 let hilbert_basis_thm {X : Scheme} (h : locally_noetherian X) : locally_noetherian (affine_line X)

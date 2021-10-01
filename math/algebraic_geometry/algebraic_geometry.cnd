@@ -6,33 +6,53 @@ open topology
 
 namespace algebraic_geometry
 
+-- The type of schemes.
 let Scheme : Type
-
--- Underlying topological space
+-- The underlying topological space of a scheme.
 let top_of_scheme (X : Scheme) : TopSpace
 
 namespace scheme
--- Scheme properties
-let affine quasi_compact regular noetherian locally_noetherian reduced irreducible cohen_macaulay excellent separated quasi_separated jacobson normal integral finite_dimensional (X : Scheme) : Prop
-def connected (X : Scheme) := topology.connected (top_of_scheme X)
+    -- A scheme is affine if it is isomorphic to $\Spec(R)$ for some ring $R$.
+    let affine (X : Scheme) : Prop
+    -- A scheme is quasi-compact if its underlying topological space is quasi-compact. That is, for every open cover $\{ U_i \}_{i \in I}$ of $X$, there exists a finite subcover.
+    let quasi_compact (X : Scheme) : Prop
+    -- A scheme is regular if it is locally noetherian and all of its stalks are regular local rings.
+    let regular (X : Scheme) : Prop
+    -- A scheme is locally noetherian if it can be covered by affine open subsets $\Spec A_i$, where each $A_i$ is a noetherian ring.
+    let locally_noetherian (X : Scheme) : Prop
+    -- A scheme is noetherian if it is locally noetherian and quasi-compact.
+    let noetherian (X : Scheme) : Prop
+    -- A scheme $X$ is reduced if $\mathcal{O}_X(U)$ is a reduced ring for all open $U \subset X$.
+    let reduced (X : Scheme) : Prop
+    -- A scheme $X$ is irreducible if its underlying topological space is irreducible. That is, if $X = Z_1 \sqcup Z_2$ for some closed subsets $Z_1, Z_2 \subset X$, then $Z_1 = X$ or $Z_2 = X$.
+    let irreducible (X : Scheme) : Prop
+    let cohen_macaulay (X : Scheme) : Prop
+    let excellent (X : Scheme) : Prop
+    -- A scheme is separated if the morphism $X \to \Spec \ZZ$ is separated.
+    let separated (X : Scheme) : Prop
+    -- A scheme is quasi-separated if the morphism $X \to \Spec \ZZ$ is quasi-separated.
+    let quasi_separated (X : Scheme) : Prop
+    let jacobson (X : Scheme) : Prop
+    let normal (X : Scheme) : Prop
+    -- A scheme $X$ is integral if it is non-empty and for every non-empty open subset $U \subset X$, the ring $\mathcal{O}_X(U)$ is a domain.
+    let integral (X : Scheme) : Prop
+    let finite_dimensional (X : Scheme) : Prop
+    -- A scheme is connected if its underlying topological space is connected.
+    def connected (X : Scheme) := topology.connected (top_of_scheme X)
 end scheme
 
 namespace morphism
--- Morphism properties
-let formally_etale formally_unramified formally_smooth proper finite quasi_finite flat affine quasi_compact separated quasi_separated regular finitely_presented locally_finite_type locally_finitely_presented etale smooth unramified finite_type open_morphism universally_closed immersion open_immersion closed_immersion finite_fibers surjective zariski_cover etale_cover smooth_cover syntomic_cover fppf_cover fpqc_cover faithfully_flat {X Y : Scheme} (f : Morphism X Y) : Prop
-
--- Property properties
-let stable_composition stable_left stable_base_change (P {X Y : Scheme} (f : Morphism X Y) : Prop) : Prop
+    let formally_etale formally_unramified formally_smooth proper finite quasi_finite flat affine quasi_compact separated quasi_separated regular finitely_presented locally_finite_type locally_finitely_presented etale smooth unramified finite_type open_morphism universally_closed immersion open_immersion closed_immersion finite_fibers surjective zariski_cover etale_cover smooth_cover syntomic_cover fppf_cover fpqc_cover faithfully_flat {X Y : Scheme} (f : Morphism X Y) : Prop
+    let stable_composition stable_left stable_base_change (P {X Y : Scheme} (f : Morphism X Y) : Prop) : Prop
 end morphism
 
--- Sheaves
+-- The type of sheaves on a scheme $X$.
 let Sheaf (X : Scheme) : Type
 namespace sheaf
-let quasi_coherent coherent free locally_free flasque {X : Scheme} (F : Sheaf X) : Prop
+    let quasi_coherent coherent free locally_free flasque {X : Scheme} (F : Sheaf X) : Prop
 end sheaf
 
-
--- General constructions
+-- The scheme $\Spec(R)$ for a given ring $R$.
 let Spec (R : Ring) : Scheme
 let Spec_contravariant : Contravariant Spec
 def mSpec {A B : Ring} (f : Morphism A B) := contramap Spec_contravariant f

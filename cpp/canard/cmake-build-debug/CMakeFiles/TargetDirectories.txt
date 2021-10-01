@@ -1,3 +1,0 @@
-/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/jessevogel/Projects/canard/cpp/canard/cmake-build-debug/CMakeFiles/canard.dir

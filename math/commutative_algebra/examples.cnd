@@ -5,51 +5,74 @@ open commutative_algebra.module
 
 namespace commutative_algebra
 
--- Examples
-let ZZ QQ RR CC : Ring
+-- The ring of integers $\ZZ$.
+let ZZ : Ring
+-- The ring of rational numbers $\QQ$.
+let QQ : Ring
+-- The ring of real numbers $\RR$.
+let RR : Ring
+-- The ring of complex numbers $\CC$.
+let CC : Ring
+-- The zero ring $\{ 0 \}$.
 let zero_ring : Ring
 
--- ZZ
+-- The ring $\ZZ$ is a domain.
 let ZZ_is_dm : domain ZZ
+-- The ring $\ZZ$ is a PID.
 let ZZ_is_pid : pid ZZ
+-- The ring $\ZZ$ is not a field. For example, $2 \in \ZZ$ is not invertible.
 let ZZ_not_field : not (field ZZ)
+-- The ring $\ZZ$ is noetherian.
 let ZZ_nt : noetherian ZZ
+-- The ring $\ZZ$ is excellent.
 let ZZ_exc : excellent ZZ
+-- The ring $\ZZ$ is not artin.
 let ZZ_not_art : not (artin ZZ)
+-- The ring $\ZZ$ is not local. For example, $(2)$ and $(3)$ are both maximal ideals.
 let ZZ_not_lc : not (local ZZ)
 
--- QQ
+-- The ring $\QQ$ is a field.
 let QQ_is_field : field QQ
-
--- RR
+-- The ring $\RR$ is a field.
 let RR_is_field : field RR
-
--- CC
+-- The ring $\CC$ is a field.
 let CC_is_field : field CC
 
--- Inclusion of numbers
+-- The inclusion of rings $\ZZ \to \QQ$.
 let ZZ_to_QQ : Morphism ZZ QQ
+-- The inclusion of rings $\QQ \to \RR$.
 let QQ_to_RR : Morphism QQ RR
+-- The inclusion of rings $\RR \to \CC$.
 let RR_to_CC : Morphism RR CC
+-- The inclusion of rings $\ZZ \to \RR$.
 def ZZ_to_RR := comp QQ_to_RR ZZ_to_QQ
+-- The inclusion of rings $\QQ \to \CC$.
 def QQ_to_CC := comp RR_to_CC QQ_to_RR
 
--- Finite field of 2 elements
+-- The field $\FF_2$ consisting of 2 elements.
 let FF2 : Ring
+-- The ring $\FF_2$ is a field.
 let FF2_is_field : field FF2
+-- The ring $\FF_2$ is finite.
 let FF2_is_finite : finite FF2
-
+-- The quotient map $\ZZ \to \FF_2$.
 let ZZ_to_FF2 : Morphism ZZ FF2
 
+/- The $\ZZ$-module $\FF_2 = \ZZ/2\ZZ$ is not flat, since tensoring
+\[ 0 \to \ZZ \xrightarrow{\cdot 2} \to \ZZ \to \ZZ/2\ZZ \to 0 \]
+with $\ZZ/2\ZZ$ gives
+\[ 0 \to \ZZ/2\ZZ \xrightarrow{0} \ZZ/2\ZZ \xrightarrow{\id} \ZZ/2\ZZ \to 0 \]
+is not exact on the left. -/
 let FF2_over_ZZ_not_flat : not (flat (module_of_ring_morphism ZZ_to_FF2))
+-- The $\ZZ$-module $\QQ$ is injective.
 let QQ_over_ZZ_injective : injective (module_of_ring_morphism ZZ_to_QQ)
-
--- ZZ[(1 + \sqrt{19}) / 2]
+-- The ring $\ZZ[(1 + \sqrt{19}) / 2]$.
 let ZZ_quadr_19 : Ring
+-- The ring $\ZZ[(1 + \sqrt{19}) / 2]$ is a PID.
 let ZZ_quadr_19_pid : pid ZZ_quadr_19
+-- The ring $\ZZ[(1 + \sqrt{19}) / 2]$ is not a Euclidean domain.
 let ZZ_quadr_19_not_eucl : not (euclidean ZZ_quadr_19)
 
--- ?
 let ufd_xy {R : Ring} (h : ufd R) : Ring
 let ufd_xy_of_ufd {R : Ring} (h : ufd R) : ufd (ufd_xy h)
 let ufd_xy_not_pid {R : Ring} (h : ufd R) : not (pid (ufd_xy h))
@@ -57,20 +80,27 @@ let ufd_xy_not_pid {R : Ring} (h : ufd R) : not (pid (ufd_xy h))
 -- Integral closure ZZ in \bar{QQ}
 let ZZ_bar : Ring
 
--- QQ[\sqrt{2}]
+-- The field $\QQ(\sqrt{2})$.
 let QQ_sqrt2 : Ring
-let QQ_sqrt2_dm : domain QQ_sqrt2
+-- The ring $\QQ(\sqrt{2})$ is a field.
+let QQ_sqrt2_field : field QQ_sqrt2
+-- The ring $\QQ(\sqrt{2})$ is noetherian.
 let QQ_sqrt2_nt : noetherian QQ_sqrt2
-
--- QQ \to QQ[\sqrt{2}]
+-- The inclusion $\QQ \to \QQ(\sqrt{2})$.
 let QQ_to_QQ_sqrt2 : Morphism QQ QQ_sqrt2
 
--- k[x, y] / (x^2 - y^3)
+-- The ring $k[x, y] / (x^2 - y^3)$ for a given field $k$.
 let cusp_ring {k : Ring} (h : field k) : Ring
+-- The ring $k[x, y] / (x^2 - y^3)$ is not integrally closed. The element $x/y$ in the field of fractions is integral since $(x/y)^2 = y$, but does not live in the ring. 
 let cusp_ring_not_ic {k : Ring} (h : field k) : not (integrally_closed (cusp_ring h))
+-- The ring $k[x, y] / (x^2 - y^3)$ is a domain.
 let cusp_ring_dm {k : Ring} (h : field k) : domain (cusp_ring h)
+-- The ring $k[x, y] / (x^2 - y^3)$ is noetherian.
 let cusp_ring_nt {k : Ring} (h : field k) : noetherian (cusp_ring h)
+-- The ring $k[x, y] / (x^2 - y^3)$ is not artin.
 let cusp_ring_not_art {k : Ring} (h : field k) : not (artin (cusp_ring h))
+-- The ring $k[x, y] / (x^2 - y^3)$ not local. For example, both $(x, y)$ and $(x - 1, y - 1)$ are maximal ideals.
 let cusp_ring_not_lc  {k : Ring} (h : field k) : not (local (cusp_ring h))
 
 end commutative_algebra
+

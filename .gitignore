@@ -57,3 +57,10 @@ hs_err_pid*
 # Python
 __pycache__/
 *.ipynb_checkpoints
+
+# CLion build directories
+cmake-build-release/
+cmake-build-debug/
+
+# Uploading source
+upload_to_server.sh

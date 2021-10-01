@@ -143,7 +143,7 @@ function addObject(name, type) {
     context.properties[name] = {};
 
     // Update overview
-    const list = $('#object-list');
+    const list = $('object-list');
     const div = create('div', `<span class="name math">${name}</span><span class="type"> : ${type}</span><span class="adjectives"></span>`);
     MathJax.typeset([ div ]);
     onClick(div, event => selectObject(name));
@@ -169,16 +169,17 @@ function deleteObject(name) {
     }
 
     // Update overview
-    const list = $('#object-list');
+    const list = $('object-list');
     for(let div of list.children) {
         if(div.innerText.startsWith(`${name} :`))
             div.remove();
     }
 
     // Clear properties, deselect all
-    clear($('#object-properties'));
-    if($('#object-list .selected') != null)
-        removeClass($('#object-list .selected'), 'selected');
+    clear($('object-properties'));
+    const selected = document.querySelector('object-list .selected');
+    if(selected != null)
+        removeClass(selected, 'selected');
 
     // Update type arguments, just in case
     updateTypeArguments();
@@ -192,7 +193,7 @@ function selectObject(name) {
         return;
 
     // Update overview
-    const list = $('#object-list');
+    const list = $('object-list');
     for(let div of list.children) {
         removeClass(div, 'selected');
         if(div.innerText.startsWith(`${name} :`))
@@ -200,7 +201,7 @@ function selectObject(name) {
     }
 
     // Update properties
-    const objectProperties = $('#object-properties');
+    const objectProperties = $('object-properties');
     clear(objectProperties);
     const typeBase = context.types[name].split(' ')[0];
     for(let key in properties[typeBase]) {
@@ -231,10 +232,10 @@ function selectObject(name) {
             api(query).then(response => {
                 switch(response.status) {
                     case 'error':
-                        setText($('#output'), 'Error: ' + response.message);
+                        setText($('output'), 'Error: ' + response.message);
                         return;
                     case 'fail':
-                        setText($('#output'), 'Fail: ' + response.data);
+                        setText($('output'), 'Fail: ' + response.data);
                         return;
                     case 'success':
                         let output = '';
@@ -249,7 +250,7 @@ function selectObject(name) {
                                     output += '<span style="font-size: 1.25rem;" class="tt"><span style="color: rgba(0, 0, 0, 0.5);">' + X + '</span>: '+ typeset(solution[X]) + '</span><br/>';
                             }
                         }
-                        setHTML($('#output'), output);
+                        setHTML($('output'), output);
                         return;
                 }
             }).catch(message => {
@@ -257,7 +258,7 @@ function selectObject(name) {
             });
 
             // Loading icon
-            setHTML($('#output'), '<div class="loading"></div>');
+            setHTML($('output'), '<div class="loading"></div>');
         });
 
         const div = create('div', '');
@@ -270,19 +271,19 @@ function selectObject(name) {
 
 function init() {
     // Options for object type <select>
-    const select = $('#object-type');
+    const select = $('object-type');
     for(let type in types)
         select.append(create('option', type, { 'value': type }));
 
     // On change for object type, update type arguments
-    const typeArguments = $('#object-type-arguments');
+    const typeArguments = $('object-type-arguments');
     onChange(select, updateTypeArguments);
 
     // Click add object <button>
-    const button = $('#object-add');
+    const button = $('object-add');
     onClick(button, event => {
-        const name = $('#object-name').value;
-        const typeBase = $('#object-type').value;
+        const name = $('object-name').value;
+        const typeBase = $('object-type').value;
 
         // Validate name
         if(!name.match(/^\w+$/)) {
@@ -297,7 +298,7 @@ function init() {
         }
 
         // Check type arguments
-        const typeArguments = $('#object-type-arguments');
+        const typeArguments = $('object-type-arguments');
         const arguments = [];
         for(let select of typeArguments.children)
             arguments.push(select.value);
@@ -312,10 +313,10 @@ function init() {
     });
 
     // Click search <button>
-    onClick($('#button-search'), event => {
+    onClick($('button-search'), event => {
         // If there are no objects, just clear output
         if(context.objects.length == 0) {
-            clear($('#output'));
+            clear($('output'));
             alert('Please provide some data');
             return;
         }
@@ -325,10 +326,10 @@ function init() {
         api(query).then(response => {
             switch(response.status) {
                 case 'error':
-                    setText($('#output'), 'Error: ' + response.message);
+                    setText($('output'), 'Error: ' + response.message);
                     return;
                 case 'fail':
-                    setText($('#output'), 'Fail: ' + response.data);
+                    setText($('output'), 'Fail: ' + response.data);
                     return;
                 case 'success':
                     let output = '';
@@ -351,7 +352,7 @@ function init() {
                             output += '</div>';
                         }
                     }
-                    setHTML($('#output'), output);
+                    setHTML($('output'), output);
                     return;
             }
         }).catch(message => {
@@ -359,26 +360,26 @@ function init() {
         });
 
         // Set loading icon
-        setHTML($('#output'), '<div class="loading"></div>');
+        setHTML($('output'), '<div class="loading"></div>');
     });
 
     // Click contradiction <button>
-    onClick($('#button-contradiction'), event => {
+    onClick($('button-contradiction'), event => {
         const query = toContradictionQuery(context);
         console.log(query);
 
         api(query).then(response => {
             switch(response.status) {
                 case 'error':
-                    setText($('#output'), 'Error: ' + response.message);
+                    setText($('output'), 'Error: ' + response.message);
                     return;
                 case 'fail':
-                    setText($('#output'), 'Fail: ' + response.data);
+                    setText($('output'), 'Fail: ' + response.data);
                     return;
                 case 'success':
                     const solutions = response.data[0].data;
                     if(solutions.length == 0) {
-                        setText($('#output'), 'No solutions found..');
+                        setText($('output'), 'No solutions found..');
                         return;
                     }
                     
@@ -387,7 +388,7 @@ function init() {
                         for(let X in solution)
                             output += '<span style="font-size: 1.125rem;" class="tt"><span style="color: rgba(0, 0, 0, 0.5);">' + X + '</span>: '+ typeset(solution[X]) + '</span><br/>';
                     }
-                    setHTML($('#output'), output);
+                    setHTML($('output'), output);
                     return;
             }
         }).catch(message => {
@@ -395,28 +396,15 @@ function init() {
         });
 
         // Set loading icon
-        setHTML($('#output'), '<div class="loading"></div>');
-    });
-}
-
-// ------------------------------------------------------------
-
-function typeset(expression) {
-    return expression.replace(
-        new RegExp(/(\w+(?:\.\w+)+)/, 'g'),
-        function($1) {
-            const i = $1.lastIndexOf('.');
-            const namespace = $1.substr(0, i);
-            const identifier = $1.substr(i + 1);
-            return `<a href="doc.html#${$1}" target="_blank">${identifier}</a>`;
+        setHTML($('output'), '<div class="loading"></div>');
     });
 }
 
 // ------------------------------------------------------------
 
 function updateTypeArguments() {
-    const arguments = types[$('#object-type').value];
-    const typeArguments = $('#object-type-arguments');
+    const arguments = types[$('object-type').value];
+    const typeArguments = $('object-type-arguments');
     clear(typeArguments);
 
     // Case the type does not require arguments
@@ -439,7 +427,7 @@ function updateTypeArguments() {
 }
 
 function updateAdjectives(name) {
-    for(let div of $('#object-list').children) {
+    for(let div of $('object-list').children) {
         if(div.querySelector('.name').innerText != name)
             continue;
 

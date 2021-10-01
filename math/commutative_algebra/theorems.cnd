@@ -3,29 +3,41 @@ open commutative_algebra.module
 
 namespace commutative_algebra
 
--- Theorems
+-- Every field is a domain, because if $xy = 0$ with $x \ne 0$, then $y = 0 \cdot x^{-1} = 0$.
 let domain_of_field {R : Ring} (h : field R) : domain R
+-- Every field is noetherian, because the only (maximal) ideal is $(0)$.
 let noetherian_of_field {R : Ring} (h : field R) : noetherian R
+-- Every domain is reduced, because if $x^n = 0$ then $x = 0$.
 let reduced_of_domain {R : Ring} (h : domain R) : reduced R
+-- Every field is a local ring, since $(0)$ is the only (maximal) ideal.
 let local_of_field {R : Ring} (h : field R) : local R
-
+-- Any free module is projective.
 let proj_of_free_module {R : Ring} {M : Module R} (h : free M) : projective M
+-- Any projective module is flat.
 let flat_of_proj_module {R : Ring} {M : Module R} (h : projective M) : flat M
+-- Any free module is flat.
 def flat_of_free_module {R : Ring} {M : Module R} (h : free M) := flat_of_proj_module (proj_of_free_module h)
-
+-- Every ring $R$ is a cyclic module over itself.
 let cyclic_module_self (R : Ring) : cyclic (module_self R)
+-- Every ring $R$ is a free module over itself.
 let free_module_self (R : Ring) : free (module_self R)
-
+-- Every PID is a UFD.
 let ufd_of_pid {R : Ring} (h : pid R) : ufd R
+-- Every UFD is integrally closed.
 let ic_of_ufd {R : Ring} (h : ufd R) : integrally_closed R
+-- Every integrally closed ring is a domain.
 let domain_of_ic {R : Ring} (h : integrally_closed R) : domain R
+-- Every Euclidean ring is a PID.
 let pid_of_eucl {R : Ring} (h : euclidean R) : pid R
+-- Every field is a Euclidean ring.
 let eucl_of_field {R : Ring} (h : field R) : euclidean R
+-- Every artin ring is noetherian.
 let nt_of_art {R : Ring} (h : artin R) : noetherian R
-
+-- Every field is excellent.
 let exc_of_field {R : Ring} (h : field R) : excellent R
+-- Every noetherian complete local ring is excellent.
 let exc_of_nt_cmpl_lc {R : Ring} (h1 : noetherian R) (h2 : complete R) (h3 : local R) : excellent R
-
+-- Every field is Jacobson.
 let jcb_of_field {R : Ring} (h : field R) : jacobson R
 
 end commutative_algebra

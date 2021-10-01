@@ -5,37 +5,24 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/fonts.css">
+    <script type="text/javascript" src="js/mathjax-config.js"></script>
+    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3.0.1/es5/tex-mml-chtml.js"></script>
     <script type="text/javascript" src="js/util.js"></script>
-    <script type="text/javascript" src="js/api.js"></script>
+    <script type="text/javascript" src="js/script.js"></script>
+    <script type="text/javascript" src="js/docs.js"></script>
 </head>
 
 <body>
-    <nav><a href="search.html">Search</a><a href="advanced.html">Advanced</a><a href="docs.html">Docs</a><a href="propose.html">Propose</a></nav>
+    <nav>
+        <a href="search.html">Search</a>
+        <a href="advanced.html">Advanced</a>
+        <a href="docs.html">Docs</a>
+        <a href="propose.html">Propose</a>
+    </nav>
 
-    <div id="content"></div>
+    <div id="content">
 
-    <script>
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'doc/identifiers', true);
-        xhr.setRequestHeader('Content-Type', 'text/plain');
-        xhr.send();
-        xhr.onload = function() {
-            const content = $('#content');
-            const ul = create('ul');
-            const identifiers = this.responseText.trim().split('\n');
-            identifiers.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
-            for(let identifier of identifiers) {
-                const li = create('li')
-                li.append(create('a', identifier, { 'href': `/doc.html#${identifier}`, 'class': 'tt' }));
-                ul.append(li);
-            }
-            content.append(ul);
-        };
-        xhr.onerror = function () {
-            console.log(this.responseText);
-        };
-    </script>
-
+    </div>
 </body>
 
 </html>

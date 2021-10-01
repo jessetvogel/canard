@@ -25,6 +25,7 @@ window.MathJax = {
             QQ: '\\mathbb{Q}',
             CC: '\\mathbb{C}',
             RR: '\\mathbb{R}',
+            FF: '\\mathbb{F}',
             NN: '\\mathbb{N}',
             PP: '\\mathbb{P}',
             textup: [ '\\text{#1}', 1 ],
