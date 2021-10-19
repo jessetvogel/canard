@@ -43,3 +43,5 @@ search (h1 : not (morphism.formally_etale (ec_to_P1 QQ_is_field))) (h2 : not (mo
 search (h : not (morphism.open_immersion (mSpec QQ_to_QQ_sqrt2)));
 
 search (P (T_ S_ : Type) (F_ (t_ : T_) : S_) (h_ : Functor F_) (X_ Y_ : T_) (f_ : Morphism X_ Y_) : Morphism (F_ X_) (F_ Y_));
+
+search (h : not (zariski_local connected))

@@ -75,6 +75,7 @@ let qfn_of_fn {X Y : Scheme} {f : Morphism X Y} (h : finite f) : quasi_finite f
 let fl_of_sm {X Y : Scheme} {f : Morphism X Y} (h : smooth f) : flat f
 def ur_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := ur_of_fur_lft (fur_of_fet (fet_of_et h)) (lft_of_lfp (lfp_of_et h))
 def sm_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := sm_of_fsm_lfp (fsm_of_fet (fet_of_et h)) (lfp_of_et h)
+let qf_of_oi {X Y : Scheme} {f : Morphism X Y} (h : open_immersion f) : quasi_finite f
 
 let src_af_of_af_trg_af {X Y : Scheme} {f : Morphism X Y} (h1: scheme.affine Y) (h2 : morphism.affine f) : scheme.affine X
 let af_of_src_af_trg_af {X Y : Scheme} (f : Morphism X Y) (h1 : scheme.affine X) (h2: scheme.affine Y) : morphism.affine f
@@ -107,6 +108,23 @@ let zrc_of_iso {X Y : Scheme} {f : Morphism X Y} (h : isomorphism f) : zariski_c
 let zrc_of_sj_oi {X Y : Scheme} {f : Morphism X Y} (h1 : surjective f) (h2 : open_immersion f) : zariski_cover f
 let fl_of_fpqc {X Y : Scheme} {f : Morphism X Y} (h : fpqc_cover f) : flat f
 let sj_of_fpqc {X Y : Scheme} {f : Morphism X Y} (h : fpqc_cover f) : surjective f
+
+-- The identity morphism $\id_X$ is proper for all schemes $X$.
+let id_pr (X : Scheme) : proper (id X)
+-- The identity morphism $\id_X$ is finite for all schemes $X$.
+let id_fn (X : Scheme) : finite (id X)
+-- The identity morphism $\id_X$ is flat for all schemes $X$.
+let id_fl (X : Scheme) : flat (id X)
+-- The identity morphism $\id_X$ is affine for all schemes $X$.
+let id_af (X : Scheme) : morphism.affine (id X)
+-- The identity morphism $\id_X$ is étale for all schemes $X$.
+let id_et (X : Scheme) : etale (id X)
+-- The identity morphism $\id_X$ is surjective for all schemes $X$.
+let id_sj (X : Scheme) : surjective (id X)
+-- The identity morphism $\id_X$ is an open immersion for all schemes $X$.
+let id_oi (X : Scheme) : open_immersion (id X)
+-- The identity morphism $\id_X$ is finitely presented for all schemes $X$.
+let id_fp (X : Scheme) : finitely_presented (id X)
 
 -- Composition theorems
 let property_comp {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} {P {T S : Scheme} (phi : Morphism T S) : Prop} (h1 : P f) (h2 : P g) (h3 : stable_composition P) : P (comp g f)

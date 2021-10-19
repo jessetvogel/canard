@@ -6,7 +6,7 @@ namespace commutative_algebra
 -- Every field is a domain, because if $xy = 0$ with $x \ne 0$, then $y = 0 \cdot x^{-1} = 0$.
 let domain_of_field {R : Ring} (h : field R) : domain R
 -- Every field is noetherian, because the only (maximal) ideal is $(0)$.
-let noetherian_of_field {R : Ring} (h : field R) : noetherian R
+let noetherian_of_field {R : Ring} (h : field R) : ring.noetherian R
 -- Every domain is reduced, because if $x^n = 0$ then $x = 0$.
 let reduced_of_domain {R : Ring} (h : domain R) : reduced R
 -- Every field is a local ring, since $(0)$ is the only (maximal) ideal.
@@ -32,11 +32,11 @@ let pid_of_eucl {R : Ring} (h : euclidean R) : pid R
 -- Every field is a Euclidean ring.
 let eucl_of_field {R : Ring} (h : field R) : euclidean R
 -- Every artin ring is noetherian.
-let nt_of_art {R : Ring} (h : artin R) : noetherian R
+let nt_of_art {R : Ring} (h : ring.artin R) : ring.noetherian R
 -- Every field is excellent.
 let exc_of_field {R : Ring} (h : field R) : excellent R
 -- Every noetherian complete local ring is excellent.
-let exc_of_nt_cmpl_lc {R : Ring} (h1 : noetherian R) (h2 : complete R) (h3 : local R) : excellent R
+let exc_of_nt_cmpl_lc {R : Ring} (h1 : ring.noetherian R) (h2 : complete R) (h3 : local R) : excellent R
 -- Every field is Jacobson.
 let jcb_of_field {R : Ring} (h : field R) : jacobson R
 

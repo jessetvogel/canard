@@ -13,9 +13,26 @@ let QQ : Ring
 let RR : Ring
 -- The ring of complex numbers $\CC$.
 let CC : Ring
+
 -- The zero ring $\{ 0 \}$.
 let zero_ring : Ring
+-- The zero ring is trivial.
+let zero_trivial : trivial zero_ring
+-- The zero ring is not a field, since $1 = 0$.
+let zero_not_field : not (field zero_ring)
+-- The zero ring is not a domain.
+let zero_not_dm : not (domain zero_ring)
+-- The zero ring is noetherian.
+let zero_nt : ring.noetherian zero_ring
+-- The zero ring is reduced.
+let zero_rd : reduced zero_ring
+-- The zero ring is not local, since it does not have any maximal ideals.
+let zero_not_lc : not (local zero_ring)
+-- The zero ring is finite, since it contains a single element.
+let zero_fn : finite zero_ring
 
+-- The ring $\ZZ$ is not trivial.
+let ZZ_not_trivial : not (trivial ZZ)
 -- The ring $\ZZ$ is a domain.
 let ZZ_is_dm : domain ZZ
 -- The ring $\ZZ$ is a PID.
@@ -23,20 +40,27 @@ let ZZ_is_pid : pid ZZ
 -- The ring $\ZZ$ is not a field. For example, $2 \in \ZZ$ is not invertible.
 let ZZ_not_field : not (field ZZ)
 -- The ring $\ZZ$ is noetherian.
-let ZZ_nt : noetherian ZZ
+let ZZ_nt : ring.noetherian ZZ
 -- The ring $\ZZ$ is excellent.
 let ZZ_exc : excellent ZZ
 -- The ring $\ZZ$ is not artin.
-let ZZ_not_art : not (artin ZZ)
+let ZZ_not_art : not (ring.artin ZZ)
 -- The ring $\ZZ$ is not local. For example, $(2)$ and $(3)$ are both maximal ideals.
 let ZZ_not_lc : not (local ZZ)
 
+-- The ring $\QQ$ is not trivial.
+let QQ_not_trivial : not (trivial QQ)
 -- The ring $\QQ$ is a field.
 let QQ_is_field : field QQ
 -- The ring $\RR$ is a field.
 let RR_is_field : field RR
 -- The ring $\CC$ is a field.
 let CC_is_field : field CC
+
+-- The ring $\RR$ is not trivial.
+let RR_not_trivial : not (trivial RR)
+-- The ring $\CC$ is not trivial.
+let CC_not_trivial : not (trivial CC)
 
 -- The inclusion of rings $\ZZ \to \QQ$.
 let ZZ_to_QQ : Morphism ZZ QQ
@@ -51,6 +75,8 @@ def QQ_to_CC := comp RR_to_CC QQ_to_RR
 
 -- The field $\FF_2$ consisting of 2 elements.
 let FF2 : Ring
+-- The ring $\FF_2$ is not trivial.
+let FF2_not_trivial : not (trivial FF2)
 -- The ring $\FF_2$ is a field.
 let FF2_is_field : field FF2
 -- The ring $\FF_2$ is finite.
@@ -85,7 +111,7 @@ let QQ_sqrt2 : Ring
 -- The ring $\QQ(\sqrt{2})$ is a field.
 let QQ_sqrt2_field : field QQ_sqrt2
 -- The ring $\QQ(\sqrt{2})$ is noetherian.
-let QQ_sqrt2_nt : noetherian QQ_sqrt2
+let QQ_sqrt2_nt : ring.noetherian QQ_sqrt2
 -- The inclusion $\QQ \to \QQ(\sqrt{2})$.
 let QQ_to_QQ_sqrt2 : Morphism QQ QQ_sqrt2
 
@@ -96,11 +122,10 @@ let cusp_ring_not_ic {k : Ring} (h : field k) : not (integrally_closed (cusp_rin
 -- The ring $k[x, y] / (x^2 - y^3)$ is a domain.
 let cusp_ring_dm {k : Ring} (h : field k) : domain (cusp_ring h)
 -- The ring $k[x, y] / (x^2 - y^3)$ is noetherian.
-let cusp_ring_nt {k : Ring} (h : field k) : noetherian (cusp_ring h)
+let cusp_ring_nt {k : Ring} (h : field k) : ring.noetherian (cusp_ring h)
 -- The ring $k[x, y] / (x^2 - y^3)$ is not artin.
-let cusp_ring_not_art {k : Ring} (h : field k) : not (artin (cusp_ring h))
+let cusp_ring_not_art {k : Ring} (h : field k) : not (ring.artin (cusp_ring h))
 -- The ring $k[x, y] / (x^2 - y^3)$ not local. For example, both $(x, y)$ and $(x - 1, y - 1)$ are maximal ideals.
 let cusp_ring_not_lc  {k : Ring} (h : field k) : not (local (cusp_ring h))
 
 end commutative_algebra
-

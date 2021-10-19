@@ -7,8 +7,20 @@ open commutative_algebra.ring
 
 namespace algebraic_geometry
 
+-- The empty scheme $\varnothing = \Spec(\{ 0 \})$.
 def empty_scheme := Spec zero_ring
+-- The empty scheme is empty.
+let empty_empty: empty empty_scheme
+-- The empty scheme is not irreducible.
+let empty_not_irr : not (irreducible empty_scheme)
+-- The empty scheme is not integral.
+let empty_not_int : not (integral empty_scheme)
+-- The empty scheme is not connected.
+let empty_cn : not (connected empty_scheme)
 
+
+-- The scheme $\Spec(R)$ is non-empty whenever $R$ is not the zero ring.
+let spec_not_empty {R : Ring} (h : not (trivial R)) : not (empty (Spec R))
 -- The scheme $\Spec(R)$ is affine for any ring $R$.
 let spec_af (R : Ring) : scheme.affine (Spec R)
 -- The scheme $\Spec(R)$ is integral whenever $R$ is a domain.
@@ -22,6 +34,8 @@ let spec_nm {R : Ring} (h : integrally_closed R) : normal (Spec R)
 let spec_not_nm {R : Ring} (h : not (integrally_closed R)) : not (normal (Spec R))
 let spec_exc {R : Ring} (h : ring.excellent R) : scheme.excellent (Spec R)
 let spec_jcb {R : Ring} (h : ring.jacobson R) : scheme.jacobson (Spec R)
+-- The scheme $\Spec(R)$ is reduced whenever $R$ is reduced.
+let spec_rd {R : Ring} (h : ring.reduced R) : scheme.reduced (Spec R)
 
 -- The affine line $\AA^1_X = \AA^1 \times X$ over a given scheme $X$.
 let affine_line (X : Scheme) : Scheme
@@ -147,5 +161,16 @@ let plane_no_origin_to_Spec_k_sm {k : Ring} (h : field k) : smooth (plane_no_ori
 let plane_no_origin_to_Spec_k_sp {k : Ring} (h : field k) : morphism.separated (plane_no_origin_to_Spec_k h)
 let plane_no_origin_to_Spec_k_not_ur {k : Ring} (h : field k) : not (morphism.unramified (plane_no_origin_to_Spec_k h))
 -- let plane_no_origin_to_Spec_k_not_ci {k : Ring} (h : field k) : not (closed_immersion (plane_no_origin_to_Spec_k h))
+
+-- The disjoint union $X \sqcup Y$ of two schemes $X$ and $Y$.
+let disjoint_union (X Y : Scheme) : Scheme
+-- The disjoint union $X \sqcup Y$ is not connected whenever $X$ and $Y$ are non-empty.
+let du_not_cn {X Y : Scheme} (h1 : not (empty X)) (h : not (empty Y)) : not (connected (disjoint_union X Y))
+-- Whenever a local property of schemes $P$ holds for $X$ and $Y$, it also holds for the disjoint union $X \sqcup Y$.
+let du_zar_lc {X Y : Scheme} {P (S : Scheme) : Prop} (h1 : P X) (h2 : P Y) (l : zariski_local P) : P (disjoint_union X Y)
+-- Whenever $X$ is non-empty, the disjoint union $X \sqcup Y$ is also non-empty
+let du_empty_X {X : Scheme} (Y : Scheme) (h : not (empty X)) : not (empty (disjoint_union X Y))
+-- Whenever $Y$ is non-empty, the disjoint union $X \sqcup Y$ is also non-empty
+let du_empty_Y (X : Scheme) {Y : Scheme} (h : not (empty Y)) : not (empty (disjoint_union X Y))
 
 end algebraic_geometry

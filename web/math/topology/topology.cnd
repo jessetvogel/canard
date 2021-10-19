@@ -2,6 +2,8 @@ namespace topology
 
 let TopSpace : Type
 
+let empty (X : TopSpace) : Prop
+
 let connected path_connected compact quasi_compact hausdorff
     (X : TopSpace) : Prop
 

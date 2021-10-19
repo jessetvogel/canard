@@ -1,0 +1,140 @@
+import "../commutative_algebra/commutative_algebra.cnd"
+import "../topology/topology.cnd"
+
+open commutative_algebra
+open topology
+
+namespace algebraic_geometry
+
+-- The type of schemes.
+let Scheme : Type
+-- The underlying topological space of a scheme.
+let top_of_scheme (X : Scheme) : TopSpace
+
+namespace scheme
+    -- A scheme is empty if its underlying topological space is empty.
+    def empty (X : Scheme) := topology.empty (top_of_scheme X)
+    -- A scheme is affine if it is isomorphic to $\Spec(R)$ for some ring $R$.
+    let affine (X : Scheme) : Prop
+    -- A scheme is quasi-compact if its underlying topological space is quasi-compact. That is, for every open cover $\{ U_i \}_{i \in I}$ of $X$, there exists a finite subcover.
+    let quasi_compact (X : Scheme) : Prop
+    -- A scheme is regular if it is locally noetherian and all of its stalks are regular local rings.
+    let regular (X : Scheme) : Prop
+    -- A scheme is locally noetherian if it can be covered by affine open subsets $\Spec A_i$, where each $A_i$ is a noetherian ring.
+    let locally_noetherian (X : Scheme) : Prop
+    -- A scheme is noetherian if it is locally noetherian and quasi-compact.
+    let noetherian (X : Scheme) : Prop
+    -- A scheme $X$ is reduced if $\mathcal{O}_X(U)$ is a reduced ring for all open $U \subset X$.
+    let reduced (X : Scheme) : Prop
+    -- A scheme $X$ is irreducible if its underlying topological space is irreducible. That is, if $X = Z_1 \sqcup Z_2$ for some closed subsets $Z_1, Z_2 \subset X$, then $Z_1 = X$ or $Z_2 = X$.
+    let irreducible (X : Scheme) : Prop
+    let cohen_macaulay (X : Scheme) : Prop
+    let excellent (X : Scheme) : Prop
+    -- A scheme is separated if the morphism $X \to \Spec \ZZ$ is separated.
+    let separated (X : Scheme) : Prop
+    -- A scheme is quasi-separated if the morphism $X \to \Spec \ZZ$ is quasi-separated.
+    let quasi_separated (X : Scheme) : Prop
+    let jacobson (X : Scheme) : Prop
+    let normal (X : Scheme) : Prop
+    -- A scheme $X$ is integral if it is non-empty and for every non-empty open subset $U \subset X$, the ring $\mathcal{O}_X(U)$ is a domain.
+    let integral (X : Scheme) : Prop
+    let finite_dimensional (X : Scheme) : Prop
+    -- A scheme is connected if its underlying topological space is connected.
+    let connected (X : Scheme) : Prop -- := topology.connected (top_of_scheme X)
+
+    -- A property $P$ is Zariski-local if for every scheme $X$ and open cover $X = \bigcup_{i \in I} U_i$, we have that $P$ holds for $X$ if and only if $P$ holds for all $U_i$.
+    let zariski_local (P (X : Scheme) : Prop) : Prop
+    let zariski_local_rd : zariski_local reduced
+    let zariski_local_sp : zariski_local separated
+    let zariski_local_qsp : zariski_local quasi_separated
+    let zariski_local_nt : zariski_local noetherian
+    let zariski_local_rg : zariski_local regular
+end scheme
+
+namespace morphism
+    -- A morphism $f : X \to Y$ is affine if for every affine open $V \subset Y$, the inverse image $f^{-1}(V)$ is an affine open of $X$.
+    let affine {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is flat if for every $x \in X$, the local ring $\mathcal{O}_{X, x}$ is flat as an $\mathcal{O}_{Y, f(x)}$-module.
+    let flat {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is separated if the diagonal map $\Delta_X : X \to X \times X$ is a closed immersion.
+    let separated {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is quasi-separated if the diagonal map $\Delta_X : X \to X \times X$ is quasi-compact.
+    let quasi_separated {X Y : Scheme} (f : Morphism X Y) : Prop
+    /- A morphism $f : X \to Y$ is of finite presentation at $x \in X$ if there exists affine opens $U = \Spec S \subset X$ containing $x$ and $V = \Spec R \subset Y$ with $f(U) \subset V$ such that $S$ is a finitely presented $R$-algebra (via the induced map $R \to S$). That is, $S \simeq R[x_1, \ldots, x_n] / (f_1, \ldots, f_m)$ for some integer $n$ and some $f_i \in R[x_1, \ldots, x_n]$.
+    The morphism $f$ is locally of finite presentation if it is of finite presentation at all $x \in X$. -/
+    let locally_finitely_presented {X Y : Scheme} (f : Morphism X Y) : Prop
+    /- A morphism $f : X \to Y$ is of finite type at $x \in X$ if there exists affine opens $U = \Spec S \subset X$  containing $x$  and $V = \Spec R \subset Y$ with $f(U) \subset V$  such that  $S$ is a finitely generated $R$-algebra (via the induced map $R \to S$). That is, $S \simeq R[x_1, \ldots, x_n] / I$ for some integer $n$ and some ideal $I \subset R[x_1, \ldots, x_n]$.
+    The morphism $f$ is locally of finite type if it is of finite type at all $x \in X$. -/
+    let locally_finite_type {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is of finite presentation if it is locally of finite presentation, quasi-compact and quasi-separated.
+    let finitely_presented {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- 
+    let regular {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is quasi-compact if the pre-image $f^{-1}(K)$ of every quasi-compact subset $K \subset Y$ is quasi-compact.
+    let quasi_compact {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is quasi-finite if it is of finite type and every point $x \in X$ is isolated in its fiber $f^{-1}(f(x))$, i.e. every fiber is a discrete finite set.
+    let quasi_finite {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is finite if there exists a covering of $Y$ by open affine subsets $V_i = \Spec B_i$, such that for each $i$, $f^{-1}(V_i)$ is affine, equal to $\Spec A_i$, where $A_i$ is a $B_i$-algebra which is a finitely generated $B_i$-module.
+    let finite {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is proper if it is separated, of finite type and universally closed.
+    let proper {X Y : Scheme} (f : Morphism X Y) : Prop
+
+    let formally_smooth {X Y : Scheme} (f : Morphism X Y) : Prop
+    let formally_unramified {X Y : Scheme} (f : Morphism X Y) : Prop
+    let formally_etale {X Y : Scheme} (f : Morphism X Y) : Prop
+
+    let unramified {X Y : Scheme} (f : Morphism X Y) : Prop
+    let smooth {X Y : Scheme} (f : Morphism X Y) : Prop
+    let etale {X Y : Scheme} (f : Morphism X Y) : Prop
+
+    -- A morphism $f : X \to Y$ is of finite type if it is locally of finite type and quasi-compact.
+    let finite_type {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is open if for every open $U \subset X$, the image $f(U) \subset Y$ is open.
+    let open_morphism {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is universally closed if for every $g : Z \to Y$, the pullback $X \times_Y Z \to Z$ is closed.
+    let universally_closed {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is an immersion if it factors as $j \circ i$, where $i : X \to U$ is a closed immersion and $j : U \to Y$ is an open immersion.
+    let immersion {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is an open immersion if it induces an isomorphism between $X$ and an open subscheme of $Y$.
+    let open_immersion {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is a closed immersion if it induces a homeomorphism between the underlying space of $X$  and a closed subset of that of $Y$, and furthermore the induced map  $i^\# : \mathcal{O}_Y \to i_*\mathcal{O}_X$ of sheaves on $Y$ is surjective.
+    let closed_immersion {X Y : Scheme} (f : Morphism X Y) : Prop
+    let finite_fibers {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is surjective if the underlying map of topological spaces is surjective.
+    let surjective {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is faithfully flat if it is flat and surjective.
+    let faithfully_flat {X Y : Scheme} (f : Morphism X Y) : Prop
+    
+    let zariski_cover {X Y : Scheme} (f : Morphism X Y) : Prop
+    let etale_cover {X Y : Scheme} (f : Morphism X Y) : Prop
+    let smooth_cover {X Y : Scheme} (f : Morphism X Y) : Prop
+    let syntomic_cover {X Y : Scheme} (f : Morphism X Y) : Prop
+    let fppf_cover {X Y : Scheme} (f : Morphism X Y) : Prop
+    let fpqc_cover {X Y : Scheme} (f : Morphism X Y) : Prop
+    
+    let stable_composition stable_left stable_base_change (P {X Y : Scheme} (f : Morphism X Y) : Prop) : Prop
+end morphism
+
+-- The type of sheaves on a scheme $X$.
+let Sheaf (X : Scheme) : Type
+namespace sheaf
+    let quasi_coherent {X : Scheme} (F : Sheaf X) : Prop
+    let coherent {X : Scheme} (F : Sheaf X) : Prop
+    let free {X : Scheme} (F : Sheaf X) : Prop
+    let locally_free {X : Scheme} (F : Sheaf X) : Prop
+    let flasque {X : Scheme} (F : Sheaf X) : Prop
+end sheaf
+
+-- The scheme $\Spec(R)$ for a given ring $R$.
+let Spec (R : Ring) : Scheme
+let Spec_contravariant : Contravariant Spec
+def mSpec {A B : Ring} (f : Morphism A B) := contramap Spec_contravariant f
+let sheaf_of_module {R : Ring} (M : Module R) : Sheaf (Spec R)
+
+-- The spectrum of the integers.
+def Spec_ZZ := Spec ZZ -- Even though this is a single step, this is the simplest scheme, so we want to consider it as a first case
+
+end algebraic_geometry
+
+import "theorems.cnd"
+import "examples.cnd"

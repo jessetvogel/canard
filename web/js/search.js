@@ -76,7 +76,7 @@ const properties = {
         'morphism.separated': 'separated',
         'morphism.quasi_separated': 'quasi-separated',
         'morphism.regular': 'regular',
-        'morphism.finitely_presented': 'finitely-presented',
+        'morphism.finitely_presented': 'finitely presented',
         'morphism.locally_finite_type': 'locally finite type',
         'morphism.locally_finitely_presented': 'locally finitely presented',
         'morphism.etale': 'étale',

@@ -19,7 +19,7 @@ def feed(process, input):
     return json.loads(process.stdout.readline().decode())
 
 # Start process
-canard = subprocess.Popen(['../bin/canard', '--json', '--explicit', '--doc', '../math/main.cnd'], stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+canard = subprocess.Popen(['../bin/canard', '--json', '--explicit', '--doc', '../web/math/main.cnd'], stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 # List all identifiers
 identifiers = []
