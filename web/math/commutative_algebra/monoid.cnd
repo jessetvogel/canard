@@ -1,0 +1,25 @@
+import "../group_theory/core.cnd"
+import "ring.cnd"
+open group_theory.group
+open commutative_algebra.ring
+
+namespace commutative_algebra
+
+-- The type of commutative monoids.
+let Monoid : Type
+-- Given a ring $R$ and monoid $M$, the monoid ring $R[M]$.
+let monoid_ring (R : Ring) (M : Monoid) : Ring
+-- The groupification of a monoid $M$ is \[ M^\textup{gp} = \{ xy^{-1} : x, y \in M \} / \sim{} , \] where $x_1y_1^{-1} = x_2y_2^{-1}$ if and only if $zx_1y_2 = zx_2y_1$ for some $z \in M$.
+let groupification (M : Monoid) : Group
+namespace monoid
+    -- A monoid $M$ is integral if the map to its groupification $M \to M^\textup{gp}$ is injective.
+    let integral (M : Monoid) : Prop
+    -- A monoid $M$ is saturated if for all $x \in M^\textup{gp}$ with $x^n \in M$ for some $n \ge 1$, we have $x \in M$.
+    let saturated (M : Monoid) : Prop
+    -- A monoid $M$ is fine if it is finitely generated and integral.
+    let fine (M : Monoid) : Prop
+    -- A monoid $M$ is fs if it is fine and saturated.
+    let fs (M : Monoid) : Prop
+end monoid
+
+end commutative_algebra

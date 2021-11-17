@@ -1,0 +1,27 @@
+import "../commutative_algebra/ring.cnd"
+import "../commutative_algebra/module.cnd"
+import "../commutative_algebra/examples.cnd"
+import "scheme.cnd"
+import "sheaf.cnd"
+
+open commutative_algebra
+open commutative_algebra.ring
+open commutative_algebra.module
+open algebraic_geometry.scheme
+
+
+namespace algebraic_geometry
+
+-- The scheme $\Spec(R)$ for a given ring $R$.
+let Spec (R : Ring) : Scheme
+let Spec_contravariant : Contravariant Spec
+def mSpec {A B : Ring} (f : Morphism A B) := contramap Spec_contravariant f
+let sheaf_of_module {R : Ring} (M : Module R) : Sheaf (Spec R)
+
+-- The spectrum of the integers.
+def Spec_ZZ := Spec ZZ -- Even though this is a single step, this is the simplest scheme, so we want to consider it as a first case
+
+end algebraic_geometry
+
+import "theorems.cnd"
+import "examples.cnd"

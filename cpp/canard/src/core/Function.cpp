@@ -5,9 +5,9 @@
 #include "Function.h"
 #include "Matcher.h"
 #include "Specialization.h"
+#include "Formatter.h"
 
 #include <utility>
-#include <sstream>
 #include <algorithm>
 
 int id_counter = 0;
@@ -71,7 +71,8 @@ FunctionPtr Function::specialize(std::vector<FunctionPtr> arguments, Function::D
     const size_t n = arguments.size();
     if (n != m)
         throw SpecializationException(
-                to_string() + " expected " + std::to_string(m) + " arguments but received " + std::to_string(n));
+                Formatter::to_string(shared_from_this()) + " expected " + std::to_string(m) +
+                " arguments but received " + std::to_string(n));
 
     // Base case: if there are no arguments and no given dependencies, immediately return
     if (n == 0 && dependencies.empty())
@@ -84,7 +85,7 @@ FunctionPtr Function::specialize(std::vector<FunctionPtr> arguments, Function::D
         FunctionPtr &argument = arguments[i];
         if (!matcher.matches(dependency, argument))
             throw SpecializationException(
-                    "argument '" + argument->to_string() + "' does not match '" + dependency->to_string() + "'");
+                    "argument '" + Formatter::to_string(argument) + "' does not match '" + Formatter::to_string(dependency) + "'");
     }
 
     // If this is a specialization itself (that is, the base is not equal to this),
@@ -107,39 +108,8 @@ FunctionPtr Function::specialize(std::vector<FunctionPtr> arguments, Function::D
     FunctionPtr converted_type = matcher.convert(type());
 
     // Now create a new specialization with the right inputs
-    return std::make_shared<Specialization>(shared_from_this(), std::move(arguments), std::move(converted_type), std::move(dependencies));
-}
-
-std::string Function::to_string() {
-    return to_string(false, false);
-}
-
-std::string Function::to_string(bool full, bool with_namespaces) {
-    std::ostringstream ss;
-
-    if (with_namespaces && m_space != nullptr) {
-        std::string path = m_space->to_string();
-        if (!path.empty())
-            ss << path << '.';
-    }
-
-    ss << (m_label.empty() ? "?" : m_label);
-
-//    ss << "[" << m_id << "]";
-
-    if (full) {
-        size_t n = m_dependencies.m_functions.size();
-        for (int i = 0; i < n; ++i) {
-            bool e = m_dependencies.m_explicits[i];
-            ss << (e ? " (" : " {");
-            ss << m_dependencies.m_functions[i]->to_string(true, with_namespaces);
-            ss << (e ? ')' : '}');
-        }
-        ss << " : ";
-        ss << type()->to_string(false, with_namespaces);
-    }
-
-    return ss.str();
+    return std::make_shared<Specialization>(shared_from_this(), std::move(arguments), std::move(converted_type),
+                                            std::move(dependencies));
 }
 
 bool Function::equals(const FunctionPtr &other) {

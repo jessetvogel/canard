@@ -1,0 +1,2 @@
+import "monoid.cnd"
+import "ring.cnd"

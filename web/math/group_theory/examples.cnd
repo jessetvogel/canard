@@ -1,5 +1,16 @@
+import "../set_theory/core.cnd"
+open set_theory.set
+open group_theory.group
+
 namespace group_theory
 
+-- The trivial group
+let trivial_group : Group
+-- The trivial group is trivial
+let trivial_group_tr : trivial trivial_group
+-- The symmetric group on a set $S$.
 let symmetric_group (S : Set) : Group
+-- The free group on a set $S$.
+let free_group (S : Set) : Group
 
-end
+end group_theory

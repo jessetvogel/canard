@@ -6,10 +6,10 @@ function typeset(expression) {
             const namespace = $1.substr(0, i);
             const identifier = $1.substr(i + 1);
 
-            if (window.location.pathname.endsWith('docs.html'))
+            if (window.location.pathname.endsWith('docs.php'))
                 return `<a href="#${$1}">${identifier}</a>`;
             else
-                return `<a href="docs.html#${$1}" target="_blank">${identifier}</a>`;
+                return `<a href="docs.php#${$1}" target="_blank">${identifier}</a>`;
         });
 }
 
@@ -41,5 +41,32 @@ function createLoading() {
 
 function api(query) {
     console.log(query);
-    return requestPOST('php/query.php', JSON.stringify({ 'query': query }));
+    return new Promise((resolve, reject) => requestPOST('php/canard.php', JSON.stringify({
+        'query': query
+    })).then(function (response) { resolve(JSON.parse(response)); }).catch(reject));
+}
+
+function dbGet(table, fields, conditions = {}) {
+    return new Promise((resolve, reject) => requestGET(`/php/data.php?query=${encodeURIComponent(JSON.stringify({
+        'table': table,
+        'fields': fields,
+        'conditions': conditions
+    }))}`).then(function (response) { resolve(JSON.parse(response)); }).catch(reject));
+}
+
+function dbInsert(table, values, password) {
+    return new Promise((resolve, reject) => requestPOST('/php/data.php', JSON.stringify({
+        'table': table,
+        'values': values,
+        'password': password
+    })).then(function (response) { resolve(JSON.parse(response)); }).catch(reject));
+}
+
+function dbUpdate(table, values, conditions, password) {
+    return new Promise((resolve, reject) => requestPOST('/php/data.php', JSON.stringify({
+        'table': table,
+        'values': values,
+        'conditions': conditions,
+        'password': password
+    })).then(function (response) { resolve(JSON.parse(response)); }).catch(reject));
 }

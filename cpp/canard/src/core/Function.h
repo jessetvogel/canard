@@ -51,6 +51,8 @@ public:
 
     const Dependencies &dependencies() { return m_dependencies; }
 
+    Namespace* space() { return m_space; }
+
     virtual const std::vector<FunctionPtr> &arguments() { return m_dependencies.m_functions; }
 
     std::vector<FunctionPtr> explicit_dependencies();
@@ -62,8 +64,7 @@ public:
     virtual bool depends_on(const std::vector<FunctionPtr> &);
     virtual bool depends_on(const std::unordered_set<FunctionPtr> &);
     bool signature_depends_on(const std::vector<FunctionPtr> &);
-    std::string to_string();
-    virtual std::string to_string(bool, bool);
+
     FunctionPtr specialize(std::vector<FunctionPtr>, Dependencies);
     bool equals(const FunctionPtr &);
 

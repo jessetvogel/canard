@@ -1,0 +1,6 @@
+namespace set_theory
+namespace set
+    -- The type of sets.
+    let Set : Type
+end set
+end set_theory

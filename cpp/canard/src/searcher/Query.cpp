@@ -4,6 +4,7 @@
 
 #include "Query.h"
 #include "../core/macros.h"
+#include "../core/Formatter.h"
 #include <utility>
 #include <sstream>
 #include <algorithm>
@@ -511,10 +512,10 @@ std::string Query::to_string() {
     std::ostringstream ss;
     ss << "Query@" << depth() << " {";
     for (auto &f: m_locals)
-        ss << " (" << f->to_string(true, false) << ")";
+        ss << " (" << Formatter::to_string(f, true, false) << ")";
     ss << " } ";
     for (auto &f: m_indeterminates)
-        ss << " (" << f->to_string(true, false) << ")";
+        ss << " (" << Formatter::to_string(f, true, false) << ")";
     return ss.str();
 }
 

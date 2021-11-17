@@ -1,0 +1,17 @@
+let Sch : Type
+let zar_loc (P (X : Sch) : Prop) : Prop
+
+let sch_constr (X : Sch) : Sch
+let thm {P (X : Sch) : Prop} {X : Sch} (h1 : P X) (h2 : zar_loc P) : P (sch_constr X)
+
+let Top : Type
+let top_of_sch (X : Sch) : Top
+let connected (T : Top) : Prop
+def sch_connected (X : Sch) := connected (top_of_sch X)
+
+let zar_loc_connected : zar_loc sch_connected
+
+let X : Sch
+let X_conn : sch_connected X
+
+check thm X_conn zar_loc_connected

@@ -1,19 +1,19 @@
-import "../commutative_algebra/commutative_algebra.cnd"
-import "../topology/topology.cnd"
+import "../commutative_algebra/core.cnd"
+import "../topology/core.cnd"
 
 open commutative_algebra
-open topology
+open commutative_algebra.ring
+open commutative_algebra.module
+open topology.top
 
 namespace algebraic_geometry
-
--- The type of schemes.
-let Scheme : Type
--- The underlying topological space of a scheme.
-let top_of_scheme (X : Scheme) : TopSpace
-
 namespace scheme
+    -- The type of schemes.
+    let Scheme : Type
+    -- The underlying topological space of a scheme.
+    let to_top (X : Scheme) : Top
     -- A scheme is empty if its underlying topological space is empty.
-    def empty (X : Scheme) := topology.empty (top_of_scheme X)
+    def empty (X : Scheme) := topology.top.empty (to_top X)
     -- A scheme is affine if it is isomorphic to $\Spec(R)$ for some ring $R$.
     let affine (X : Scheme) : Prop
     -- A scheme is quasi-compact if its underlying topological space is quasi-compact. That is, for every open cover $\{ U_i \}_{i \in I}$ of $X$, there exists a finite subcover.
@@ -44,12 +44,19 @@ namespace scheme
 
     -- A property $P$ is Zariski-local if for every scheme $X$ and open cover $X = \bigcup_{i \in I} U_i$, we have that $P$ holds for $X$ if and only if $P$ holds for all $U_i$.
     let zariski_local (P (X : Scheme) : Prop) : Prop
+    -- Being reduced is a Zariski-local property.
     let zariski_local_rd : zariski_local reduced
+    -- Being separated is a Zariski-local property.
     let zariski_local_sp : zariski_local separated
+    -- Being quasi-separated is a Zariski-local property.
     let zariski_local_qsp : zariski_local quasi_separated
+    -- Being noetherian is a Zariski-local property.
     let zariski_local_nt : zariski_local noetherian
+    -- Being regular is a Zariski-local property.
     let zariski_local_rg : zariski_local regular
 end scheme
+
+open algebraic_geometry.scheme
 
 namespace morphism
     -- A morphism $f : X \to Y$ is affine if for every affine open $V \subset Y$, the inverse image $f^{-1}(V)$ is an affine open of $X$.
@@ -115,26 +122,4 @@ namespace morphism
     let stable_composition stable_left stable_base_change (P {X Y : Scheme} (f : Morphism X Y) : Prop) : Prop
 end morphism
 
--- The type of sheaves on a scheme $X$.
-let Sheaf (X : Scheme) : Type
-namespace sheaf
-    let quasi_coherent {X : Scheme} (F : Sheaf X) : Prop
-    let coherent {X : Scheme} (F : Sheaf X) : Prop
-    let free {X : Scheme} (F : Sheaf X) : Prop
-    let locally_free {X : Scheme} (F : Sheaf X) : Prop
-    let flasque {X : Scheme} (F : Sheaf X) : Prop
-end sheaf
-
--- The scheme $\Spec(R)$ for a given ring $R$.
-let Spec (R : Ring) : Scheme
-let Spec_contravariant : Contravariant Spec
-def mSpec {A B : Ring} (f : Morphism A B) := contramap Spec_contravariant f
-let sheaf_of_module {R : Ring} (M : Module R) : Sheaf (Spec R)
-
--- The spectrum of the integers.
-def Spec_ZZ := Spec ZZ -- Even though this is a single step, this is the simplest scheme, so we want to consider it as a first case
-
 end algebraic_geometry
-
-import "theorems.cnd"
-import "examples.cnd"

@@ -298,7 +298,7 @@ void Parser::parse_import() {
     Parser sub_parser(ifstream, m_ostream, m_session);
     sub_parser.set_location(directory, file);
     sub_parser.use_json(m_use_json);
-    sub_parser.use_explicit(m_use_explicit);
+    sub_parser.set_formatter(*m_formatter);
     sub_parser.set_documentation(m_documentation);
     sub_parser.m_imported_files = std::move(m_imported_files);
     auto start_time = std::chrono::system_clock::now();
@@ -379,9 +379,9 @@ void Parser::parse_search() {
             keys.reserve(indeterminates.size());
             values.reserve(result.size());
             for (auto &f: indeterminates)
-                keys.push_back(f->to_string());
+                keys.push_back(f->label());
             for (auto &g: result)
-                values.push_back(g->to_string(false, m_use_explicit));
+                values.push_back(format(g));
             output(Message::create(SUCCESS, keys, values));
         } else {
             output(Message::create(SUCCESS, std::vector<std::string>()));
@@ -399,7 +399,7 @@ void Parser::parse_search() {
         for (int i = 0; i < n; ++i) {
             if (!first) ss << ", ";
             first = false;
-            ss << indeterminates[i]->to_string() << " = " << result[i]->to_string();
+            ss << indeterminates[i]->label() << " = " << format(result[i]);
         }
         output(ss.str());
     }
@@ -414,7 +414,7 @@ void Parser::parse_check() {
      */
 
     consume(KEYWORD, "check");
-    auto f_str = parse_expression(m_current_namespace->get_context())->to_string(true, m_use_explicit);
+    auto f_str = Formatter::to_string(parse_expression(m_current_namespace->get_context()), true, m_use_explicit);
 
     if (m_use_json)
         output(Message::create(SUCCESS, f_str));
@@ -548,7 +548,8 @@ Function::Dependencies Parser::parse_dependencies(Context &context) {
     for (int i = 0; i < n; ++i) {
         if (!dependencies.m_explicits[i] && !context.is_used(dependencies.m_functions[i]))
             throw ParserException(m_current_token,
-                                  "implicit parameter '" + dependencies.m_functions[i]->to_string() + "' unused");
+                                  "implicit parameter '" + Formatter::to_string(dependencies.m_functions[i]) +
+                                  "' unused");
     }
 
     return dependencies;
@@ -647,17 +648,9 @@ void Parser::output(const std::string &message) {
 
 void Parser::error(const std::string &message) {
     if (m_use_json)
-        output("{\"status\":\"error\",\"data\":\"" + message + "\"}");
+        output(R"({"status":"error","data":")" + message + "\"}");
     else
         output("⚠️ " + message);
-}
-
-void Parser::use_json(bool b) {
-    m_use_json = b;
-}
-
-void Parser::use_explicit(bool b) {
-    m_use_explicit = b;
 }
 
 void Parser::set_location(std::string &directory, std::string &filename) {
@@ -667,4 +660,10 @@ void Parser::set_location(std::string &directory, std::string &filename) {
 
 void Parser::set_documentation(std::unordered_map<FunctionPtr, std::string> *documentation) {
     m_documentation = documentation;
+}
+
+std::string Parser::format(const FunctionPtr &f) {
+    return (m_formatter == nullptr)
+           ? Formatter::to_string(f, false, m_use_explicit)
+           : m_formatter->format(f);
 }

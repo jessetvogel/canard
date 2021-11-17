@@ -4,9 +4,9 @@ include 'php_util.php';
 
 // Get user data
 $query = POST_data()['query'];
-if($query === null)
+if ($query === null)
     response_bad_request('no query given');
-if(strpos($query, 'import') !== false)
+if (strpos($query, 'import') !== false)
     response_bad_request('import not allowed');
 
 // Setup process
@@ -20,8 +20,8 @@ $descriptorspec = array(
 $cwd = null;
 $env = array();
 $process = proc_open(dirname(__FILE__) . '/../bin/canard --json --explicit --doc ' . dirname(__FILE__) . '/../math/main.cnd', $descriptorspec, $pipes, $cwd, $env);
- 
-if(!is_resource($process))
+
+if (!is_resource($process))
     response_server_error('failed to start canard');
 
 // Write commands to process
@@ -38,18 +38,18 @@ fclose($pipes[0]);
 header('Content-Type: application/json');
 
 $timeout = time() + 10; // Set a timeout of 10 seconds
-while(true) {
+while (true) {
     $status = proc_get_status($process);
-    if($status == false) { // proc_get_status failed
+    if ($status == false) { // proc_get_status failed
         proc_terminate($process);
         echo '{"status":"error","data":"proc_get_status failed"}';
         exit;
     }
 
-    if(!$status['running']) // Process terminated
+    if (!$status['running']) // Process terminated
         break;
 
-    if(time() >= $timeout) {
+    if (time() >= $timeout) {
         proc_terminate($process);
         echo '{"status":"fail","data":"timeout"}';
         exit;
@@ -68,5 +68,3 @@ fclose($pipes[1]);
 // It is important that you close any pipes before calling
 // proc_close in order to avoid a deadlock
 $return_value = proc_close($process);
-
-?>

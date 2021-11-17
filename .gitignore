@@ -64,3 +64,6 @@ cmake-build-debug/
 
 # Uploading source
 upload_to_server.sh
+
+# Databases
+*.db

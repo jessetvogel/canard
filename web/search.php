@@ -2,24 +2,12 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/fonts.css">
-    <script type="text/javascript" src="js/mathjax-config.js"></script>
-    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3.0.1/es5/tex-mml-chtml.js"></script>
-    <script type="text/javascript" src="js/util.js"></script>
-    <script type="text/javascript" src="js/script.js"></script>
+    <?php $MathJax = true; include('template/stdhead.php'); ?>
     <script type="text/javascript" src="js/search.js"></script>
 </head>
 
 <body>
-
-    <nav>
-        <a href="search.html">Search</a>
-        <a href="advanced.html">Advanced</a>
-        <a href="docs.html">Docs</a>
-        <a href="propose.html">Propose</a>
-    </nav>
+    <?php include('template/menu.html'); ?>
 
     <div id="object-bar">
         <div><input id="object-name" class="math" placeholder="X" /></div><span>:</span>
@@ -40,8 +28,6 @@
     </div>
 
     <div id="output"></div>
-
-    <script>init();</script>
 </body>
 
 </html>

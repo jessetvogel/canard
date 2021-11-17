@@ -1,0 +1,17 @@
+import "scheme.cnd"
+
+open algebraic_geometry.scheme
+
+namespace algebraic_geometry
+
+-- The type of sheaves on a scheme $X$.
+let Sheaf (X : Scheme) : Type
+namespace sheaf
+    let quasi_coherent {X : Scheme} (F : Sheaf X) : Prop
+    let coherent {X : Scheme} (F : Sheaf X) : Prop
+    let free {X : Scheme} (F : Sheaf X) : Prop
+    let locally_free {X : Scheme} (F : Sheaf X) : Prop
+    let flasque {X : Scheme} (F : Sheaf X) : Prop
+end sheaf
+
+end algebraic_geometry

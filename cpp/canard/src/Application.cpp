@@ -5,6 +5,8 @@
 #include "Application.h"
 #include "parser/Parser.h"
 #include "core/macros.h"
+#include "core/Formatter.h"
+#include "formatter/EnglishFormatter.h"
 #include <cstdlib>
 #include <fstream>
 
@@ -14,6 +16,7 @@ Application::Application(const std::vector<std::string> &arguments) {
         if (arg == "--json") m_flag_json = true;
         if (arg == "--explicit") m_flag_explicit = true;
         if (arg == "--doc") m_flag_documentation = true;
+        if (arg == "--english") m_flag_english = true;
     }
 
     // Parse files
@@ -27,12 +30,13 @@ Application::Application(const std::vector<std::string> &arguments) {
 }
 
 void Application::run() {
+    // Create English formatter
+    EnglishFormatter formatter;
+
     // Create parser and keep parsing (until exit) via System.in
     Parser parser(std::cin, std::cout, m_session);
-    parser.use_json(m_flag_json);
-    parser.use_explicit(m_flag_explicit);
-    if (m_flag_documentation)
-        parser.set_documentation(&m_documentation);
+    parser_set_flags(parser);
+    if (m_flag_english) parser.set_formatter(formatter);
     parser.parse();
 }
 
@@ -69,10 +73,14 @@ bool Application::parse_file(const std::string &path) {
 
     // Create parser to parse the file
     Parser parser(input, std::cout, m_session);
+    parser_set_flags(parser);
+    parser.set_location(directory, file);
+    return parser.parse();
+}
+
+void Application::parser_set_flags(Parser &parser) {
     parser.use_json(m_flag_json);
     parser.use_explicit(m_flag_explicit);
     if (m_flag_documentation)
         parser.set_documentation(&m_documentation);
-    parser.set_location(directory, file);
-    return parser.parse();
 }

@@ -79,7 +79,7 @@ function requestGET(url) {
 function requestPOST(url, data) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.onload = function () { resolve(JSON.parse(this.responseText)); };
+        xhr.onload = function () { resolve(this.responseText); };
         xhr.onerror = reject;
         xhr.open('POST', url);
         xhr.setRequestHeader('Content-Type', 'application/json');

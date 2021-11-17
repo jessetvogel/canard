@@ -5,6 +5,7 @@
 #include "Matcher.h"
 #include "Specialization.h"
 #include "macros.h"
+#include "Formatter.h"
 
 #include <utility>
 #include <iostream>
@@ -136,7 +137,8 @@ bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
 
 void Matcher::assert_matches(const FunctionPtr &f, const FunctionPtr &g) {
     bool match = matches(f, g);
-    CANARD_ASSERT(match, "Matching " << f->to_string(true, false) << " to " << g->to_string(true, false));
+    CANARD_ASSERT(match, "Matching " << Formatter::to_string(f, true, false) << " to "
+                                     << Formatter::to_string(g, true, false));
 }
 
 FunctionPtr Matcher::convert(const FunctionPtr &f) {
@@ -255,7 +257,7 @@ std::string Matcher::to_string() {
         if (!first)
             ss << ", ";
         first = false;
-        ss << f->to_string();
+        ss << Formatter::to_string(f);
     }
     ss << "] ";
 
@@ -264,7 +266,7 @@ std::string Matcher::to_string() {
         if (!first)
             ss << ", ";
         first = false;
-        ss << m_solution.first->to_string() << " -> " << m_solution.second->to_string();
+        ss << Formatter::to_string(m_solution.first) << " -> " << Formatter::to_string(m_solution.second);
     }
     ss << '}';
     return ss.str();

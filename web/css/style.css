@@ -152,7 +152,44 @@ select {
     padding-top: 2px; /* visual fix for Palatino Font */
 }
 
-/* index.html */
+table {
+    border-spacing: 0px;
+    width: 100%;
+    font-size: 14px;
+}
+
+table td {
+    min-width: 128px;
+    line-height: 24px;
+    padding: 4px;
+    text-align: left;
+    vertical-align: top;
+}
+
+table tr:nth-child(odd) {
+    background-color: #e0d8d4;
+}
+table tr:nth-child(even) {
+    background-color: transparent;
+}
+table tr:first-child {
+    background-color: #3280b5;
+}
+
+table th {
+    color: white;
+    padding: 8px;
+    /* text-align: left; */
+    vertical-align: top;
+    font-weight: normal;
+}
+
+table td:nth-child(3) {
+    min-width: 256px;
+    text-align: left;
+}
+
+/* index */
 nav {
     display: flex;
     justify-content: center;
@@ -177,7 +214,7 @@ nav a:hover {
     background-color: rgba(255, 255, 255, 0.12);
 }
 
-/* search.html */
+/* search */
 
 #object-bar {
     height: 64px;
@@ -353,7 +390,7 @@ nav a:hover {
     background-color: #dd141432;
 }
 
-/* docs.html */
+/* docs */
 div.definition {
     text-align: center;
     margin: 32px 0px;
@@ -365,4 +402,35 @@ div.definition {
 
 div.documentation {
     padding: 0px 4px;
+}
+
+.doc-overview {
+    font-size: 14px;
+    column-count: 3;
+    column-fill: balance;
+    min-height: 256px;
+}
+
+.doc-overview ul {
+    padding: 0px;
+}
+
+.doc-overview li {
+    list-style-position: inside;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+input.doc-search {
+    margin: 16px auto 16px auto;
+    display: block;
+    width: 512px;
+}
+
+/* proposals */
+#table-proposals th:first-child, #table-proposals td:first-child {
+    width: 96px;
+    text-align: center;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
 }

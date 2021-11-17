@@ -20,6 +20,5 @@ public:
     const std::vector<FunctionPtr> &arguments() override;
     bool depends_on(const std::vector<FunctionPtr> &) override;
     bool depends_on(const std::unordered_set<FunctionPtr> &) override;
-    std::string to_string(bool, bool) override;
 
 };
