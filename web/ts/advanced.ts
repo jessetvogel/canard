@@ -1,9 +1,10 @@
-function advancedInit() {
-    const input = $('input-search');
+function advancedInit(): void {
+    const input = $('input-search') as HTMLInputElement;
     let lines = 1;
     function updateLineNumbers() {
         const n = (input.value.match(/\n/g) || '').length + 1;
         if (n != lines) {
+            // Update line numbers
             const lineNumbers = document.querySelector('#context .line-numbers');
             while (lines < n)
                 lineNumbers.append(create('span', `${++lines}`));
@@ -11,16 +12,19 @@ function advancedInit() {
                 lineNumbers.removeChild(lineNumbers.lastChild);
                 lines--;
             }
+
+            // Update height of input
             const style = getComputedStyle(input);
             input.style.height = 'calc(' + style.paddingTop + ' + ' + style.paddingBottom + ' + ' + n + '*' + style.lineHeight + ')';
         }
     }
     updateLineNumbers();
     onInput(input, updateLineNumbers);
+
     onClick($('button-search'), function () {
         const output = $('output');
         const query = input.value;
-        api(query).then((response) => {
+        api(query).then((response: Message) => {
             clear(output);
             switch (response.status) {
                 case 'error':
@@ -36,15 +40,18 @@ function advancedInit() {
         }).catch(message => {
             console.error(message);
         });
+
         clear(output);
         output.append(createLoading());
     });
+
     onKeyDown(input, function (event) {
+        // Shift + Enter means search!
         if (event.key == 'Enter' && event.shiftKey) {
             event.preventDefault();
             $('button-search').click();
         }
     });
 }
+
 window.onload = advancedInit;
-//# sourceMappingURL=advanced.js.map

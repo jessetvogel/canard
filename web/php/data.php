@@ -85,7 +85,8 @@ if ($method == 'POST') {
 
     // Validate user data
     $allowed = [
-        'proposals' => ['user', 'proposal']
+        'proposals' => ['user', 'proposal'],
+        'documentation' => ['identifier', 'documentation']
     ];
 
     if (!is_string($table) || !is_array($values)) return response_bad_request('invalid query');

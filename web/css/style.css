@@ -434,3 +434,26 @@ input.doc-search {
     text-align: center;
     border-right: 1px solid rgba(0, 0, 0, 0.12);
 }
+
+/* editable */
+.edit-mode {
+    background-color: white;
+    border: 1px dashed rgba(0, 0, 0, 0.12);
+    padding: 8px !important;
+    box-sizing: border-box;
+}
+
+.edit-buttons {
+    display: flex;
+    justify-content: right;
+}
+
+.edit-buttons button {
+    margin: 4px;
+}
+
+.editable:empty::after {
+    content: '(empty)';
+    color: rgba(0, 0, 0, 0.5);
+    text-align: center;
+}

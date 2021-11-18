@@ -67,3 +67,6 @@ upload_to_server.sh
 
 # Databases
 *.db
+
+# Passwords
+*.pwd

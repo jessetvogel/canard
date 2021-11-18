@@ -1,8 +1,15 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var definitions = null;
 var documentation = null;
-
-function initDocs() {
-    // Load JSON data files
+function docsInit() {
     Promise.all([
         requestGET('json/definitions.json'),
         requestGET('json/documentation.json'),
@@ -11,77 +18,59 @@ function initDocs() {
         documentation = JSON.parse(values[1]);
         checkURLHash();
     });
-
-    // Loading icon while loading
     setHTML($('content'), '<div class="loading"></div>');
 }
-
-function gotoDoc(id) {
-    const content = $('content');
-    // Check if definition is valid
-    if (!(id in definitions)) {
-        setHTML(content, `No definition found for <span class="tt">${id}</span>`);
-        return;
-    }
-
-    // If there is documentation, show it, otherwise try user-submitted documentation
-    if (id in documentation) {
-        showDoc(definitions[id], documentation[id]);
-    }
-    else {
+function docsGoto(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const content = $('content');
+        if (!(id in definitions)) {
+            setHTML(content, `No definition found for <span class="tt">${id}</span>`);
+            return;
+        }
+        if (id in documentation) {
+            const doc = create('div', documentation[id]);
+            MathJax.typeset([doc]);
+            return docsShow(id, doc);
+        }
         clear(content);
         content.append(createLoading());
-        dbGet('documentation', ['documentation'], { 'identifier': id }).then(values => {
-            const doc = (values.length == 0) ? 'No documentation found' : values.map(x => `<p>${x['documentation']}</p>`).join('<br/>');
-            showDoc(definitions[id], doc);
-        });
-    }
+        const response = yield dbGet('documentation', ['id', 'documentation'], { 'identifier': id });
+        const doc = create('div', (response.length == 0) ? 'No documentation found' : response[0]['documentation'], { 'data-edit': `documentation|documentation|{"identifier":"${id}"}` });
+        makeEditable(doc);
+        MathJax.typeset([doc]);
+        docsShow(id, doc);
+    });
 }
-
-function showDoc(definition, documentation) {
-    // Add definition as header
+function docsShow(id, doc) {
     const content = $('content');
     clear(content);
-    content.append(create('div', typeset(definition), { 'class': 'definition tt' }));
-
-    // Add documentation as paragraph
-    const p = create('div', documentation, { 'class': 'documentation' });
-    content.append(p);
-    MathJax.typeset([p]);
+    content.append(create('div', typeset(definitions[id]), { 'class': 'definition tt' }));
+    content.append(doc);
 }
-
 function checkURLHash() {
     const id = window.location.hash.substr(1);
-    if (id != '') return gotoDoc(id);
-    return showDocsOverview();
+    if (id != '')
+        return docsGoto(id);
+    return docsShowOverview();
 }
-
-function showDocsOverview() {
+function docsShowOverview() {
     const content = $('content');
     clear(content);
-
-    // Create search bar
     const search = create('input', '', { 'placeholder': 'Search for definition..', 'class': 'doc-search' });
-    onInput(search, function () { searchDocOverview(search.value); });
-
-    // Add to content
+    onInput(search, function () { docsSearchOverview(search.value); });
     content.append(search);
-
-    // Sort all identifiers based on their namespace (more precisely, the initial namespace)
     const overview = create('div', '', { 'class': 'doc-overview' });
     const namespaces = {};
     for (let identifier in definitions) {
         const space = identifier.split('.')[0];
-        if (!(space in namespaces)) namespaces[space] = [];
+        if (!(space in namespaces))
+            namespaces[space] = [];
         namespaces[space].push(identifier);
     }
-
     const sections = Object.keys(namespaces);
     sections.sort();
     for (let space of sections) {
-        // Namespace section title
         overview.append(create('span', space, { 'class': 'tt' }));
-        // Create <ul> of definitions
         const ul = create('ul');
         namespaces[space].sort((a, b) => { return a.split('.').pop().localeCompare(b.split('.').pop()); });
         for (let id of namespaces[space])
@@ -90,20 +79,19 @@ function showDocsOverview() {
     }
     content.append(overview);
 }
-
-function searchDocOverview(query) {
+function docsSearchOverview(query) {
+    var _a;
     for (let li of document.querySelectorAll('.doc-overview li')) {
-        // Identifier with and without namespace
         const identifier = li.dataset.id;
         const final = identifier.split('.').pop();
-
-        if (final.includes(query) || documentation[identifier]?.includes(query)) {
+        if (final.includes(query) || ((_a = documentation[identifier]) === null || _a === void 0 ? void 0 : _a.includes(query))) {
             li.style.display = '';
-        } else {
+        }
+        else {
             li.style.display = 'none';
         }
     }
 }
-
-window.onload = initDocs;
+window.onload = docsInit;
 window.addEventListener('popstate', checkURLHash);
+//# sourceMappingURL=docs.js.map

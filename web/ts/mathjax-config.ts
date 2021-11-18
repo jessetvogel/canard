@@ -2,6 +2,9 @@ window.MathJax = {
     startup: {
         typeset: false,
         pageReady: () => {
+            // Don't let MathJax parse on startup. Rather customly process only the .mathjax-process classes
+            // This prevents some dynamic content to be parsed when it shouldn't ..
+            // console.log('MathJax is ready!');
             MathJax.typesetPromise(document.querySelectorAll('.mathjax-process'));
         }
     },
@@ -34,6 +37,6 @@ window.MathJax = {
             Stacks: ['\\href{https://stacks.math.columbia.edu/tag/#1}{\\text{Stacks Project #1}}', 1]
         }
     },
+
     ignoreHtmlClass: 'edit-mode'
 };
-//# sourceMappingURL=mathjax-config.js.map
