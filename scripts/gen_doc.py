@@ -42,28 +42,12 @@ for identifier in identifiers:
 
 
 # Write to files
-file = open('../web/doc/documentation.json', 'w')
+file = open('../web/json/documentation.json', 'w')
 file.write(json.dumps(documentation))
 file.close()
 
-file = open('../web/doc/definitions.json', 'w')
+file = open('../web/json/definitions.json', 'w')
 file.write(json.dumps(definitions))
 file.close()
 
 print('Done!')
-
-# # Send input and receive output
-# input = ''.join([ 'inspect ' + space + ';' for space in namespaces ]) + '; exit ;'
-# (stdoutdata, stderrdata) = process.communicate(input = input.encode())
-# output = stdoutdata.decode('UTF-8')
-# error = stderrdata.decode('UTF-8')
-
-# # Interpret output
-# identifiers = []
-# for space, message in zip(namespaces, output.strip().split('\n')):
-#     for x in json.loads(message)['data']:
-#         identifiers.append(space + '.' + x)
-
-# # Simply print the identifiers
-# for x in identifiers:
-#     print(x)

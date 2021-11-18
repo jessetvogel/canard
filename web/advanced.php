@@ -10,10 +10,9 @@
 <body>
     <?php include('template/menu.html'); ?>
 
+    <h2>Advanced</h2>
+
     <div id="content">
-
-        <h2>Query</h2>
-
         <div id="context" class="input">
             <div class="line-numbers"><span>1</span></div>
             <textarea id="input-search" wrap="off" placeholder="search ..."></textarea>

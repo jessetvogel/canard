@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <title>Categorical Examples</title>
+<link rel="icon" type="image/png" href="img/favicon.png" />
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/fonts.css">
 <script type="text/javascript" src="js/util.js"></script>

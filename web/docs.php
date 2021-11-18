@@ -9,10 +9,10 @@
 
 <body>
     <?php include('template/menu.html'); ?>
+
+    <h2>Documentation</h2>
     
-    <div id="content">
-        
-    </div>
+    <div id="content"></div>
 </body>
 
 </html>

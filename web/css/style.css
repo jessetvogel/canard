@@ -12,16 +12,14 @@ body {
 textarea {
     display: block;
     width: 100%;
+    height: 256px;
     line-height: 24px;
     font-size: 1rem;
-
-    height: 40px;
+    font-family: var(--font-family);
     box-sizing: border-box;
-
     border: 0;
     outline: none;
     padding: 8px 8px;
-    font-family: "Menlo";
     box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.12);
     background-color: #ffffff;
     resize: none;
@@ -55,7 +53,7 @@ textarea {
     width: var(--content-width);
     max-width: 100%;
     margin: 0 auto;
-    font-size: 18px;
+    font-size: 1.125rem;
 }
 
 /* Loading animation */
@@ -155,7 +153,7 @@ select {
 table {
     border-spacing: 0px;
     width: 100%;
-    font-size: 14px;
+    font-size: 1rem;
 }
 
 table td {
@@ -238,7 +236,7 @@ nav a:hover {
     flex-direction: row;
     gap: 8px;
     line-height: 32px;
-    font-size: 18px;
+    font-size: 1.25rem;
 }
 
 #object-type-arguments::before {
@@ -390,11 +388,21 @@ nav a:hover {
     background-color: #dd141432;
 }
 
+/* advanced */
+#input-search {
+    display: block;
+    width: 100%;
+    height: 40px;
+    line-height: 24px;
+    font-size: 1rem;
+    font-family: "Menlo";
+}
+
 /* docs */
 div.definition {
     text-align: center;
     margin: 32px 0px;
-    font-size: 18px;
+    font-size: 1.125rem;
     border: 1px solid rgba(0, 0, 0, 0.25);
     background: white;
     padding: 4px;
@@ -405,7 +413,7 @@ div.documentation {
 }
 
 .doc-overview {
-    font-size: 14px;
+    font-size: 0.9rem;
     column-count: 3;
     column-fill: balance;
     min-height: 256px;
@@ -456,4 +464,16 @@ input.doc-search {
     content: '(empty)';
     color: rgba(0, 0, 0, 0.5);
     text-align: center;
+}
+
+/* propose */
+#proposal-form {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#proposal-name {
+    margin: 8px 0px 0px 0px;
 }
