@@ -6,37 +6,33 @@
 #include "parser/Parser.h"
 #include "core/macros.h"
 #include "core/Formatter.h"
-#include "formatter/EnglishFormatter.h"
 #include <cstdlib>
 #include <fstream>
+#include <thread>
+#include <chrono>
 
 Application::Application(const std::vector<std::string> &arguments) {
     // Read flags
-    for (auto &arg: arguments) {
-        if (arg == "--json") m_flag_json = true;
-        if (arg == "--explicit") m_flag_explicit = true;
-        if (arg == "--doc") m_flag_documentation = true;
-        if (arg == "--english") m_flag_english = true;
+    for (const auto &arg: arguments) {
+        if (arg == "--json") m_options.json = true;
+        if (arg == "--explicit") m_options.explict = true;
+        if (arg == "--doc") m_options.documentation = true;
+        if (arg == "--multithreading") m_options.max_search_threads = std::thread::hardware_concurrency();
     }
 
     // Parse files
-    for (auto &arg: arguments) {
+    for (const auto &arg: arguments) {
         if (arg.rfind("--", 0) == 0) continue; // Skip flags
 
         if (!parse_file(arg))
             CANARD_LOG("Failed to parse `" << arg << "`");
     }
-
 }
 
 void Application::run() {
-    // Create English formatter
-    EnglishFormatter formatter;
-
     // Create parser and keep parsing (until exit) via System.in
-    Parser parser(std::cin, std::cout, m_session);
-    parser_set_flags(parser);
-    if (m_flag_english) parser.set_formatter(formatter);
+    Parser parser(std::cin, std::cout, m_session, m_options);
+    parser.set_documentation(&m_documentation);
     parser.parse();
 }
 
@@ -72,15 +68,14 @@ bool Application::parse_file(const std::string &path) {
     std::string file = n_path.substr(j + 1);
 
     // Create parser to parse the file
-    Parser parser(input, std::cout, m_session);
-    parser_set_flags(parser);
+    Parser parser(input, std::cout, m_session, m_options);
     parser.set_location(directory, file);
-    return parser.parse();
-}
-
-void Application::parser_set_flags(Parser &parser) {
-    parser.use_json(m_flag_json);
-    parser.use_explicit(m_flag_explicit);
-    if (m_flag_documentation)
-        parser.set_documentation(&m_documentation);
+    parser.set_documentation(&m_documentation);
+    auto start_time = std::chrono::system_clock::now();
+    bool success = parser.parse();
+    auto end_time = std::chrono::system_clock::now();
+    CANARD_LOG("Importing " << n_path << " took "
+                            << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
+                            << " ms");
+    return success;
 }

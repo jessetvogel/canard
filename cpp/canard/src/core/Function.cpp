@@ -12,9 +12,9 @@
 
 int id_counter = 0;
 
-Function::Function(FunctionPtr type, Dependencies dependencies) : m_type(std::move(type)),
-                                                                  m_dependencies(std::move(dependencies)),
-                                                                  m_id(id_counter++) {}
+Function::Function(FunctionPtr type, Dependencies dependencies) : m_id(id_counter++),
+                                                                  m_type(std::move(type)),
+                                                                  m_dependencies(std::move(dependencies)) {}
 
 FunctionPtr Function::type() {
     // m_type == nullptr indicates that function is Type, it's type is itself

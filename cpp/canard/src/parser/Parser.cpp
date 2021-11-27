@@ -10,11 +10,12 @@
 #include <climits>
 #include <cstdlib>
 #include <fstream>
-#include <chrono>
 
-Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session) : m_ostream(ostream), m_scanner(istream),
-                                                                                 m_lexer(m_scanner),
-                                                                                 m_session(session) {
+Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session, Options options)
+        : m_ostream(ostream), m_scanner(istream),
+          m_lexer(m_scanner),
+          m_session(session),
+          m_options(options) {
     m_current_namespace = &session.get_global_namespace();
     m_imported_files = std::unique_ptr<std::unordered_set<std::string>>(new std::unordered_set<std::string>());
 }
@@ -70,7 +71,7 @@ Token Parser::consume(TokenType type, const std::string &data) {
     if (found(type, data)) {
         Token token = {NONE};
         std::swap(token, m_current_token);
-        return std::move(token);
+        return token;
     } else {
         std::ostringstream ss;
         ss << "expected " << data << " (" << type << ")" << " but found " << m_current_token.m_data << " ("
@@ -202,7 +203,7 @@ void Parser::parse_inspect() {
     }
 
     // Output
-    if (m_use_json)
+    if (m_options.json)
         output(Message::create(SUCCESS, labels));
     else
         for (auto &label: labels)
@@ -218,13 +219,13 @@ void Parser::parse_doc() {
     auto f = parse_expression(m_current_namespace->get_context());
 
     std::string doc;
-    if (m_documentation != nullptr) {
+    if (m_options.documentation && m_documentation != nullptr) {
         auto it = m_documentation->find(f);
         if (it != m_documentation->end())
             doc = it->second;
     }
 
-    if (m_use_json)
+    if (m_options.json)
         output(Message::create(SUCCESS, doc));
     else
         output("📝 " + (doc.empty() ? "No documentation" : doc));
@@ -295,23 +296,15 @@ void Parser::parse_import() {
     std::string file = path.substr(i + 1);
 
     // Create sub_parser to parse the file
-    Parser sub_parser(ifstream, m_ostream, m_session);
+    Parser sub_parser(ifstream, m_ostream, m_session, m_options);
     sub_parser.set_location(directory, file);
-    sub_parser.use_json(m_use_json);
-    sub_parser.set_formatter(*m_formatter);
     sub_parser.set_documentation(m_documentation);
     sub_parser.m_imported_files = std::move(m_imported_files);
-    auto start_time = std::chrono::system_clock::now();
     bool success = sub_parser.parse();
-    auto end_time = std::chrono::system_clock::now();
     m_imported_files = std::move(sub_parser.m_imported_files);
 
     if (!success)
         throw ParserException(t_import, "error in importing '" + filename + "'");
-
-    CANARD_LOG("Importing '" << path << "' took "
-                             << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
-                             << "ms");
 }
 
 void Parser::parse_namespace() {
@@ -352,7 +345,7 @@ void Parser::parse_search() {
     }
 
     // Create searcher and specify the searching space
-    Searcher searcher(5); // TODO: watch out, its a magic number! 🪄 (= max depth)
+    Searcher searcher(m_options.max_search_depth, m_options.max_search_threads);
     std::unordered_set<Namespace *> added_namespaces;
     for (auto space = m_current_namespace; space != nullptr; space = space->get_parent()) {
         searcher.add_namespace(*space);
@@ -373,7 +366,7 @@ void Parser::parse_search() {
 
     auto result = searcher.result();
 
-    if (m_use_json) {
+    if (m_options.json) {
         if (success) {
             std::vector<std::string> keys, values;
             keys.reserve(indeterminates.size());
@@ -414,9 +407,9 @@ void Parser::parse_check() {
      */
 
     consume(KEYWORD, "check");
-    auto f_str = Formatter::to_string(parse_expression(m_current_namespace->get_context()), true, m_use_explicit);
+    auto f_str = Formatter::to_string(parse_expression(m_current_namespace->get_context()), true, m_options.explict);
 
-    if (m_use_json)
+    if (m_options.json)
         output(Message::create(SUCCESS, f_str));
     else
         output("🦆 " + f_str);
@@ -647,7 +640,7 @@ void Parser::output(const std::string &message) {
 }
 
 void Parser::error(const std::string &message) {
-    if (m_use_json)
+    if (m_options.json)
         output(R"({"status":"error","data":")" + message + "\"}");
     else
         output("⚠️ " + message);
@@ -662,8 +655,6 @@ void Parser::set_documentation(std::unordered_map<FunctionPtr, std::string> *doc
     m_documentation = documentation;
 }
 
-std::string Parser::format(const FunctionPtr &f) {
-    return (m_formatter == nullptr)
-           ? Formatter::to_string(f, false, m_use_explicit)
-           : m_formatter->format(f);
+std::string Parser::format(const FunctionPtr &f) const {
+    return Formatter::to_string(f, false, m_options.explict);
 }

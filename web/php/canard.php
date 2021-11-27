@@ -19,7 +19,7 @@ $descriptorspec = array(
 // Create process
 $cwd = null;
 $env = array();
-$process = proc_open(dirname(__FILE__) . '/../bin/canard --json --explicit --doc ' . dirname(__FILE__) . '/../math/main.cnd', $descriptorspec, $pipes, $cwd, $env);
+$process = proc_open(dirname(__FILE__) . '/../bin/canard --json --explicit --doc --multithreading ' . dirname(__FILE__) . '/../math/main.cnd', $descriptorspec, $pipes, $cwd, $env);
 
 if (!is_resource($process))
     response_server_error('failed to start canard');
@@ -28,9 +28,11 @@ if (!is_resource($process))
 fwrite($pipes[0], 'open commutative_algebra;');
 fwrite($pipes[0], 'open commutative_algebra.ring;');
 fwrite($pipes[0], 'open commutative_algebra.module;');
+fwrite($pipes[0], 'open commutative_algebra.monoid;');
 fwrite($pipes[0], 'open algebraic_geometry;');
 fwrite($pipes[0], 'open algebraic_geometry.scheme;');
 fwrite($pipes[0], 'open algebraic_geometry.morphism;');
+fwrite($pipes[0], 'open algebraic_geometry.sheaf;');
 fwrite($pipes[0], $query);
 fwrite($pipes[0], ";\n/--/;exit;");
 fclose($pipes[0]);

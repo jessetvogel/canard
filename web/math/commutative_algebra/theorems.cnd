@@ -1,8 +1,8 @@
 open commutative_algebra.ring
-open commutative_algebra.module
 
 namespace commutative_algebra
 
+namespace ring
 -- Every field is a domain, because if $xy = 0$ with $x \ne 0$, then $y = 0 \cdot x^{-1} = 0$.
 let domain_of_field {R : Ring} (h : field R) : domain R
 -- Every field is noetherian, because the only (maximal) ideal is $(0)$.
@@ -11,6 +11,9 @@ let noetherian_of_field {R : Ring} (h : field R) : ring.noetherian R
 let reduced_of_domain {R : Ring} (h : domain R) : reduced R
 -- Every field is a local ring, since $(0)$ is the only (maximal) ideal.
 let local_of_field {R : Ring} (h : field R) : local R
+end ring
+
+namespace module
 -- Any free module is projective.
 let proj_of_free_module {R : Ring} {M : Module R} (h : free M) : projective M
 -- Any projective module is flat.
@@ -39,5 +42,17 @@ let exc_of_field {R : Ring} (h : field R) : excellent R
 let exc_of_nt_cmpl_lc {R : Ring} (h1 : ring.noetherian R) (h2 : complete R) (h3 : local R) : excellent R
 -- Every field is Jacobson.
 let jcb_of_field {R : Ring} (h : field R) : jacobson R
+end module
+
+namespace monoid
+-- Any finitely generated, integral and separated monoid is fs.
+let fs_of_fg_int_st {M : Monoid} (h1 : finitely_generated M) (h2 : integral M) (h3: saturated M) : fs M
+-- Any fs monoid is finitely generated.
+let fg_of_fs {M : Monoid} (h : fs M) : finitely_generated M
+-- Any fs monoid is finitely generated.
+let int_of_fs {M : Monoid} (h : fs M) : integral M
+-- Any fs monoid is finitely generated.
+let st_of_fs {M : Monoid} (h : fs M) : saturated M
+end monoid
 
 end commutative_algebra

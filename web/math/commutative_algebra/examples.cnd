@@ -2,6 +2,7 @@ open commutative_algebra
 
 open commutative_algebra.ring
 open commutative_algebra.module
+open commutative_algebra.monoid
 
 namespace commutative_algebra
 
@@ -128,4 +129,11 @@ let cusp_ring_not_art {k : Ring} (h : field k) : not (ring.artin (cusp_ring h))
 -- The ring $k[x, y] / (x^2 - y^3)$ not local. For example, both $(x, y)$ and $(x - 1, y - 1)$ are maximal ideals.
 let cusp_ring_not_lc  {k : Ring} (h : field k) : not (local (cusp_ring h))
 
+
+-- The natural numbers $\NN$.
+let NN : Monoid
+-- The natural numbers $\NN$ are a fs monoid
+let NN_is_fs : fs NN
+
 end commutative_algebra
+

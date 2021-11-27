@@ -1,2 +1,5 @@
 import "monoid.cnd"
 import "ring.cnd"
+
+import "theorems.cnd"
+import "examples.cnd"

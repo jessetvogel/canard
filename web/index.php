@@ -8,7 +8,9 @@
 <body>
     <?php include('template/menu.html'); ?>
 
-    <div class="content">Welcome!</div>
+    <h2>Categorical Examples</h2>
+
+    <div class="content"></div>
 </body>
 
 </html>

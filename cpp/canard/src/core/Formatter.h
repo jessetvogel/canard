@@ -9,10 +9,9 @@
 class Formatter {
 public:
 
-    static std::string to_string(const FunctionPtr&);
-    static std::string to_string(const FunctionPtr&, bool, bool);
+    static std::string to_string(const FunctionPtr &);
+    static std::string to_string(const FunctionPtr &, bool, bool);
 
-    virtual std::string format(const FunctionPtr&) = 0;
+    virtual std::string format(const FunctionPtr &) = 0;
 
 };
-

@@ -1,8 +1,7 @@
-import "../commutative_algebra/ring.cnd"
-import "../commutative_algebra/module.cnd"
-import "../commutative_algebra/examples.cnd"
+import "../commutative_algebra/core.cnd"
 import "scheme.cnd"
 import "sheaf.cnd"
+import "toric.cnd"
 
 open commutative_algebra
 open commutative_algebra.ring
@@ -14,7 +13,7 @@ namespace algebraic_geometry
 
 -- The scheme $\Spec(R)$ for a given ring $R$.
 let Spec (R : Ring) : Scheme
-let Spec_contravariant : Contravariant Spec
+let Spec_contravariant : contravariant Spec
 def mSpec {A B : Ring} (f : Morphism A B) := contramap Spec_contravariant f
 let sheaf_of_module {R : Ring} (M : Module R) : Sheaf (Spec R)
 

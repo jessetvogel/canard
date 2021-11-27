@@ -1,4 +1,5 @@
 import "../set_theory/set.cnd"
+import "../group_theory/group.cnd"
 open set_theory.set
 
 namespace commutative_algebra
@@ -101,8 +102,12 @@ end ring
 -- def algebra_self (R : Ring) := algebra_of_ring_morphism (id R)
 -- let module_of_algebra {R : Ring} (A : Algebra R) : Module R
 
+open group_theory.group
+-- The multiplicative group $R^*$ of a commutative ring $R$.
+let mult_group (R : Ring) : Group
+-- The multiplicative group $R^*$ of a commutative ring $R$ is abelian.
+let mult_group_ab (R : Ring) : abelian (mult_group R)
+-- The map $R \mapsto R^*$ defines a functor from commutative rings to groups.
+let mult_group_functor : functor mult_group
 
 end commutative_algebra
-
-import "theorems.cnd"
-import "examples.cnd"

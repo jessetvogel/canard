@@ -28,6 +28,7 @@ public:
         std::vector<bool> m_explicits;
 
         size_t size() const { return m_functions.size(); }
+
         size_t empty() const { return m_functions.empty(); }
     };
 
@@ -51,7 +52,7 @@ public:
 
     const Dependencies &dependencies() { return m_dependencies; }
 
-    Namespace* space() { return m_space; }
+    Namespace *space() { return m_space; }
 
     virtual const std::vector<FunctionPtr> &arguments() { return m_dependencies.m_functions; }
 

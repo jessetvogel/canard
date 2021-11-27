@@ -12,18 +12,23 @@
 class Parser {
 public:
 
-    Parser(std::istream &, std::ostream &, Session &);
+    struct Options {
+        bool json = false;
+        bool explict = false;
+        bool documentation = false;
+        int max_search_depth = 5;
+        uint32_t max_search_threads = 1;
+    };
+
+    Parser(std::istream &, std::ostream &, Session &, Options options);
     Parser(const Parser &) = delete;
 
-    void use_json(bool b) { m_use_json = b; }
-    void use_explicit(bool b) { m_use_explicit = b; }
-    void set_formatter(Formatter &formatter) { m_formatter = &formatter; }
     void set_documentation(std::unordered_map<FunctionPtr, std::string> *);
-    bool parse();
     void set_location(std::string &, std::string &);
-    void parse_doc();
+    bool parse();
 
 private:
+    // IO fields
     std::ostream &m_ostream;
     Scanner m_scanner;
     Lexer m_lexer;
@@ -31,33 +36,26 @@ private:
     Token m_current_token = {NONE};
     bool m_running = false;
 
-    Session &m_session;
+    // Namespace related fields
     Namespace *m_current_namespace;
     std::unordered_set<Namespace *> m_open_namespaces;
     std::unique_ptr<std::unordered_set<std::string>> m_imported_files;
 
-    Token m_comment_token = {NONE};
-
+    // Other fields
+    Session &m_session;
     std::unordered_map<FunctionPtr, std::string> *m_documentation = nullptr;
-    bool m_use_json = false;
-    bool m_use_explicit = false;
-    Formatter *m_formatter = nullptr;
+    Token m_comment_token = {NONE};
+    Options m_options;
 
-    // get_token methods
-
+    // Token methods
     void next_token();
-
     bool found(TokenType);
-
     bool found(TokenType, const std::string &);
-
     Token consume();
-
     Token consume(TokenType);
-
     Token consume(TokenType, const std::string &);
 
-    // parsing methods
+    // Parse methods
     bool parse_statement();
     void parse_inspect();
     void parse_open();
@@ -68,6 +66,7 @@ private:
     void parse_check();
     void parse_declaration();
     void parse_definition();
+    void parse_doc();
 
     std::string parse_path();
     std::vector<std::string> parse_list_identifiers();
@@ -77,10 +76,10 @@ private:
     FunctionPtr parse_expression(Context &, Function::Dependencies);
     FunctionPtr parse_term(Context &);
 
-    // format method
-    std::string format(const FunctionPtr &f);
+    // Formatting method
+    std::string format(const FunctionPtr &f) const;
 
-    // output methods
+    // Output methods
     void output(const std::string &);
     void error(const std::string &);
 };

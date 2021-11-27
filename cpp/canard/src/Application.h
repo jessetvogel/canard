@@ -16,18 +16,11 @@ public:
 
 private:
 
-    bool m_flag_json = false;
-    bool m_flag_explicit = false;
-    bool m_flag_documentation = false;
-    bool m_flag_english = false;
-
     Session m_session;
+    Parser::Options m_options = {};
     std::unordered_map<FunctionPtr, std::string> m_documentation;
 
     bool parse_file(const std::string &);
-    void parser_set_flags(Parser&);
-
-//    Parser create_parser(std::istream &, std::ostream &);
 };
 
 

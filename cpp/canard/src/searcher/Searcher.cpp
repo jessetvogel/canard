@@ -6,7 +6,8 @@
 #include <algorithm>
 #include "../core/macros.h"
 
-Searcher::Searcher(const int max_depth) : m_max_depth(max_depth) {}
+Searcher::Searcher(const int max_depth, const int max_threads) : m_max_depth(max_depth),
+                                                                 m_thread_manager(max_threads) {}
 
 void Searcher::add_namespace(Namespace &space) {
     // Make a list of lists of all functions that can be used during the search
@@ -36,8 +37,11 @@ void Searcher::add_namespace(Namespace &space) {
 }
 
 bool Searcher::search(const std::shared_ptr<Query> &query) {
-    // Create a queue of queries for each depth (of queries). The strategy is to first handle the low-depth queries, and then the
-    // higher-depth queries.
+    // Clear the vector of results
+    m_result.clear();
+
+    // Create a queue of queries for each depth (of queries).
+    // The strategy is to first handle the low-depth queries, and then the higher-depth queries.
     m_depth_queues.clear();
     for (int depth = 0; depth < m_max_depth; ++depth)
         m_depth_queues.emplace_back();
@@ -45,9 +49,20 @@ bool Searcher::search(const std::shared_ptr<Query> &query) {
     // The initial query has depth 0
     m_depth_queues[0].push(query);
 
-    while (true) {
+    // Create a pool of threads
+    m_searching = true;
+    m_thread_manager.start(&Searcher::search_loop, this);
+
+    // Wait for all threads to end, and return
+    m_thread_manager.join_all();
+    return !m_result.empty();
+}
+
+void Searcher::search_loop() {
+    while (m_searching) {
         // Take the first query from the first (non-empty) queue, i.e. the one with the lowest depth
         std::shared_ptr<Query> q = nullptr;
+        m_mutex.lock();
         for (auto &queue: m_depth_queues) {
             if (!queue.empty()) {
                 q = queue.front();
@@ -55,9 +70,13 @@ bool Searcher::search(const std::shared_ptr<Query> &query) {
                 break;
             }
         }
-        // When no more queries, stop searching
-        if (q == nullptr)
-            break;
+        m_mutex.unlock();
+
+        // If there is no query, we should wait for other threads to come with updates
+        // Depending on the result of the update, we should continue or stop
+        if (q == nullptr) {
+            if (m_thread_manager.wait_for_update()) continue; else break;
+        }
 
         CANARD_DEBUG("Current query [" << q->to_string() << "]");
 
@@ -65,10 +84,9 @@ bool Searcher::search(const std::shared_ptr<Query> &query) {
         q = Query::normalize(q);
 
         // Check for redundancies
-        if (is_redundant(q, q->parent()))
-            continue;
+        if (is_redundant(q, q->parent())) continue;
 
-        // Do some optimization TODO: this does not work correctly!
+        // Do some optimization TODO: this does not work correctly! TODO: watch out for multithreading!
 //        optimize(q);
 
         // Now we are going to look for reductions. Before pushing to the queue, we will store all reductions
@@ -77,45 +95,60 @@ bool Searcher::search(const std::shared_ptr<Query> &query) {
         std::vector<std::shared_ptr<Query>> reductions;
 
         // First list to search through is the list of local variables of q
-        for (auto thm: q->locals())
+        for (auto thm: q->locals()) {
             if (search_helper(q, thm, reductions))
-                return true;
+                goto end;
+        }
 
         // If the type base is an indeterminate of q, there is nothing better to do then to try all theorems
         FunctionPtr h_type_base = q->last_indeterminate()->type()->base();
         if (q->is_indeterminate(h_type_base)) {
-            for (auto &thm: m_all_theorems)
+            for (auto &thm: m_all_theorems) {
                 if (search_helper(q, thm, reductions))
-                    return true;
+                    goto end;
+            }
         } else {
             // If the type base is known to the index, try the corresponding list of theorems
             auto it = m_index.find(h_type_base);
             if (it != m_index.end()) {
-                for (auto &thm: it->second)
+                for (auto &thm: it->second) {
                     if (search_helper(q, thm, reductions))
-                        return true;
+                        goto end;
+                }
             }
-
             // Also try the general theorems
-            for (auto &thm: m_generic_theorems)
+            for (auto &thm: m_generic_theorems) {
                 if (search_helper(q, thm, reductions))
-                    return true;
+                    goto end;
+            }
         }
 
         // Now sort the list of reductions based on the number of indeterminates
-        // Then add them to the queue
         std::sort(reductions.begin(), reductions.end(),
                   [](const std::shared_ptr<Query> &q1, const std::shared_ptr<Query> &q2) {
                       return q1->indeterminates_size() < q2->indeterminates_size();
                   });
 
+        // Then add them to the queue
+        m_mutex.lock();
         for (auto &r: reductions) {
             assert(r->depth() < m_max_depth);
             m_depth_queues[r->depth()].push(std::move(r));
         }
-    }
+        m_mutex.unlock();
 
-    return false;
+        // Notify the other threads for updates
+        m_thread_manager.send_update(true);
+    }
+    end:
+
+    // Send a permanent update
+    m_thread_manager.send_permanent_update(true);
+
+    // When we are out of the loop, this boolean makes the other threads terminate as well
+    m_searching = false;
+
+//    CANARD_LOG("END THREAD");
 }
 
 bool Searcher::search_helper(std::shared_ptr<Query> &query, FunctionPtr &thm,
@@ -129,7 +162,9 @@ bool Searcher::search_helper(std::shared_ptr<Query> &query, FunctionPtr &thm,
 
     // If the sub_query is completely solved (i.e. no more indeterminates) we are done!
     if (sub_query->is_solved()) {
+        m_mutex.lock();
         m_result = Query::final_solutions(sub_query);
+        m_mutex.unlock();
         return true;
     }
 
@@ -148,31 +183,32 @@ bool Searcher::is_redundant(const std::shared_ptr<Query> &q, const std::shared_p
     return is_redundant(q, p->parent());
 }
 
-void Searcher::optimize(const std::shared_ptr<Query> &q) {
-    // If sub_query injects into the parent p, then we can safely delete all other branches coming from that parent p
-    // since any solution of the parent will yield a solution for q
-    // TODO: reverse order of iterating, and whenever we have a match, break the for-loop ?
-    // TODO: this 'optimization' is not quite valid: if some parent gets 'strictly solved' by some query which was very slow (i.e. high depth), it should not be allowed to remove another query which already solved the query much more / earlier, just because it is a child of that parent..
-    for (auto p = q->parent(); p != nullptr; p = nullptr) { //p = p->parent()) {
-        if (!q->injects_into(p))
-            continue;
-
-        for (auto &queue: m_depth_queues) {
-            std::queue<std::shared_ptr<Query>> new_queue;
-            while (!queue.empty()) {
-                auto r = queue.front();
-                queue.pop();
-                bool should_remove = r->has_parent(p);
-
-//                if (should_remove) // && r->injects_into(p)) // exception: if r is also a strict solution, don't remove r
-//                    should_remove = false;
-
-                if (!should_remove)
-                    new_queue.push(std::move(r));
-                CANARD_DEBUG("Removed [" << r->to_string() << "] because its parent [" << p->to_string() << "] was strictly solved by [" << q->to_string() << "]");
-            }
-            // Replace the old queue with the new queue (this works as queue is given by reference)
-            queue = std::move(new_queue);
-        }
-    }
-}
+//void Searcher::optimize(const std::shared_ptr<Query> &q) {
+//    // If sub_query injects into the parent p, then we can safely delete all other branches coming from that parent p
+//    // since any solution of the parent will yield a solution for q
+//    // TODO: reverse order of iterating, and whenever we have a match, break the for-loop ?
+//    // TODO: this 'optimization' is not quite valid: if some parent gets 'strictly solved' by some query which was very slow (i.e. high depth), it should not be allowed to remove another query which already solved the query much more / earlier, just because it is a child of that parent..
+//    for (auto p = q->parent(); p != nullptr; p = nullptr) { //p = p->parent()) {
+//        if (!q->injects_into(p))
+//            continue;
+//
+//        for (auto &queue: m_depth_queues) {
+//            std::queue<std::shared_ptr<Query>> new_queue;
+//            while (!queue.empty()) {
+//                auto r = queue.front();
+//                queue.pop();
+//                bool should_remove = r->has_parent(p);
+//
+////                if (should_remove) // && r->injects_into(p)) // exception: if r is also a strict solution, don't remove r
+////                    should_remove = false;
+//
+//                if (!should_remove)
+//                    new_queue.push(std::move(r));
+//                CANARD_DEBUG("Removed [" << r->to_string() << "] because its parent [" << p->to_string()
+//                                         << "] was strictly solved by [" << q->to_string() << "]");
+//            }
+//            // Replace the old queue with the new queue (this works as queue is given by reference)
+//            queue = std::move(new_queue);
+//        }
+//    }
+//}

@@ -1,14 +1,19 @@
 -- Open everything!
-open algebraic_geometry;
-open algebraic_geometry.scheme;
-open algebraic_geometry.morphism;
 open commutative_algebra;
 open commutative_algebra.ring;
 open commutative_algebra.module;
+open commutative_algebra.monoid;
+
+open algebraic_geometry;
+open algebraic_geometry.scheme;
+open algebraic_geometry.morphism;
+
 open set_theory
 open set_theory.set
+
 open group_theory
 open group_theory.group
+
 open topology
 open topology.top
 
@@ -39,8 +44,8 @@ search (P {X Y: Scheme} {f : Morphism X Y} (h : etale f) : unramified f);
 search (P : locally_noetherian (affine_line (Spec QQ)));
 
 search (X : Scheme) (h1 : scheme.affine X) (h2 : scheme.quasi_compact X);
-search (X : Scheme) (h : integral X);
-search (R : Ring) (h : integral (Spec R));
+search (X : Scheme) (h : scheme.integral X);
+search (R : Ring) (h : scheme.integral (Spec R));
 search (X Y : Scheme) (f : Morphism X Y);
 search (R : Ring) (M N : Module R) (f : Morphism M N);
 search (R : Ring) (M : Module R) (h1 : module.flat M) (h2 : not (module.free M));
@@ -50,6 +55,6 @@ search (X Y : Scheme) (f : Morphism X Y) (h : not (zariski_cover f));
 search (h1 : not (morphism.formally_etale (ec_to_P1 QQ_is_field))) (h2 : not (morphism.open_immersion (ec_to_P1 QQ_is_field)));
 search (h : not (morphism.open_immersion (mSpec QQ_to_QQ_sqrt2)));
 
-search (P (T_ S_ : Type) (F_ (t_ : T_) : S_) (h_ : Functor F_) (X_ Y_ : T_) (f_ : Morphism X_ Y_) : Morphism (F_ X_) (F_ Y_));
+search (P (T_ S_ : Type) (F_ (t_ : T_) : S_) (h_ : functor F_) (X_ Y_ : T_) (f_ : Morphism X_ Y_) : Morphism (F_ X_) (F_ Y_));
 
 search (h : not (zariski_local scheme.connected))
