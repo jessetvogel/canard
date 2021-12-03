@@ -11,6 +11,10 @@ let noetherian_of_field {R : Ring} (h : field R) : ring.noetherian R
 let reduced_of_domain {R : Ring} (h : domain R) : reduced R
 -- Every field is a local ring, since $(0)$ is the only (maximal) ideal.
 let local_of_field {R : Ring} (h : field R) : local R
+-- Every domain is non-trivial.
+let not_trivial_of_dm {R : Ring} (h : domain R) : not (trivial R)
+-- Every finite domain is a field.
+let field_of_fn_dm {R : Ring} (h1 : domain R) (h2 : finite R) : field R
 end ring
 
 namespace module

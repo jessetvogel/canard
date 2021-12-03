@@ -1,0 +1,7 @@
+namespace linear_algebra
+
+namespace fan
+let Fan : Type
+end fan
+
+end linear_algebra

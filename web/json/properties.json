@@ -14,7 +14,8 @@
         "ring.pid": "principal ideal domain",
         "ring.ufd": "unique factorization domain",
         "ring.dvr": "discrete valuation ring",
-        "ring.integrally_closed": "integrally closed"
+        "ring.integrally_closed": "integrally closed",
+        "ring.trivial": "trivial"
     },
     "Ring Morphism": {},
     "Module": {

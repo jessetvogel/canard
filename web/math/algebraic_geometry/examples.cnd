@@ -56,13 +56,13 @@ let affine_line_to_base_sm (X : Scheme) : smooth (affine_line_to_base X)
 let affine_line_to_base_fp (X : Scheme) : finitely_presented (affine_line_to_base X)
 def affine_line_rg {X : Scheme} (h : scheme.regular X) := src_rg_of_sm_trg_rg h (affine_line_to_base_sm X)
 
--- Projective line
+-- The projective line over a given scheme $X$.
 let proj_line (X : Scheme) : Scheme
 let proj_line_not_affine (X : Scheme) : not (scheme.affine (proj_line X)) -- only if X is non-empty ..
 let proj_line_integral {X : Scheme} (h : integral X) : integral (proj_line X)
 let proj_line_separated {X : Scheme} (h : scheme.separated X) : scheme.separated (proj_line X)
 
--- X \times Spec(ZZ[x]/(x^2))
+-- The scheme $X \times \Spec(\ZZ[x]/(x^2))$ for a given scheme $X$.
 let thick (X : Scheme) : Scheme
 let thick_af {X : Scheme} (h : scheme.affine X) : scheme.affine (thick X)
 let thick_cn {X : Scheme} (h : scheme.connected X) : scheme.connected (thick X)
@@ -95,7 +95,7 @@ let ec_to_P1_fl {k : Ring} (h : field k) : morphism.flat (ec_to_P1 h)
 let ec_to_P1_sj {k : Ring} (h : field k) : morphism.surjective (ec_to_P1 h)
 let ec_to_P1_fp {k : Ring} (h : field k) : morphism.finitely_presented (ec_to_P1 h)
 
--- Integral closure ZZ in \bar{QQ}
+-- Integral closure of $\ZZ$ in $\bar{\QQ}$.
 def Spec_ZZ_bar := Spec ZZ_bar
 let ZZ_bar_not_cm : not (scheme.cohen_macaulay Spec_ZZ_bar)
 let ZZ_bar_int : scheme.integral Spec_ZZ_bar

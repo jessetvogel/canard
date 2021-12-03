@@ -148,6 +148,7 @@ select {
     box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.12);
     border-radius: 4px;
     padding-top: 2px; /* visual fix for Palatino Font */
+    background-color: #ffffff;
 }
 
 table {

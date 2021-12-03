@@ -1,0 +1,9 @@
+import "../linear_algebra/fan.cnd"
+open linear_algebra.fan
+open algebraic_geometry.scheme
+
+namespace algebraic_geometry
+-- The toric variety corresponding to a fan.
+let toric_variety (F : Fan) : Scheme
+
+end algebraic_geometry

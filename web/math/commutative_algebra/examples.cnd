@@ -49,10 +49,10 @@ let ZZ_not_art : not (ring.artin ZZ)
 -- The ring $\ZZ$ is not local. For example, $(2)$ and $(3)$ are both maximal ideals.
 let ZZ_not_lc : not (local ZZ)
 
--- The ring $\QQ$ is not trivial.
-let QQ_not_trivial : not (trivial QQ)
 -- The ring $\QQ$ is a field.
 let QQ_is_field : field QQ
+-- The ring $\QQ$ is not trivial.
+def QQ_not_trivial := not_trivial_of_dm (domain_of_field QQ_is_field)
 -- The ring $\RR$ is a field.
 let RR_is_field : field RR
 -- The ring $\CC$ is a field.
@@ -135,5 +135,12 @@ let NN : Monoid
 -- The natural numbers $\NN$ are a fs monoid
 let NN_is_fs : fs NN
 
-end commutative_algebra
+-- Polynomial ring $R[x]$ over a given ring $R$.
+let polynomial_ring (R : Ring) : Ring
+let polynomial_ring_ufd {R : Ring} (h : ufd R) : ufd (polynomial_ring R)
+let polynomial_ring_nt {R : Ring} (h : ring.noetherian R) : ring.noetherian (polynomial_ring R)
+let polynomial_ring_dm {R : Ring} (h : domain R) : domain (polynomial_ring R)
+let polynomial_ring_rd {R : Ring} (h : ring.reduced R) : ring.reduced (polynomial_ring R)
+let polynomial_ring_not_lc (R : Ring) : not (ring.local (polynomial_ring R))
 
+end commutative_algebra

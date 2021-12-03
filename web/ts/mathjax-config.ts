@@ -28,6 +28,7 @@ window.MathJax = {
             FF: '\\mathbb{F}',
             NN: '\\mathbb{N}',
             PP: '\\mathbb{P}',
+            AA: '\\mathbb{A}',
             textup: ['\\text{#1}', 1],
             im: '\\operatorname{im}',
             coker: '\\operatorname{coker}',
