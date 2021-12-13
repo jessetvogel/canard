@@ -37,7 +37,7 @@ public:
     size_t indeterminates_size() { return m_indeterminates.size(); }
 
     bool is_solved() { return m_indeterminates.empty(); }
-    bool has_parent(const std::shared_ptr<Query>&) const;
+//    bool has_parent(const std::shared_ptr<Query>&) const;
 
     bool is_indeterminate(const FunctionPtr &);
     static std::shared_ptr<Query> normalize(const std::shared_ptr<Query> &);

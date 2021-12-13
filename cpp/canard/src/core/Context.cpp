@@ -9,7 +9,7 @@ Context::Context() : m_parent(nullptr) {}
 
 Context::Context(Context &parent) : m_parent(&parent) {}
 
-bool Context::put_function(const std::string& label, const FunctionPtr& f) {
+bool Context::put_function(const std::string &label, const FunctionPtr &f) {
     auto pos = m_labels.find(label);
     if (pos != m_labels.end())
         return false;

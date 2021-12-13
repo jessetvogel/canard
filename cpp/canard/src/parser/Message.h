@@ -13,14 +13,12 @@ enum MessageStatus {
 
 class Message {
 
-    static std::string escape(const std::string&);
+    static std::string escape(const std::string &);
 
 public:
 
-    static std::string create(MessageStatus, const std::string&);
-
-    static std::string create(MessageStatus, const std::vector<std::string>&);
-
-    static std::string create(MessageStatus, const std::vector<std::string>&, const std::vector<std::string>&);
+    static std::string create(MessageStatus, const std::string &);
+    static std::string create(MessageStatus, const std::vector<std::string> &);
+    static std::string create(MessageStatus, const std::vector<std::string> &, const std::vector<std::string> &);
 
 };

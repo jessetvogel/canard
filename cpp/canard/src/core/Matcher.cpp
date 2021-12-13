@@ -3,9 +3,9 @@
 //
 
 #include "Matcher.h"
-#include "Specialization.h"
 #include "macros.h"
 #include "Formatter.h"
+#include "FunctionPool.h"
 
 #include <utility>
 #include <iostream>
@@ -34,7 +34,7 @@ bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
     auto it_solution_f = m_solutions.find(f);
     if (it_solution_f != m_solutions.end()) {
         const auto &k = it_solution_f->second;
-        if (k->equals(g)) return true;
+        if (k.equivalent(g)) return true;
 
         // TODO: the order in which to put things: either g -> k or k -> g I'm not so sure about.
         //  we want to keep some order: only map 'from left to right', so should we check whether k < g or k > g ?
@@ -67,7 +67,7 @@ const FunctionPtr &Matcher::get_solution(const FunctionPtr &f) const {
 bool Matcher::is_indeterminate(const FunctionPtr &f) {
     // Checks whether f is an indeterminate of this or some parent
     for (Matcher *matcher = this; matcher != nullptr; matcher = matcher->m_parent) {
-        auto &indeterminates = matcher->m_indeterminates;
+        const auto &indeterminates = matcher->m_indeterminates;
         if (std::find(indeterminates.begin(), indeterminates.end(), f) != indeterminates.end())
             return true;
     }
@@ -78,29 +78,29 @@ bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
     // If f equals g, there is obviously a match, and nothing more to do
     if (f == g) return true;
 
-    // Number of dependencies should agree
-    auto &f_dependencies = f->dependencies(), &g_dependencies = g->dependencies();
-    size_t n = f_dependencies.size();
-    if (n != g_dependencies.size())
+    // Number of parameters should agree
+    auto &f_parameters = f->parameters(), &g_parameters = g->parameters();
+    size_t n = f_parameters.size();
+    if (n != g_parameters.size())
         return false;
 
-    // Dependencies themselves should match
-    auto sub_matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_dependencies.m_functions)) : nullptr;
+    // Parameters themselves should match
+    auto sub_matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.m_functions)) : nullptr;
     Matcher &use_matcher = (n > 0) ? *sub_matcher : *this;
     for (int i = 0; i < n; ++i) {
         // Explicitness must match
-        if (f_dependencies.m_explicits[i] != g_dependencies.m_explicits[i])
+        if (f_parameters.m_explicits[i] != g_parameters.m_explicits[i])
             return false;
         // Functions must match
-        if (!use_matcher.matches(f_dependencies.m_functions[i], g_dependencies.m_functions[i]))
+        if (!use_matcher.matches(f_parameters.m_functions[i], g_parameters.m_functions[i]))
             return false;
     }
 
     // Types should match (note: up to the matches already made by use_matcher)
-    if (!use_matcher.matches(f->type(), g->type()))
+    if (!use_matcher.matches(f.type(), g.type()))
         return false;
 
-    // At this point, f and g agree up to their signature, i.e. their dependencies and types match
+    // At this point, f and g agree up to their signature, i.e. their parameters and types match
 
     // If f (resp. g) is an indeterminate, map f -> g (resp. g -> f).
     // Also treat the case where f or g is an indeterminate of some parent
@@ -116,10 +116,10 @@ bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
 
     // If the bases match, simply match the arguments
     // Note that the bases themselves can be indeterminates, so we have to account for that first.
-    const auto &f_base = f->base();
-    const auto &g_base = g->base();
+    const auto &f_base = f.base();
+    const auto &g_base = g.base();
 
-    // TODO: what if fBase/gBase is an indeterminate, but also it has dependencies ?
+    // TODO: what if fBase/gBase is an indeterminate, but also it has parameters ?
     //  At some points problems appear, because there will be multiple solutions..
     if (f_base == g_base || ((is_indeterminate(f_base) || is_indeterminate(g_base)) && matches(f_base, g_base))) {
         auto &f_arguments = f->arguments(), &g_arguments = g->arguments();
@@ -146,25 +146,27 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     const FunctionPtr &g = get_solution(f);
     if (g != nullptr) return g;
 
-    FunctionPtr f_base = f->base();
-    if (f == f_base) return f; // Note that this is actually a special case of the next step!
+    // If f is a base function (and has no solution), then the conversion can only be f itself
+    if (f->is_base()) return f; // (Note that this is actually a special case of the next step!)
 
-    // Convert dependencies if needed
+    // Convert parameters if needed
     // E.g. something like "λ (f : Hom X X) := comp f f" must be converted under "X -> Spec R"
     // to "λ (f : Hom (Spec R) (Spec R)) := comp f f"
-    Function::Dependencies converted_dependencies;
-    const Function::Dependencies &f_dependencies = f->dependencies();
-    size_t n = f_dependencies.size();
+    FunctionParameters converted_parameters;
+    const FunctionParameters &f_parameters = f->parameters();
+    const size_t n = f_parameters.size();
 
-    Matcher matcher(this, f_dependencies.m_functions);
-    Matcher &sub_matcher = (n > 0) ? matcher : *this;
+    std::unique_ptr<Matcher> matcher = (n > 0)
+                                       ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.m_functions))
+                                       : nullptr;
+    Matcher &sub_matcher = (n > 0) ? *matcher : *this;
     for (int i = 0; i < n; ++i) {
-        auto &x = f_dependencies.m_functions[i];
+        const auto &x = f_parameters.m_functions[i];
         auto clone = sub_matcher.clone(x);
         sub_matcher.assert_matches(x, clone);
 
-        converted_dependencies.m_functions.push_back(clone);
-        converted_dependencies.m_explicits.push_back(f_dependencies.m_explicits[i]);
+        converted_parameters.m_functions.push_back(std::move(clone));
+        converted_parameters.m_explicits.push_back(f_parameters.m_explicits[i]);
     }
 
     // Otherwise, when f is a specialization, we convert each argument of f
@@ -172,71 +174,63 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     std::vector<FunctionPtr> converted_arguments;
     for (auto &arg: f->arguments()) {
         auto converted_argument = sub_matcher.convert(arg);
-        if (!changes && !converted_argument->equals(arg))
+        if (!changes && !converted_argument.equivalent(arg))
             changes = true;
-        converted_arguments.push_back(converted_argument);
+        converted_arguments.push_back(std::move(converted_argument));
     }
 
     // Note: also possibly the base should be converted!
-    FunctionPtr f_base_solution = get_solution(f_base);
-    if (f_base_solution != nullptr && f_base_solution != f_base) {
-        f_base = f_base_solution; // (silently change the base)
-        changes = true;
-    }
+    const FunctionPtr &f_base = f.base();
+    const FunctionPtr &f_base_solution = get_solution(f_base);
+    bool f_base_changed = (f_base_solution != nullptr && f_base_solution != f_base);
+    const FunctionPtr &f_base_new = f_base_changed ? f_base_solution : f_base;
+    changes |= f_base_changed;
 
     // If no actual changes were made to the arguments or the base, we can simply return the original f
-    if (!changes)
-        return f;
+    if (!changes) return f;
 
     // Now we must convert the type of f, this requires another sub_matcher!
     // Because the type is determined by the arguments provided to the base Function,
     // since we replace those now, the type should be re-determined
-    auto &f_base_dependencies = f_base->dependencies();
-    Matcher sub_sub_matcher(&sub_matcher, f_base_dependencies.m_functions);
-    size_t m = f_base_dependencies.size();
+    auto &f_base_parameters = f_base_new->parameters();
+    Matcher sub_sub_matcher(&sub_matcher, f_base_parameters.m_functions);
+    const size_t m = f_base_parameters.size();
     int j = 0;
     for (int i = 0; i < m; ++i) {
-        if (!f_base_dependencies.m_explicits[i])
-            continue;
-
-        sub_sub_matcher.assert_matches(f_base_dependencies.m_functions[i], converted_arguments[j]);
-        j++;
+        if (f_base_parameters.m_explicits[i])
+            sub_sub_matcher.assert_matches(f_base_parameters.m_functions[i], converted_arguments[j++]);
     }
-    FunctionPtr converted_type = sub_sub_matcher.convert(f->type());
 
-    return std::make_shared<Specialization>(f_base, std::move(converted_arguments), std::move(converted_type),
-                                            std::move(converted_dependencies));
+    return f.pool().create_specialization(
+            sub_sub_matcher.convert(f.type()), std::move(converted_parameters),
+            f_base_new, std::move(converted_arguments)
+    );
 }
 
 FunctionPtr Matcher::clone(const FunctionPtr &f) {
-    // Since we only use this for duplicating dependencies, and dependencies are always their own base function!
-    CANARD_ASSERT(f == f->base(), "Can only clone base functions");
+    // Since we only use this for duplicating parameters, and parameters are always their own base function!
+    CANARD_ASSERT(f->is_base(), "Can only clone base functions");
     // TODO: does it make sense to duplicate a specialization ?
     // TODO: are there any shortcuts we can take so that we can simply immediately return x itself ?
 
-    // Duplicate *its* dependencies
-    Function::Dependencies converted_dependencies;
-    auto &f_dependencies = f->dependencies();
-    size_t n = f_dependencies.size();
+    // Duplicate *its* parameters
+    FunctionParameters converted_parameters;
+    const auto &f_parameters = f->parameters();
+    const size_t n = f_parameters.size();
 
-    Matcher matcher(this, f_dependencies.m_functions);
-    Matcher &sub_matcher = (n > 0) ? matcher : *this;
-
+    std::unique_ptr<Matcher> matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.m_functions))
+                                               : nullptr;
+    Matcher &sub_matcher = (n > 0) ? *matcher : *this;
     for (int i = 0; i < n; ++i) {
-        auto clone = sub_matcher.clone(f_dependencies.m_functions[i]);
-        sub_matcher.assert_matches(f_dependencies.m_functions[i], clone);
-        converted_dependencies.m_functions.push_back(clone);
+        auto clone = sub_matcher.clone(f_parameters.m_functions[i]);
+        sub_matcher.assert_matches(f_parameters.m_functions[i], clone);
+        converted_parameters.m_functions.push_back(std::move(clone));
     }
-    converted_dependencies.m_explicits = f_dependencies.m_explicits;
-
-    // Convert the type (according to the sub_matcher!)
-    auto converted_type = sub_matcher.convert(f->type());
+    converted_parameters.m_explicits = f_parameters.m_explicits;
 
     // Create a new Function
-    auto g = std::make_shared<Function>(converted_type, std::move(converted_dependencies));
+    auto g = f.pool().create_function(sub_matcher.convert(f.type()), std::move(converted_parameters));
     g->set_label(f->label());
-
-//    std::cerr << "Cloned " << f->to_string(true, false) << " to " << g->to_string(true, false) << std::endl;
     return g;
 }
 

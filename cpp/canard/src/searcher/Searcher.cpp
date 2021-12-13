@@ -3,8 +3,9 @@
 //
 
 #include "Searcher.h"
-#include <algorithm>
+#include "../core/Namespace.h"
 #include "../core/macros.h"
+#include <algorithm>
 
 Searcher::Searcher(const int max_depth, const int max_threads) : m_max_depth(max_depth),
                                                                  m_thread_manager(max_threads) {}
@@ -16,11 +17,11 @@ void Searcher::add_namespace(Namespace &space) {
     m_all_theorems.insert(m_all_theorems.end(), theorems.begin(), theorems.end());
 
     for (FunctionPtr &thm: theorems) {
-        auto thm_type_base = thm->type()->base();
+        auto thm_type_base = thm.type().base();
 
         // If the thmTypeBase is a dependency of the theorem, then store in the 'general' category
-        auto &thm_dependencies = thm->dependencies().m_functions;
-        if (std::find(thm_dependencies.begin(), thm_dependencies.end(), thm_type_base) != thm_dependencies.end()) {
+        auto &thm_parameters = thm->parameters().m_functions;
+        if (std::find(thm_parameters.begin(), thm_parameters.end(), thm_type_base) != thm_parameters.end()) {
             m_generic_theorems.push_back(thm);
             continue;
         }
@@ -80,7 +81,7 @@ void Searcher::search_loop() {
 
         CANARD_DEBUG("Current query [" << q->to_string() << "]");
 
-        // Normalize the query before reducing: convert dependencies of indeterminates to local variables
+        // Normalize the query before reducing: convert parameters of indeterminates to local variables
         q = Query::normalize(q);
 
         // Check for redundancies
@@ -101,7 +102,7 @@ void Searcher::search_loop() {
         }
 
         // If the type base is an indeterminate of q, there is nothing better to do then to try all theorems
-        FunctionPtr h_type_base = q->last_indeterminate()->type()->base();
+        FunctionPtr h_type_base = q->last_indeterminate().type().base();
         if (q->is_indeterminate(h_type_base)) {
             for (auto &thm: m_all_theorems) {
                 if (search_helper(q, thm, reductions))

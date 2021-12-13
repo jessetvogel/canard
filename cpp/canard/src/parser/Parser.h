@@ -71,9 +71,9 @@ private:
     std::string parse_path();
     std::vector<std::string> parse_list_identifiers();
     std::vector<FunctionPtr> parse_functions(Context &);
-    Function::Dependencies parse_dependencies(Context &);
+    FunctionParameters parse_parameters(Context &);
     FunctionPtr parse_expression(Context &);
-    FunctionPtr parse_expression(Context &, Function::Dependencies);
+    FunctionPtr parse_expression(Context &, FunctionParameters);
     FunctionPtr parse_term(Context &);
 
     // Formatting method

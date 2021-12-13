@@ -3,14 +3,13 @@
 //
 
 #include "Namespace.h"
-
 #include <utility>
 
 Namespace::Namespace(Session &session) : m_session(session), m_parent(nullptr), m_name(std::string()), m_context() {}
 
-Namespace::Namespace(Namespace &parent, const std::string& name) : m_session(parent.m_session),
+Namespace::Namespace(Namespace &parent, std::string name) : m_session(parent.m_session),
                                                             m_parent(&parent),
-                                                            m_name(name), m_context() {}
+                                                            m_name(std::move(name)), m_context() {}
 
 FunctionPtr Namespace::get_function(const std::string &path) {
     size_t i = path.find('.');
@@ -27,7 +26,7 @@ FunctionPtr Namespace::get_function(const std::string &path) {
 }
 
 void Namespace::put_function(const FunctionPtr &f) {
-    m_all_functions.push_back(f);
+    m_functions.push_back(f);
     f->set_namespace(this);
 }
 
@@ -59,7 +58,7 @@ Context &Namespace::get_context() {
     return m_context;
 }
 
-Namespace *Namespace::create_subspace(const std::string& name) {
+Namespace *Namespace::create_subspace(const std::string &name) {
     auto subspace = new Namespace(*this, name);
     std::unique_ptr<Namespace> child(subspace);
     m_children.emplace(name, std::move(child));

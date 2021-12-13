@@ -1,3 +1,5 @@
+-- import "/Users/jessevogel/Projects/canard/web/math/main.cnd"
+
 -- Open everything!
 open commutative_algebra;
 open commutative_algebra.ring;
@@ -18,7 +20,6 @@ open topology
 open topology.top
 
 -- Bugs above, usual tests below
-
 search (R : Ring);
 
 search (X : Scheme) (h : scheme.affine X);
@@ -57,4 +58,6 @@ search (h : not (morphism.open_immersion (mSpec QQ_to_QQ_sqrt2)));
 
 search (P (T_ S_ : Type) (F_ (t_ : T_) : S_) (h_ : functor F_) (X_ Y_ : T_) (f_ : Morphism X_ Y_) : Morphism (F_ X_) (F_ Y_));
 
-search (h : not (zariski_local scheme.connected))
+search (h : not (zariski_local scheme.connected));
+
+

@@ -448,7 +448,7 @@ void Parser::parse_definition() {
     // Parse dependencies
     Context &context = m_current_namespace->get_context();
     Context sub_context(m_current_namespace->get_context());
-    Function::Dependencies dependencies = parse_dependencies(sub_context);
+    FunctionParameters dependencies = parse_parameters(sub_context);
     // (if there are dependencies, we will use the sub_context for any further use)
     Context &use_context = (dependencies.size() > 0) ? sub_context : context;
 
@@ -497,25 +497,25 @@ std::vector<FunctionPtr> Parser::parse_functions(Context &context) {
 
     auto identifiers = parse_list_identifiers();
 
-    // Parse dependencies
+    // Parse parameters
     Context sub_context(context);
-    Function::Dependencies dependencies = parse_dependencies(sub_context);
-    Context &use_context = (dependencies.size() > 0) ? sub_context : context;
+    FunctionParameters parameters = parse_parameters(sub_context);
+    Context &use_context = (parameters.size() > 0) ? sub_context : context;
 
     // Parse type
     consume(SEPARATOR, ":");
     Token token = m_current_token;
     auto type = parse_expression(use_context);
-    if (type->type() != m_session.TYPE && type->type() != m_session.PROP)
+    if (type.type() != m_session.TYPE && type.type() != m_session.PROP)
         throw ParserException(token, "expected a Type or Prop");
-    if (type->dependencies().size() > 0) // TODO: I don't think this is expected behaviour..
+    if (type->parameters().size() > 0) // TODO: I don't think this is expected behaviour..
         throw ParserException(token, "forgot arguments");
 
     // Actually create the functions
     std::vector<FunctionPtr> output;
     for (std::string &identifier: identifiers) {
-        // don't move, since we use the dependencies multiple times. Could make it shared in the future?
-        auto f = std::make_shared<Function>(type, dependencies);
+        // don't move, since we use the parameters multiple times. Could make it shared in the future?
+        auto f = type.pool().create_function(type, parameters);
         if (!context.put_function(identifier, f))
             throw ParserException(m_current_token, "identifier '" + identifier + "' already used in this context");
         output.push_back(f);
@@ -524,8 +524,8 @@ std::vector<FunctionPtr> Parser::parse_functions(Context &context) {
     return output;
 }
 
-Function::Dependencies Parser::parse_dependencies(Context &context) {
-    Function::Dependencies dependencies;
+FunctionParameters Parser::parse_parameters(Context &context) {
+    FunctionParameters dependencies;
     bool is_explicit;
     while ((is_explicit = found(SEPARATOR, "(")) || found(SEPARATOR, "{")) {
         consume();
@@ -552,7 +552,7 @@ FunctionPtr Parser::parse_expression(Context &context) {
     return parse_expression(context, {});
 }
 
-FunctionPtr Parser::parse_expression(Context &context, Function::Dependencies dependencies) {
+FunctionPtr Parser::parse_expression(Context &context, FunctionParameters dependencies) {
     /* EXPRESSION =
         TERM | TERM TERM+
      */
@@ -575,7 +575,7 @@ FunctionPtr Parser::parse_expression(Context &context, Function::Dependencies de
         if (dependencies.size() == 0)
             return base;
         try {
-            return base->specialize(base->arguments(), std::move(dependencies));
+            return base.specialize(base->arguments(), std::move(dependencies));
         } catch (SpecializationException &e) {
             throw ParserException(m_current_token, e.m_message);
         }
@@ -584,7 +584,7 @@ FunctionPtr Parser::parse_expression(Context &context, Function::Dependencies de
     // If there is more than one term, specialize
     terms.erase(terms.begin());
     try {
-        return base->specialize(terms, std::move(dependencies));
+        return base.specialize(terms, std::move(dependencies));
     } catch (SpecializationException &e) {
         throw ParserException(m_current_token, e.m_message);
     }

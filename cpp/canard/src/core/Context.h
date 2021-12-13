@@ -13,13 +13,10 @@ class Context {
 public:
 
     Context();
-
     Context(Context &);
 
     bool put_function(const std::string &, const FunctionPtr &);
-
     FunctionPtr get_function(const std::string &);
-
     bool is_used(const FunctionPtr &);
 
 private:

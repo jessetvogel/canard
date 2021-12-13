@@ -3,6 +3,7 @@
 //
 
 #include "Formatter.h"
+#include "Namespace.h"
 #include <sstream>
 
 std::string Formatter::to_string(const FunctionPtr &f) {
@@ -11,8 +12,8 @@ std::string Formatter::to_string(const FunctionPtr &f) {
 
 std::string Formatter::to_string(const FunctionPtr &f, bool flag_full, bool flag_namespaces) {
     std::ostringstream ss;
-    const bool is_base = f->base() == f;
-    const auto &dependencies = f->dependencies();
+    const bool is_base = (f.base() == f);
+    const auto &dependencies = f->parameters();
     const size_t n = dependencies.size();
 
     // Formatter for base functions
@@ -22,7 +23,7 @@ std::string Formatter::to_string(const FunctionPtr &f, bool flag_full, bool flag
             if (!path.empty()) ss << path << '.';
         }
 
-        ss << (f->label().empty() ? "?" : f->label()); //    ss << "[" << m_id << "]";
+        ss << (f->label().empty() ? "?" : f->label()); // ss << "[" << f->m_id << "]";
 
         if (flag_full) {
             for (int i = 0; i < n; ++i) {
@@ -32,10 +33,10 @@ std::string Formatter::to_string(const FunctionPtr &f, bool flag_full, bool flag
                 ss << (e ? ')' : '}');
             }
             ss << " : ";
-            ss << to_string(f->type(), false, flag_namespaces);
+            ss << to_string(f.type(), false, flag_namespaces);
         }
     }
-        // Formatter for specializations
+    // Formatter for specializations
     else {
         //    if(full && !m_label.empty()) return m_label;
         if (n > 0) {
@@ -56,7 +57,7 @@ std::string Formatter::to_string(const FunctionPtr &f, bool flag_full, bool flag
             ss << " := ";
         }
 
-        ss << to_string(f->base(), false, flag_namespaces);
+        ss << to_string(f.base(), false, flag_namespaces);
 
         for (auto &g: f->arguments()) {
             std::string str_argument = to_string(g, false, flag_namespaces);
@@ -68,7 +69,7 @@ std::string Formatter::to_string(const FunctionPtr &f, bool flag_full, bool flag
         }
 
         if (flag_full)
-            ss << " : " << to_string(f->type(), false, flag_namespaces);
+            ss << " : " << to_string(f.type(), false, flag_namespaces);
     }
     return ss.str();
 }
