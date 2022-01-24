@@ -178,4 +178,9 @@ let du_empty_X {X : Scheme} (Y : Scheme) (h : not (empty X)) : not (empty (disjo
 -- Whenever $Y$ is non-empty, the disjoint union $X \sqcup Y$ is also non-empty
 let du_empty_Y (X : Scheme) {Y : Scheme} (h : not (empty Y)) : not (empty (disjoint_union X Y))
 
+-- The line with double origin over a field $k$.
+let line_double_origin {k : Ring} (h : field k) : Scheme
+-- The line with double origin is not separated.
+let line_double_origin_not_sp {k : Ring} (h : field k) : not (scheme.separated (line_double_origin h))
+
 end algebraic_geometry

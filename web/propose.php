@@ -14,7 +14,7 @@
         If you want to add an example, theorem or property to the website, you can submit it via the form below.
         Please include references (e.g. to books or to the Stacks Project) in case of theorems, or properties with justification in case of examples.
         <div id="proposal-form">
-            <textarea id="proposal-text" placeholder="Write your proposal here..."></textarea>
+            <textarea id="proposal-text" placeholder="Write your proposal here..."><?php if (isset($_GET['m'])) echo strip_tags($_GET['m']); ?></textarea>
             <input id="proposal-name" type="text" placeholder="Your name" />
             <button id="submit-proposal">Submit</button>
         </div>

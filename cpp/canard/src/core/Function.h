@@ -99,9 +99,11 @@ struct SpecializationException : public std::exception {
 
 #include <utility>
 
-template<>
-struct std::hash<FunctionPtr> {
-    std::size_t operator()(const FunctionPtr &ptr) const {
-        return reinterpret_cast<std::size_t>(ptr.operator->());
-    }
-};
+namespace std {
+    template<>
+    struct hash<FunctionPtr> {
+        size_t operator()(const FunctionPtr &ptr) const {
+            return reinterpret_cast<size_t>(ptr.operator->());
+        }
+    };
+}

@@ -618,8 +618,13 @@ FunctionPtr Parser::parse_term(Context &context) {
             return candidates[0];
         // If more than one candidate, its ambiguous
         if (candidates.size() > 1) {
-            // TODO: show what the options are, but then should remember the namespaces
-            throw ParserException(token, "ambiguous identifier '" + path + "'");
+            std::ostringstream ss;
+            for (int i = 0; i < candidates.size(); ++i) {
+                if (i == candidates.size() - 1) ss << " or ";
+                ss << Formatter::to_string(candidates[i], false, true);
+                if (i < candidates.size() - 2) ss << ", ";
+            }
+            throw ParserException(token, "ambiguous identifier '" + path + "', could be " + ss.str());
         }
         // Otherwise, if no candidates, throw unknown
         throw ParserException(token, "unknown identifier '" + path + "'");

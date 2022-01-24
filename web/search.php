@@ -9,7 +9,7 @@
 <body>
     <?php include('template/menu.html'); ?>
 
-    <h2>Search</h2>
+    <h2>Help (Search)</h2>
 
     <div id="object-bar">
         <div><input id="object-name" class="math" placeholder="X" /></div><span>:</span>
@@ -26,7 +26,7 @@
     <div id="search-bar">
         <button id="button-search">Search</button>
         <button id="button-contradiction">Contradiction?</button>
-        <a href="help.html" target="_blank">Help</a>
+        <a href="search-help.php" target="_blank">Help</a>
     </div>
 
     <div id="output"></div>

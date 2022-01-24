@@ -18,7 +18,7 @@
             <textarea id="input-search" wrap="off" placeholder="search ..."></textarea>
         </div>
 
-        <div id="search-bar"><button id="button-search">Search</button><a href="advanced-help.html" target="_blank">Help</a></div>
+        <div id="search-bar"><button id="button-search">Search</button><a href="advanced-help.php" target="_blank">Help</a></div>
 
         <div id="output"></div>
 

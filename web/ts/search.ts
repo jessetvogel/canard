@@ -248,12 +248,16 @@ function updateAdjectives(name: string): void {
             continue;
 
         const span = div.querySelector('.adjectives') as HTMLElement;
-        const adjectives = [];
-        const typeBase = context.types[name].split(' ')[0];
-        for (let key in context.properties[name])
-            adjectives.push((context.properties[name][key] ? '' : 'not ') + properties[typeBase][key]);
-        setText(span, adjectives.join(', '));
+        setText(span, adjectivesString(name));
     }
+}
+
+function adjectivesString(name: string): string {
+    const adjectives = [];
+    const typeBase = context.types[name].split(' ')[0];
+    for (let key in context.properties[name])
+        adjectives.push((context.properties[name][key] ? '' : 'not ') + properties[typeBase][key]);
+    return adjectives.join(', ');
 }
 
 function updateOutput(response: Message) {
@@ -267,10 +271,26 @@ function updateOutput(response: Message) {
             setText($('output'), 'Fail: ' + response.data);
             return;
         case 'success':
-            for (const message of response.data)
+            for (const message of response.data) {
+                // If no solutions, add a propose button instead!
+                if (message.status == 'success' && message.data.length == 0) {
+                    const template = encodeURIComponent(`Hey, I know an example:\n\n${contextString()}\nNamely, consider `);
+                    output.append(create('div', `No solutions found. Do you know an example? Please <a target="_blank" href="propose.php?m=${template}">let us know</a>!`, { 'class': 'result' }));
+                    continue;
+                }
                 output.append(messageBox(message));
+            }
             return;
     }
 }
 
 window.onload = searchInit;
+
+function contextString(): String {
+    let str = '';
+    for (const name in context.types) {
+        const adjs = adjectivesString(name);
+        str += `${name}: ${context.types[name]}${adjs.length == 0 ? '' : ' (' + adjs + ')'}\n`;
+    }
+    return str;
+}

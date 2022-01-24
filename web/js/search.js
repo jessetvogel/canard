@@ -184,12 +184,15 @@ function updateAdjectives(name) {
         if (div.querySelector('.name').innerText != name)
             continue;
         const span = div.querySelector('.adjectives');
-        const adjectives = [];
-        const typeBase = context.types[name].split(' ')[0];
-        for (let key in context.properties[name])
-            adjectives.push((context.properties[name][key] ? '' : 'not ') + properties[typeBase][key]);
-        setText(span, adjectives.join(', '));
+        setText(span, adjectivesString(name));
     }
+}
+function adjectivesString(name) {
+    const adjectives = [];
+    const typeBase = context.types[name].split(' ')[0];
+    for (let key in context.properties[name])
+        adjectives.push((context.properties[name][key] ? '' : 'not ') + properties[typeBase][key]);
+    return adjectives.join(', ');
 }
 function updateOutput(response) {
     const output = $('output');
@@ -202,10 +205,24 @@ function updateOutput(response) {
             setText($('output'), 'Fail: ' + response.data);
             return;
         case 'success':
-            for (const message of response.data)
+            for (const message of response.data) {
+                if (message.status == 'success' && message.data.length == 0) {
+                    const template = encodeURIComponent(`Hey, I know an example:\n\n${contextString()}\nNamely, consider `);
+                    output.append(create('div', `No solutions found. Do you know an example? Please <a target="_blank" href="propose.php?m=${template}">let us know</a>!`, { 'class': 'result' }));
+                    continue;
+                }
                 output.append(messageBox(message));
+            }
             return;
     }
 }
 window.onload = searchInit;
+function contextString() {
+    let str = '';
+    for (const name in context.types) {
+        const adjs = adjectivesString(name);
+        str += `${name}: ${context.types[name]}${adjs.length == 0 ? '' : ' (' + adjs + ')'}\n`;
+    }
+    return str;
+}
 //# sourceMappingURL=search.js.map
