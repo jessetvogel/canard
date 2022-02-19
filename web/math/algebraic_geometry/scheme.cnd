@@ -41,6 +41,8 @@ namespace scheme
     let finite_dimensional (X : Scheme) : Prop
     -- A scheme is connected if its underlying topological space is connected.
     let connected (X : Scheme) : Prop -- := topology.connected (top_of_scheme X)
+    -- A scheme is toric if [...].
+    let toric (X : Scheme) : Prop
 
     -- A property $P$ is Zariski-local if for every scheme $X$ and open cover $X = \bigcup_{i \in I} U_i$, we have that $P$ holds for $X$ if and only if $P$ holds for all $U_i$.
     let zariski_local (P (X : Scheme) : Prop) : Prop
@@ -58,7 +60,7 @@ end scheme
 
 open algebraic_geometry.scheme
 
-namespace morphism
+namespace scheme_map
     -- A morphism $f : X \to Y$ is affine if for every affine open $V \subset Y$, the inverse image $f^{-1}(V)$ is an affine open of $X$.
     let affine {X Y : Scheme} (f : Morphism X Y) : Prop
     -- A morphism $f : X \to Y$ is flat if for every $x \in X$, the local ring $\mathcal{O}_{X, x}$ is flat as an $\mathcal{O}_{Y, f(x)}$-module.
@@ -75,7 +77,7 @@ namespace morphism
     let locally_finite_type {X Y : Scheme} (f : Morphism X Y) : Prop
     -- A morphism $f : X \to Y$ is of finite presentation if it is locally of finite presentation, quasi-compact and quasi-separated.
     let finitely_presented {X Y : Scheme} (f : Morphism X Y) : Prop
-    -- 
+    -- A morphism $f : X \to Y$ is regular if [...].
     let regular {X Y : Scheme} (f : Morphism X Y) : Prop
     -- A morphism $f : X \to Y$ is quasi-compact if the pre-image $f^{-1}(K)$ of every quasi-compact subset $K \subset Y$ is quasi-compact.
     let quasi_compact {X Y : Scheme} (f : Morphism X Y) : Prop
@@ -85,6 +87,8 @@ namespace morphism
     let finite {X Y : Scheme} (f : Morphism X Y) : Prop
     -- A morphism $f : X \to Y$ is proper if it is separated, of finite type and universally closed.
     let proper {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is projective if it factors as $X \xrightarrow{i} \PP_Y^n \xrightarrow{p} Y$, with $i$ a closed immersion and $p$ the natural projection.
+    let projective {X Y : Scheme} (f : Morphism X Y) : Prop
 
     let formally_smooth {X Y : Scheme} (f : Morphism X Y) : Prop
     let formally_unramified {X Y : Scheme} (f : Morphism X Y) : Prop
@@ -111,7 +115,11 @@ namespace morphism
     let surjective {X Y : Scheme} (f : Morphism X Y) : Prop
     -- A morphism $f : X \to Y$ is faithfully flat if it is flat and surjective.
     let faithfully_flat {X Y : Scheme} (f : Morphism X Y) : Prop
-    
+    -- A morphism $f : X \to Y$ is a locally complete intersection if [...].
+    let lci {X Y : Scheme} (f : Morphism X Y) : Prop
+    -- A morphism $f : X \to Y$ is syntomic if [...].
+    let syntomic {X Y : Scheme} (f : Morphism X Y) : Prop
+
     let zariski_cover {X Y : Scheme} (f : Morphism X Y) : Prop
     let etale_cover {X Y : Scheme} (f : Morphism X Y) : Prop
     let smooth_cover {X Y : Scheme} (f : Morphism X Y) : Prop
@@ -120,6 +128,6 @@ namespace morphism
     let fpqc_cover {X Y : Scheme} (f : Morphism X Y) : Prop
     
     let stable_composition stable_left stable_base_change (P {X Y : Scheme} (f : Morphism X Y) : Prop) : Prop
-end morphism
+end scheme_map
 
 end algebraic_geometry

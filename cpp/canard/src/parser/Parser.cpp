@@ -194,20 +194,21 @@ void Parser::parse_inspect() {
     if (space == nullptr)
         throw ParserException(t_inspect, "unknown namespace '" + path + "'");
 
-    // Construct list of labels
-    std::vector<std::string> labels;
+    // Construct list of identifiers
+    std::vector<std::string> identifiers;
+    std::string prefix = m_options.explict ? space->to_string() + "." : "";
     for (auto &f: space->get_functions()) {
-        std::string label = f->label();
-        if (!label.empty())
-            labels.push_back(label);
+        std::string identifier = prefix + f->label();
+        if (!identifier.empty())
+            identifiers.push_back(identifier);
     }
 
     // Output
     if (m_options.json)
-        output(Message::create(SUCCESS, labels));
+        output(Message::create(SUCCESS, identifiers));
     else
-        for (auto &label: labels)
-            output(label);
+        for (auto &identifier: identifiers)
+            output(identifier);
 }
 
 void Parser::parse_doc() {
@@ -231,12 +232,28 @@ void Parser::parse_doc() {
         output("📝 " + (doc.empty() ? "No documentation" : doc));
 }
 
+void add_namespaces_with_children(std::unordered_set<Namespace *> &set, Namespace *space) {
+    set.insert(space);
+    for (auto child: space->get_children())
+        add_namespaces_with_children(set, child);
+}
+
 void Parser::parse_open() {
-    /*
+    /*_
         open NAMESPACE
      */
 
     Token t_open = consume(KEYWORD, "open");
+
+    // `open *` opens all available namespaces
+    if (found(SEPARATOR, "*")) {
+        consume();
+        for (auto space: m_session.get_global_namespace().get_children())
+            add_namespaces_with_children(m_open_namespaces, space);
+        return;
+    }
+
+    // Otherwise, open by identifier
     std::string path = parse_path();
     auto space = m_session.get_global_namespace().get_namespace(path);
     if (space == nullptr)
@@ -250,6 +267,15 @@ void Parser::parse_close() {
      */
 
     Token t_close = consume(KEYWORD, "close");
+
+    // `close *` closes all namespaces
+    if (found(SEPARATOR, "*")) {
+        consume();
+        m_open_namespaces.clear();
+        return;
+    }
+
+    // Otherwise, close by identifier
     std::string path = parse_path();
     auto space = m_session.get_global_namespace().get_namespace(path);
     if (space == nullptr)
@@ -552,10 +578,21 @@ FunctionPtr Parser::parse_expression(Context &context) {
     return parse_expression(context, {});
 }
 
-FunctionPtr Parser::parse_expression(Context &context, FunctionParameters dependencies) {
+FunctionPtr Parser::parse_expression(Context &context, FunctionParameters parameters) {
     /* EXPRESSION =
         TERM | TERM TERM+
      */
+
+    // Support for lambda expressions
+    // (λ or \) PARAMETERS -> EXPRESSION
+    if (found(SEPARATOR, "\\") || found(SEPARATOR, "λ")) {
+        consume();
+        Context lambda_context(context);
+        FunctionParameters lambda_parameters = parse_parameters(lambda_context);
+        consume(SEPARATOR, "->");
+        // Combine parameters with the λ-parameters
+        return parse_expression(lambda_context, parameters + lambda_parameters);
+    }
 
     // Get a list of following terms
     std::vector<FunctionPtr> terms;
@@ -569,13 +606,13 @@ FunctionPtr Parser::parse_expression(Context &context, FunctionParameters depend
 
     FunctionPtr base = terms[0];
 
-    // If there is only one term and no dependencies, return that term
-    // If there are dependencies, specialize the term with its own arguments, but with dependencies!
+    // If there is only one term and no parameters, return that term
+    // If there are parameters, specialize the term with its own arguments, but with parameters!
     if (n == 1) {
-        if (dependencies.size() == 0)
+        if (parameters.size() == 0)
             return base;
         try {
-            return base.specialize(base->arguments(), std::move(dependencies));
+            return base.specialize(base->arguments(), std::move(parameters));
         } catch (SpecializationException &e) {
             throw ParserException(m_current_token, e.m_message);
         }
@@ -584,7 +621,7 @@ FunctionPtr Parser::parse_expression(Context &context, FunctionParameters depend
     // If there is more than one term, specialize
     terms.erase(terms.begin());
     try {
-        return base.specialize(terms, std::move(dependencies));
+        return base.specialize(terms, std::move(parameters));
     } catch (SpecializationException &e) {
         throw ParserException(m_current_token, e.m_message);
     }

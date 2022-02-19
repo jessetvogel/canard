@@ -87,14 +87,22 @@ namespace module
     there exists some $N \in \NN$ such that $M_n = M_N$ for any $n \ge N$. -/
     let artin {R : Ring} (M : Module R) : Prop
 end module
+
 open commutative_algebra.module
 
-namespace ring
-    -- Any ring morphism $f : R \to S$ makes $S$ into an $R$-module.
-    let module_of_ring_morphism {R S : Ring} (f : Morphism R S) : Module R
-    -- Any ring is a module over itself.
-    def module_self (R : Ring) := module_of_ring_morphism (id R)
-end ring
+namespace module_map
+
+end module_map
+
+-- Any ring morphism $f : R \to S$ makes $S$ into an $R$-module.
+let module_of_ring_map {R S : Ring} (f : Morphism R S) : Module R
+-- Any ring is a module over itself.
+def module_self (R : Ring) := module_of_ring_map (id R)
+
+namespace ring_map
+    -- A morphism of rings $f : R \to S$ is flat if $S$ is flat as an $R$-module.
+    def flat {R S : Ring} (f : Morphism R S) := module.flat (module_of_ring_map f)
+end ring_map
 
 -- The type of algebras over a given ring $R$.
 -- let Algebra (R : Ring) : Type -- Although actually, can we define an Algebra as a `Morphism R _` ?

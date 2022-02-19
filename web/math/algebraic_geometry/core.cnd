@@ -1,13 +1,11 @@
 import "../commutative_algebra/core.cnd"
 import "scheme.cnd"
 import "sheaf.cnd"
-import "toric.cnd"
 
 open commutative_algebra
 open commutative_algebra.ring
 open commutative_algebra.module
 open algebraic_geometry.scheme
-
 
 namespace algebraic_geometry
 
@@ -22,5 +20,6 @@ def Spec_ZZ := Spec ZZ -- Even though this is a single step, this is the simples
 
 end algebraic_geometry
 
+import "toric.cnd"
 import "theorems.cnd"
 import "examples.cnd"

@@ -9,7 +9,7 @@
 <body>
     <?php include('template/menu.html'); ?>
 
-    <h2>Help (Search)</h2>
+    <h2>Search</h2>
 
     <div id="object-bar">
         <div><input id="object-name" class="math" placeholder="X" /></div><span>:</span>

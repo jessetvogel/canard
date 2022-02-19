@@ -9,7 +9,7 @@
 <body>
     <?php include('template/menu.html'); ?>
 
-    <h2>Help</h2>
+    <h2>Help (Search)</h2>
 
     <div id="content" class="mathjax-process">
         The 'Search' page allows you to search for examples of rings, modules, schemes, etc. (and morphisms thereof) having (or not having) certain properties.

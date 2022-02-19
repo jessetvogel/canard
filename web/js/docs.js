@@ -68,7 +68,7 @@ function docsShowOverview() {
     const overview = create('div', '', { 'class': 'doc-overview' });
     const namespaces = {};
     for (let identifier in definitions) {
-        const space = identifier.split('.')[0];
+        const space = identifier.substring(0, identifier.lastIndexOf('.'));
         if (!(space in namespaces))
             namespaces[space] = [];
         namespaces[space].push(identifier);

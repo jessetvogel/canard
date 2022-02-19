@@ -90,9 +90,9 @@ let ZZ_to_FF2 : Morphism ZZ FF2
 with $\ZZ/2\ZZ$ gives
 \[ 0 \to \ZZ/2\ZZ \xrightarrow{0} \ZZ/2\ZZ \xrightarrow{\id} \ZZ/2\ZZ \to 0 \]
 is not exact on the left. -/
-let FF2_over_ZZ_not_flat : not (flat (module_of_ring_morphism ZZ_to_FF2))
+let FF2_over_ZZ_not_flat : not (flat (module_of_ring_map ZZ_to_FF2))
 -- The $\ZZ$-module $\QQ$ is injective.
-let QQ_over_ZZ_injective : injective (module_of_ring_morphism ZZ_to_QQ)
+let QQ_over_ZZ_injective : injective (module_of_ring_map ZZ_to_QQ)
 -- The ring $\ZZ[(1 + \sqrt{19}) / 2]$.
 let ZZ_quadr_19 : Ring
 -- The ring $\ZZ[(1 + \sqrt{19}) / 2]$ is a PID.
@@ -128,7 +128,6 @@ let cusp_ring_nt {k : Ring} (h : field k) : ring.noetherian (cusp_ring h)
 let cusp_ring_not_art {k : Ring} (h : field k) : not (ring.artin (cusp_ring h))
 -- The ring $k[x, y] / (x^2 - y^3)$ not local. For example, both $(x, y)$ and $(x - 1, y - 1)$ are maximal ideals.
 let cusp_ring_not_lc  {k : Ring} (h : field k) : not (local (cusp_ring h))
-
 
 -- The natural numbers $\NN$.
 let NN : Monoid

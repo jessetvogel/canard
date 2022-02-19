@@ -1,7 +1,34 @@
 namespace linear_algebra
 
+namespace cone
+    -- The type of rational polyhedral cones.
+    let Cone : Type
+    -- A cone is simplicial if [...]
+    let simplicial (C : Cone) : Prop
+    -- A cone is smooth if [...]
+    let smooth (C : Cone) : Prop
+
+    -- A smooth cone is simplicial.
+    let simpl_of_sm {C : Cone} (h : smooth C) : simplicial C
+end cone
+
+open linear_algebra.cone
+
 namespace fan
-let Fan : Type
+    -- The type of fans.
+    let Fan : Type
+    -- A fan is complete if [...]
+    let complete (F : Fan) : Prop
+    -- A fan is projective if [...]
+    let projective (F : Fan) : Prop
 end fan
+
+open linear_algebra.fan
+
+-- Every cone $\sigma$ naturally defines a fan $\Delta = \{ \tau : \tau \textup{ is a face of } \sigma \}$.
+let fan_of_cone (C : Cone) : Fan
+
+/- Theorems -/
+
 
 end linear_algebra

@@ -11,8 +11,11 @@
 #include <atomic>
 
 class Namespace;
+
 class Function;
+
 class FunctionPool;
+
 struct FunctionParameters;
 
 struct FunctionPtr {
@@ -48,6 +51,17 @@ struct FunctionParameters {
 
     inline size_t size() const { return m_functions.size(); }
     inline size_t empty() const { return m_functions.empty(); }
+
+    FunctionParameters operator+(const FunctionParameters &other) const {
+        std::vector<FunctionPtr> new_functions = m_functions;
+        std::vector<bool> new_explicits = m_explicits;
+        new_functions.insert(new_functions.end(), other.m_functions.begin(), other.m_functions.end());
+        new_explicits.insert(new_explicits.end(), other.m_explicits.begin(), other.m_explicits.end());
+        return {
+                .m_functions = new_functions,
+                .m_explicits = new_explicits
+        };
+    }
 };
 
 struct Function {
@@ -85,6 +99,7 @@ private:
               const FunctionPtr &base, std::vector<FunctionPtr> arguments);
 
     friend class FunctionPool;
+
     friend class FunctionPtr;
 
 };
@@ -94,7 +109,6 @@ struct SpecializationException : public std::exception {
     const std::string m_message;
 
     explicit SpecializationException(std::string message) : m_message(std::move(message)) {};
-
 };
 
 #include <utility>

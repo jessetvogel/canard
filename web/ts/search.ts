@@ -1,17 +1,23 @@
 const context: {
     objects: string[],
     types: { [obj: string]: string },
-    properties: { [obj: string]: { [prop: string]: boolean } }
-} = { objects: [], types: {}, properties: {} };
+    typeArgs: { [obj: string]: string[] }
+    properties: { [obj: string]: { [prop: string]: boolean } },
+    tex: { [obj: string]: string }
+} = { objects: [], types: {}, typeArgs: {}, properties: {}, tex: {} };
 
 const types: { [type: string]: string[] } = {
     "Ring": [],
-    "RingMorphism": ["Ring", "Ring"],
+    "Ring morphism": ["Ring", "Ring"],
     "Module": ["Ring"],
-    "ModuleMorphism": ["Module \\w+", "Module \\w+"],
+    "Module morphism": ["Module \\w+", "Module \\w+"],
     "Scheme": [],
-    "SchemeMorphism": ["Scheme", "Scheme"],
-    "Sheaf": ["Scheme"]
+    "Scheme morphism": ["Scheme", "Scheme"],
+    "Sheaf": ["Scheme"],
+    "Monoid": [],
+    "Monoid morphism": ["Monoid", "Monoid"],
+    "Cone": [],
+    "Fan": []
 };
 
 const properties: { [type: string]: { [prop: string]: string } } = {};
@@ -21,7 +27,8 @@ function getQueryHelper(): string {
     let i = 0;
     for (let obj of context.objects) {
         // Object definition
-        const type = context.types[obj].replace(/\b\w+Morphism\b/g, 'Morphism');; // All morphisms are Morphisms
+        const typeBase = (context.types[obj].endsWith('morphism') ? 'Morphism' : context.types[obj]);
+        const type = [typeBase].concat(context.typeArgs[obj]).join(' ');
         query += `(${obj} : ${type}) `;
         // Object properties
         for (let property in context.properties[obj])
@@ -44,15 +51,18 @@ function getContradictionQuery(): string {
 
 // ------------------------------------------------------------
 
-function contextAddObject(name: string, type: string): void {
+function contextAddObject(name: string, type: string, args: string[]): void {
     // Update context
     context.objects.push(name);
     context.types[name] = type;
+    context.typeArgs[name] = args;
     context.properties[name] = {};
+    const tex = name + ' : ' + ((type.endsWith('morphism')) ? `${args[0]} \\to ${args[1]}` : [`\\text{${type}}`].concat(args).join(' '));
+    context.tex[name] = tex;
 
     // Update overview
     const list = $('object-list');
-    const div = create('div', `<span class="name math">${name}</span><span class="type"> : ${type}</span><span class="adjectives"></span>`);
+    const div = create('div', `<span class="math">$${tex}$</span><span class="adjectives"></span>`, { 'data-name': name });
     MathJax.typeset([div]);
     onClick(div, event => contextSelectObject(name));
     const deleteIcon = create('div', '', { 'class': 'delete' });
@@ -69,7 +79,9 @@ function contextRemoveObject(name: string): void {
     const i = context.objects.indexOf(name);
     context.objects.splice(i, 1);
     delete context.types[name];
+    delete context.typeArgs[name];
     delete context.properties[name];
+    delete context.tex[name];
 
     for (let obj of context.objects) { // Remove objects depending (through type) on `name`
         if (context.types[obj].match(`\\b${name}\\b`))
@@ -79,7 +91,7 @@ function contextRemoveObject(name: string): void {
     // Update overview
     const list = $('object-list');
     for (let div of list.children) {
-        if ((div as HTMLElement).innerText.startsWith(`${name} :`))
+        if ((div as HTMLElement).dataset['name'] == name)
             div.remove();
     }
 
@@ -104,16 +116,16 @@ function contextSelectObject(name: string): void {
     const list = $('object-list') as HTMLElement;
     for (let div of list.children) {
         removeClass(div as HTMLElement, 'selected');
-        if ((div as HTMLElement).innerText.startsWith(`${name} :`))
+        if ((div as HTMLElement).dataset['name'] == name)
             addClass(div as HTMLElement, 'selected');
     }
 
     // Update properties
     const objectProperties = $('object-properties');
     clear(objectProperties);
-    const typeBase = context.types[name].split(' ')[0];
-    for (let key in properties[typeBase]) {
-        const label = create('label', properties[typeBase][key]);
+    const type = context.types[name];
+    for (let key in properties[type]) {
+        const label = create('label', properties[type][key]);
         if (key in context.properties[name])
             addClass(label, context.properties[name][key] ? 'yes' : 'no');
         onClick(label, event => {
@@ -165,7 +177,7 @@ async function searchInit() {
     const button = $('object-add');
     onClick(button, event => {
         const name = ($('object-name') as HTMLInputElement).value;
-        const typeBase = ($('object-type') as HTMLInputElement).value;
+        const type = ($('object-type') as HTMLInputElement).value;
 
         // Validate name
         if (!name.match(/^\w+$/)) {
@@ -182,15 +194,17 @@ async function searchInit() {
         // Check type arguments
         const typeArguments = $('object-type-arguments');
         const arguments = [];
-        for (let select of typeArguments.children)
-            arguments.push((select as HTMLInputElement).value);
-
-        // Construct type
-        arguments.unshift(typeBase);
-        const type = arguments.join(' ');
+        for (let select of typeArguments.children) {
+            const arg = (select as HTMLInputElement).value
+            if (arg == '') {
+                alert('Missing argument')
+                return;
+            }
+            arguments.push(arg);
+        }
 
         // Add and select object
-        contextAddObject(name, type);
+        contextAddObject(name, type, arguments);
         contextSelectObject(name);
     });
 
@@ -244,7 +258,7 @@ function updateTypeArguments(): void {
 
 function updateAdjectives(name: string): void {
     for (let div of $('object-list').children) {
-        if ((div.querySelector('.name') as HTMLElement).innerText != name)
+        if ((div as HTMLElement).dataset['name'] != name)
             continue;
 
         const span = div.querySelector('.adjectives') as HTMLElement;
@@ -254,9 +268,9 @@ function updateAdjectives(name: string): void {
 
 function adjectivesString(name: string): string {
     const adjectives = [];
-    const typeBase = context.types[name].split(' ')[0];
+    const type = context.types[name];
     for (let key in context.properties[name])
-        adjectives.push((context.properties[name][key] ? '' : 'not ') + properties[typeBase][key]);
+        adjectives.push((context.properties[name][key] ? '' : 'not ') + properties[type][key]);
     return adjectives.join(', ');
 }
 

@@ -17,7 +17,9 @@
         "ring.integrally_closed": "integrally closed",
         "ring.trivial": "trivial"
     },
-    "Ring Morphism": {},
+    "Ring morphism": {
+        "ring_map.flat": "flat"
+    },
     "Module": {
         "module.faithful": "faithful",
         "module.simple": "simple",
@@ -46,45 +48,70 @@
         "scheme.finite_dimensional": "finite dimensional",
         "scheme.connected": "connected"
     },
-    "SchemeMorphism": {
-        "morphism.formally_etale": "formally étale",
-        "morphism.formally_unramified": "formally unramified",
-        "morphism.formally_smooth": "formally smooth",
-        "morphism.proper": "proper",
-        "morphism.finite": "finite",
-        "morphism.quasi_finite": "quasi-finite",
-        "morphism.flat": "flat",
-        "morphism.affine": "affine",
-        "morphism.quasi_compact": "quasi-compact",
-        "morphism.separated": "separated",
-        "morphism.quasi_separated": "quasi-separated",
-        "morphism.regular": "regular",
-        "morphism.finitely_presented": "finitely presented",
-        "morphism.locally_finite_type": "locally finite type",
-        "morphism.locally_finitely_presented": "locally finitely presented",
-        "morphism.etale": "étale",
-        "morphism.smooth": "smooth",
-        "morphism.unramified": "unramified",
-        "morphism.finite_type": "finite type",
-        "morphism.open_morphism": "open morphism",
-        "morphism.universally_closed": "universally closed",
-        "morphism.immersion": "immersion",
-        "morphism.open_immersion": "open immersion",
-        "morphism.closed_immersion": "closed immersion",
-        "morphism.finite_fibers": "finite fibers",
-        "morphism.surjective": "surjective",
-        "morphism.zariski_cover": "Zariski cover",
-        "morphism.etale_cover": "etale cover",
-        "morphism.smooth_cover": "smooth cover",
-        "morphism.syntomic_cover": "syntomic cover",
-        "morphism.fppf_cover": "fppf cover",
-        "morphism.fpqc_cover": "fpqc cover",
-        "morphism.faithfully_flat": "faithfully flat"
+    "Scheme morphism": {
+        "scheme_map.formally_etale": "formally étale",
+        "scheme_map.formally_unramified": "formally unramified",
+        "scheme_map.formally_smooth": "formally smooth",
+        "scheme_map.proper": "proper",
+        "scheme_map.finite": "finite",
+        "scheme_map.quasi_finite": "quasi-finite",
+        "scheme_map.flat": "flat",
+        "scheme_map.affine": "affine",
+        "scheme_map.quasi_compact": "quasi-compact",
+        "scheme_map.separated": "separated",
+        "scheme_map.quasi_separated": "quasi-separated",
+        "scheme_map.regular": "regular",
+        "scheme_map.finitely_presented": "finitely presented",
+        "scheme_map.locally_finite_type": "locally finite type",
+        "scheme_map.locally_finitely_presented": "locally finitely presented",
+        "scheme_map.etale": "étale",
+        "scheme_map.smooth": "smooth",
+        "scheme_map.unramified": "unramified",
+        "scheme_map.finite_type": "finite type",
+        "scheme_map.open_morphism": "open morphism",
+        "scheme_map.universally_closed": "universally closed",
+        "scheme_map.immersion": "immersion",
+        "scheme_map.open_immersion": "open immersion",
+        "scheme_map.closed_immersion": "closed immersion",
+        "scheme_map.finite_fibers": "finite fibers",
+        "scheme_map.surjective": "surjective",
+        "scheme_map.zariski_cover": "Zariski cover",
+        "scheme_map.etale_cover": "etale cover",
+        "scheme_map.smooth_cover": "smooth cover",
+        "scheme_map.syntomic_cover": "syntomic cover",
+        "scheme_map.fppf_cover": "fppf cover",
+        "scheme_map.fpqc_cover": "fpqc cover",
+        "scheme_map.faithfully_flat": "faithfully flat"
     },
     "Sheaf": {
         "sheaf.quasi_coherent": "quasi-coherent",
         "sheaf.coherent": "coherent",
         "sheaf.locally_free": "locally free",
         "sheaf.free": "free"
+    },
+    "Monoid": {
+        "monoid.integral": "integral",
+        "monoid.finitely_generated": "finitely generated",
+        "monoid.finitely_presented": "finitely presented",
+        "monoid.saturated": "saturated",
+        "monoid.sharp": "sharp",
+        "monoid.dull": "dull"
+    },
+    "Monoid morphism": {
+        "monoid_map.integral": "integral",
+        "monoid_map.local": "local",
+        "monoid_map.exact": "exact",
+        "monoid_map.injective": "injective",
+        "monoid_map.surjective": "surjective",
+        "monoid_map.smooth": "smooth",
+        "monoid_map.etale": "étale"
+    },
+    "Cone": {
+        "cone.simplicial": "simplicial",
+        "cone.smooth": "smooth"
+    },
+    "Fan": {
+        "fan.complete": "complete",
+        "fan.projective": "projective"
     }
 }

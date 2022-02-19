@@ -7,7 +7,7 @@
 
 const std::vector<std::string> Lexer::KEYWORDS(
         {"let", "def", "check", "search", "import", "namespace", "end", "open", "close", "exit", "inspect", "doc"});
-const std::vector<std::string> Lexer::SEPARATORS({":", "(", ")", "{", "}", "_", ";", ".", ":=", "--"});
+const std::vector<std::string> Lexer::SEPARATORS({":", "(", ")", "{", "}", "_", ";", ".", ":=", "--", "*", "\\", "λ", "->"});
 
 bool Lexer::is_keyword(const std::string &str) {
     return std::find(KEYWORDS.begin(), KEYWORDS.end(), str) != KEYWORDS.end();
@@ -177,7 +177,7 @@ bool Lexer::tokenize(std::string str) {
 
 Token Lexer::make_token() {
     if (m_current_token.m_type == NONE) {
-        std::string message = "unknown get_token '" + m_stream.str() + "'";
+        std::string message = "unrecognized token '" + m_stream.str() + "'";
         m_stream.str(std::string());
         m_stream_length = 0;
         throw LexerException(m_current_token.m_line, m_current_token.m_position, message);

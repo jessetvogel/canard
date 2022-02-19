@@ -25,14 +25,7 @@ if (!is_resource($process))
     response_server_error('failed to start canard');
 
 // Write commands to process
-fwrite($pipes[0], 'open commutative_algebra;');
-fwrite($pipes[0], 'open commutative_algebra.ring;');
-fwrite($pipes[0], 'open commutative_algebra.module;');
-fwrite($pipes[0], 'open commutative_algebra.monoid;');
-fwrite($pipes[0], 'open algebraic_geometry;');
-fwrite($pipes[0], 'open algebraic_geometry.scheme;');
-fwrite($pipes[0], 'open algebraic_geometry.morphism;');
-fwrite($pipes[0], 'open algebraic_geometry.sheaf;');
+fwrite($pipes[0], 'open *;');
 fwrite($pipes[0], $query);
 fwrite($pipes[0], ";\n/--/;exit;");
 fclose($pipes[0]);

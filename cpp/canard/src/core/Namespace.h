@@ -20,6 +20,7 @@ public:
     FunctionPtr get_function(const std::string &);
     const std::vector<FunctionPtr> &get_functions() { return m_functions; }
     Namespace *get_parent();
+    std::vector<Namespace*> get_children();
     Namespace *get_namespace(const std::string &);
     void put_function(const FunctionPtr &);
     Namespace *create_subspace(const std::string &);

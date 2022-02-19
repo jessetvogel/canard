@@ -1,9 +1,37 @@
+import "../algebraic_geometry/core.cnd"
 import "../linear_algebra/fan.cnd"
+import "../commutative_algebra/ring.cnd"
+import "../commutative_algebra/monoid.cnd"
+
+open linear_algebra
 open linear_algebra.fan
+open algebraic_geometry
 open algebraic_geometry.scheme
+open commutative_algebra
+open commutative_algebra.ring
+open commutative_algebra.monoid
 
 namespace algebraic_geometry
--- The toric variety corresponding to a fan.
-let toric_variety (F : Fan) : Scheme
+
+-- The toric variety corresponding to a fan, over a base ring $R$.
+let scheme_of_fan (R : Ring) (F : Fan) : Scheme
+-- The structure morphism $X_R(\Delta) \to \Spec(R)$.
+let scheme_of_fan_to_base (R : Ring) (F : Fan) : Morphism (scheme_of_fan R F) (Spec R)
+-- The toric variety associated to a fan is toric.
+let toric_of_fan (R : Ring) (F : Fan) : toric (scheme_of_fan R F)
+-- For a monoid $M$ and ring $R$, the scheme $\Spec(R[M])$ is toric.
+let toric_of_monoid_ring (R : Ring) (M : Monoid) : toric (Spec (monoid_ring R M))
+-- Toric varieties are normal.
+let nm_of_toric {X : Scheme} (h : toric X) : normal X
+-- Toric varieties are separated.
+let sp_of_toric {X : Scheme} (h : toric X) : separated X
+-- The toric variety of a fan is proper if the fan is complete.
+let pr_of_cmpl_fan (R : Ring) (F : Fan) (h : fan.complete F) : scheme_map.proper (scheme_of_fan_to_base R F)
+-- The toric variety of a fan is proper only if the fan is complete.
+let cmpl_fan_of_pr (R : Ring) (F : Fan) (h : scheme_map.proper (scheme_of_fan_to_base R F)) : fan.complete F
+-- Toric variety of a fan is projective if the fan is projective
+let proj_of_proj_fan (R : Ring) (F : Fan) (h : fan.complete F) : scheme_map.proper (scheme_of_fan_to_base R F)
+-- Toric variety of a fan is projective only if the fan is projective
+let proj_fan_of_proj (R : Ring) (F : Fan) (h : scheme_map.projective (scheme_of_fan_to_base R F)) : fan.projective F
 
 end algebraic_geometry

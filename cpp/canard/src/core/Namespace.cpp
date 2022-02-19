@@ -75,3 +75,11 @@ std::string Namespace::to_string() {
 
     return parent_str + '.' + m_name;
 }
+
+std::vector<Namespace *> Namespace::get_children() {
+    std::vector<Namespace*> children;
+    children.reserve(m_children.size());
+    for(auto& entry : m_children)
+        children.push_back(entry.second.get());
+    return children;
+}

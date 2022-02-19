@@ -4,11 +4,15 @@ import json
 namespaces  = [
     'commutative_algebra',
     'commutative_algebra.ring',
+    'commutative_algebra.ring_map',
     'commutative_algebra.module',
+    'commutative_algebra.module_map',
+    'commutative_algebra.monoid',
+    'commutative_algebra.monoid_map',
 
     'algebraic_geometry',
     'algebraic_geometry.scheme',
-    'algebraic_geometry.morphism',
+    'algebraic_geometry.scheme_map',
     'algebraic_geometry.sheaf'
 ]
 
@@ -16,7 +20,11 @@ namespaces  = [
 def feed(process, input):
     process.stdin.write((input + ';\n').encode())
     process.stdin.flush()
-    return json.loads(process.stdout.readline().decode())
+    output = process.stdout.readline().decode()
+    jsonoutput = json.loads(output)
+    if jsonoutput['status'] == 'error':
+        print(f'[⚠️ ERROR] input {input} gives {jsonoutput["data"]}')
+    return jsonoutput
 
 # Start process
 canard = subprocess.Popen(['../bin/canard', '--json', '--explicit', '--doc', '../web/math/main.cnd'], stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
@@ -26,7 +34,7 @@ identifiers = []
 for space in namespaces:
     result = feed(canard, 'inspect ' + space)
     for identifier in result['data']:
-        identifiers.append(space + '.' + identifier)
+        identifiers.append(identifier)
 
 # Generate doc for each identifier
 documentation = {}
