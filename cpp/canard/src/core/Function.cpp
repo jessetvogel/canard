@@ -4,120 +4,68 @@
 
 #include "Function.h"
 #include "Matcher.h"
-#include "Formatter.h"
-#include "FunctionPool.h"
 #include <utility>
+#include <memory>
 
-void Function::init() {
-    m_space = nullptr;
-    m_label.clear();
-    m_type = nullptr;
-    m_base = nullptr;
-    m_parameters = {};
-    m_arguments.clear();
-    m_reference_count = 0;
+FunctionRef::FunctionRef(std::shared_ptr<Function> ptr) {
+    m_f = std::move(ptr);
 }
 
-void Function::init(const FunctionPtr &type, FunctionParameters parameters) {
-    m_space = nullptr;
-    m_label.clear();
-    m_type = type;
-    m_base = nullptr;
-    m_parameters = std::move(parameters);
-    m_arguments.clear();
-    m_reference_count = 0;
-}
-
-void Function::init(const FunctionPtr &type, FunctionParameters parameters,
-                    const FunctionPtr &base, std::vector<FunctionPtr> arguments) {
-    m_space = nullptr;
-    m_label.clear();
-    m_type = type;
-    m_base = base;
-    m_parameters = std::move(parameters);
-    m_arguments = std::move(arguments);
-    m_reference_count = 0;
-}
-
-FunctionPtr::FunctionPtr(FunctionPool *pool, Function *f) {
-    m_pool = pool;
-    m_f = f;
-    if (m_f != nullptr) m_f->m_reference_count++;
-}
-
-FunctionPtr::FunctionPtr(const FunctionPtr &other) {
-    m_pool = other.m_pool;
+FunctionRef::FunctionRef(const FunctionRef &other) {
     m_f = other.m_f;
-    if (m_f != nullptr) m_f->m_reference_count++;
 }
 
-FunctionPtr &FunctionPtr::operator=(FunctionPtr other) {
-    std::swap(m_pool, other.m_pool);
-    std::swap(m_f, other.m_f);
-    return *this;
+const FunctionRef &FunctionRef::type() const {
+    // If m_type == nullptr, then function is Type, whose type is itself
+    // This is because we don't store pointers to self, because then we never destruct
+    return m_f->m_type == nullptr ? *this : m_f->m_type;
 }
 
-FunctionPtr::~FunctionPtr() {
-    // If this was the last reference to the Function, recycle it
-    if (m_f != nullptr) {
-        if (--(m_f->m_reference_count) == 0) {
-            m_f->init();
-            m_pool->recycle(m_f);
-        }
-    }
+const FunctionRef &FunctionRef::base() const {
+    // If m_base == nullptr, then function is a base function, whose base is itself
+    // This is because we don't store pointers to self, because then we never destruct
+    return m_f->m_base == nullptr ? *this : m_f->m_base;
 }
 
-const FunctionPtr &FunctionPtr::type() const {
-    // m_type == nullptr indicates that function is Type, it's type is itself
-    // However, we don't store pointers to self, because then we never destruct
-    if (m_f->m_type == nullptr) return *this;
-    return m_f->m_type;
+Function::Function(const FunctionRef &type, Telescope parameters) {
+    m_type = type;
+    m_parameters = std::move(parameters);
+    m_base = nullptr;
 }
 
-const FunctionPtr &FunctionPtr::base() const {
-    // If the Function is a base-function, it is its own base
-    if (m_f->is_base()) return *this;
-    return m_f->m_base;
+Function::Function(const FunctionRef &type, Telescope parameters, const FunctionRef &base, std::vector<FunctionRef> arguments) {
+    m_type = type;
+    m_parameters = std::move(parameters);
+    m_base = base;
+    m_arguments = std::move(arguments);
 }
 
-const FunctionParameters &Function::parameters() const {
+FunctionRef Function::make(const FunctionRef &type, Telescope parameters) {
+    return std::shared_ptr<Function>(new Function(type, std::move(parameters)));
+}
+
+FunctionRef Function::make(const FunctionRef &type, Telescope parameters, const FunctionRef &base, std::vector<FunctionRef> arguments) {
+    return std::shared_ptr<Function>(new Function(type, std::move(parameters), base, std::move(arguments)));
+}
+
+const std::string &Function::name() const {
+    return m_name;
+}
+
+const Telescope &Function::parameters() const {
     return m_parameters;
 }
 
-const std::vector<FunctionPtr> &Function::arguments() const {
+const std::vector<FunctionRef> &Function::arguments() const {
     // If the Function is a base-function, its arguments are its own parameters
-    if (is_base()) return m_parameters.m_functions;
-    // Otherwise, interpret its own functions as the arguments
-    return m_arguments;
+    return is_base() ? m_parameters.functions() : m_arguments;
 }
 
-std::vector<FunctionPtr> Function::explicit_parameters() const {
-    std::vector<FunctionPtr> explicit_dependencies;
-    const auto n = m_parameters.size();
-    for (int i = 0; i < n; ++i) {
-        if (m_parameters.m_explicits[i])
-            explicit_dependencies.push_back(m_parameters.m_functions[i]);
-    }
-    return explicit_dependencies;
+void Function::set_name(const std::string &name) {
+    m_name = name;
 }
 
-const std::string &Function::label() const {
-    return m_label;
-}
-
-Namespace *Function::space() const {
-    return m_space;
-}
-
-void Function::set_label(const std::string &label) {
-    m_label = label;
-}
-
-void Function::set_namespace(Namespace *space) {
-    m_space = space;
-}
-
-bool Function::depends_on(const std::vector<FunctionPtr> &list) {
+bool Function::depends_on(const std::vector<FunctionRef> &list) {
     if (is_base()) {
         // A base function is said to 'depend' on the list, if it is contained in the list
         for (const auto &ptr: list) {
@@ -135,7 +83,7 @@ bool Function::depends_on(const std::vector<FunctionPtr> &list) {
     }
 }
 
-bool Function::depends_on(const std::unordered_set<FunctionPtr> &set) {
+bool Function::depends_on(const std::unordered_set<FunctionRef> &set) {
     if (is_base()) {
         // A base function is said to 'depend' on the set, if it is contained in the set
         for (const auto &ptr: set) {
@@ -153,50 +101,66 @@ bool Function::depends_on(const std::unordered_set<FunctionPtr> &set) {
     }
 }
 
-bool Function::signature_depends_on(const std::vector<FunctionPtr> &list) {
+bool Function::signature_depends_on(const std::vector<FunctionRef> &list) {
     if (m_type == nullptr ? depends_on(list) : m_type->depends_on(list)) return true;
 //    return std::any_of(m_parameters.m_functions.begin(), m_parameters.m_functions.end(),
 //                       [list](auto &it) { return it->signature_depends_on(list); });
-    for (const auto &param: m_parameters.m_functions) {
+    for (const auto &param: m_parameters.functions()) {
         if (param->signature_depends_on(list))
             return true;
     }
     return false;
 }
 
-FunctionPtr FunctionPtr::specialize(std::vector<FunctionPtr> arguments, FunctionParameters parameters) {
-    // Check that the number of arguments equals the number of explicit dependencies
-    std::vector<FunctionPtr> explicit_dependencies = m_f->explicit_parameters();
-    const size_t m = explicit_dependencies.size();
+void Function::set_metadata(std::shared_ptr<void> metadata) {
+    m_metadata = std::move(metadata);
+}
+
+FunctionRef FunctionRef::specialize(Telescope parameters, std::vector<FunctionRef> arguments) const {
+    // Check that the number of arguments equals the number of parameters
+    const size_t m = m_f->m_parameters.size();
     const size_t n = arguments.size();
     if (n != m)
-        throw SpecializationException(
-                Formatter::to_string(*this) + " expected " + std::to_string(m) +
+        throw SpecializationException( // TODO: change SpecializationException so that formatting can be done on the level where the exception is catched!
+                "Formatter::to_string(*this) +  expected " + std::to_string(m) +
                 " arguments but received " + std::to_string(n));
 
-    // Base case: if there are no arguments and no given dependencies, immediately return
-    if (n == 0 && parameters.empty()) return *this;
+    // Base case: if there are no arguments and no given parameters, immediately return
+    if (n == 0 && parameters.empty())
+        return *this;
 
     // Create a matcher that matches the dependencies to the arguments given
-    Matcher matcher(m_f->m_parameters.m_functions);
+    Matcher matcher(m_f->parameters().functions());
     for (int i = 0; i < n; ++i) {
-        FunctionPtr &dependency = explicit_dependencies[i];
-        FunctionPtr &argument = arguments[i];
-        if (!matcher.matches(dependency, argument))
+        const FunctionRef &parameter = m_f->parameters().functions()[i];
+        const FunctionRef &argument = arguments[i];
+        if (argument == nullptr) // `nullptr` indicates an implicit argument
+            continue;
+        if (!matcher.matches(parameter, argument))
             throw SpecializationException(
-                    "argument '" + Formatter::to_string(argument) + "' does not match '" +
-                    Formatter::to_string(dependency) + "'");
+                    "argument ' + Formatter::to_string(argument) + ' does not match ' + Formatter::to_string(parameter) + '");
     }
 
+    // Swap any `nullptr` arguments with their match
+    for (int i = 0; i < n; ++i) {
+        if (arguments[i] == nullptr) {
+            const auto &solution = matcher.get_solution(m_f->parameters().functions()[i]);
+            if (solution == nullptr)
+                throw SpecializationException("Could not deduce implicit argument " + std::to_string(i));
+            arguments[i] = solution;
+        }
+    }
+
+    // TODO: this must change at some point !!
     // If this is a specialization itself,
     // we convert the arguments to arguments for the base, and then return a specialization of the base.
     // Note this must be done recursively, since specializing the base requires a different Matcher
     // Note also that base must be converted as well! E.g. when specializing 'def dom {T : Type} {X Y : T} (f : Morphism X Y) := X'
     if (!m_f->is_base()) {
-        std::vector<FunctionPtr> base_arguments;
+        std::vector<FunctionRef> base_arguments;
         for (auto &f: m_f->arguments())
             base_arguments.push_back(matcher.convert(f));
-        return matcher.convert(base()).specialize(std::move(base_arguments), std::move(parameters));
+        return matcher.convert(base()).specialize(std::move(parameters), std::move(base_arguments));
     }
 
     // TODO: if the list of arguments equals the list of dependencies, we can just return the underlying base function right ??
@@ -205,20 +169,19 @@ FunctionPtr FunctionPtr::specialize(std::vector<FunctionPtr> arguments, Function
     // At this point everything is verified.
     // The last thing to do is to construct the type of the specialization.
     // Now create a new specialization with the right inputs
-    return m_pool->create_specialization(matcher.convert(type()), std::move(parameters),
-                                         *this, std::move(arguments));
+    return Function::make(matcher.convert(type()), std::move(parameters), *this, std::move(arguments));
 }
 
-bool FunctionPtr::equivalent(const FunctionPtr &other) const {
+bool FunctionRef::equivalent(const FunctionRef &other) const {
     // Shortcut
-    if(m_f == other.m_f) return true;
+    if (m_f == other.m_f) return true;
 
     // Bases should agree
     if (other.base() != base()) return false;
 
     // Must have the same number of parameters
-    const size_t n = m_f->m_parameters.m_functions.size();
-    if (n != other->m_parameters.m_functions.size()) return false;
+    const size_t n = m_f->m_parameters.functions().size();
+    if (n != other->m_parameters.functions().size()) return false;
 
     // If there are no parameters, check equality on the arguments
     if (n == 0) {
@@ -231,15 +194,17 @@ bool FunctionPtr::equivalent(const FunctionPtr &other) const {
     }
 
     // If there are dependencies, we need a Matcher
-    Matcher matcher(m_f->m_parameters.m_functions);
+    Matcher matcher(m_f->m_parameters.functions());
     for (int i = 0; i < n; i++) {
-        // Explicitness must match
-        if (m_f->m_parameters.m_explicits[i] != other->m_parameters.m_explicits[i])
-            return false;
-        if (!matcher.matches(m_f->m_parameters.m_functions[i], m_f->m_parameters.m_functions[i]))
+        if (!matcher.matches(m_f->m_parameters.functions()[i], other->m_parameters.functions()[i]))
             return false;
     }
 
     // Now just let the matcher do its work
     return matcher.matches(*this, other);
+}
+
+FunctionRef &FunctionRef::operator=(FunctionRef other) {
+    std::swap(m_f, other.m_f);
+    return *this;
 }

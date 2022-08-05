@@ -5,9 +5,10 @@
 #pragma once
 
 #include "Lexer.h"
-#include "../core/Session.h"
+#include "../interpreter/Session.h"
 #include "../core/Context.h"
-#include "../core/Formatter.h"
+#include "../interpreter/Formatter.h"
+#include "../interpreter/Metadata.h"
 
 class Parser {
 public:
@@ -23,7 +24,7 @@ public:
     Parser(std::istream &, std::ostream &, Session &, Options options);
     Parser(const Parser &) = delete;
 
-    void set_documentation(std::unordered_map<FunctionPtr, std::string> *);
+    void set_documentation(std::unordered_map<FunctionRef, std::string> *);
     void set_location(std::string &, std::string &);
     bool parse();
 
@@ -43,7 +44,7 @@ private:
 
     // Other fields
     Session &m_session;
-    std::unordered_map<FunctionPtr, std::string> *m_documentation = nullptr;
+    std::unordered_map<FunctionRef, std::string> *m_documentation = nullptr;
     Token m_comment_token = {NONE};
     Options m_options;
 
@@ -70,14 +71,14 @@ private:
 
     std::string parse_path();
     std::vector<std::string> parse_list_identifiers();
-    std::vector<FunctionPtr> parse_functions(Context &);
-    FunctionParameters parse_parameters(Context &);
-    FunctionPtr parse_expression(Context &);
-    FunctionPtr parse_expression(Context &, FunctionParameters);
-    FunctionPtr parse_term(Context &);
+    std::vector<FunctionRef> parse_functions(Context &);
+    Telescope parse_parameters(Context &, Metadata &);
+    FunctionRef parse_expression(Context &);
+    FunctionRef parse_expression(Context &, Metadata &, Telescope);
+    FunctionRef parse_term(Context &);
 
     // Formatting method
-    std::string format(const FunctionPtr &f) const;
+    std::string format(const FunctionRef &f) const;
 
     // Output methods
     void output(const std::string &);

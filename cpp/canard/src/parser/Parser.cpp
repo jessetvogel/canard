@@ -198,7 +198,7 @@ void Parser::parse_inspect() {
     std::vector<std::string> identifiers;
     std::string prefix = m_options.explict ? space->to_string() + "." : "";
     for (auto &f: space->get_functions()) {
-        std::string identifier = prefix + f->label();
+        std::string identifier = prefix + f->name();
         if (!identifier.empty())
             identifiers.push_back(identifier);
     }
@@ -361,7 +361,7 @@ void Parser::parse_search() {
     consume(KEYWORD, "search");
 
     // Parse indeterminates
-    std::vector<FunctionPtr> indeterminates;
+    std::vector<FunctionRef> indeterminates;
     Context sub_context(m_current_namespace->get_context());
     while (found(SEPARATOR, "(")) {
         consume();
@@ -398,7 +398,7 @@ void Parser::parse_search() {
             keys.reserve(indeterminates.size());
             values.reserve(result.size());
             for (auto &f: indeterminates)
-                keys.push_back(f->label());
+                keys.push_back(f->name());
             for (auto &g: result)
                 values.push_back(format(g));
             output(Message::create(SUCCESS, keys, values));
@@ -418,7 +418,7 @@ void Parser::parse_search() {
         for (int i = 0; i < n; ++i) {
             if (!first) ss << ", ";
             first = false;
-            ss << indeterminates[i]->label() << " = " << format(result[i]);
+            ss << indeterminates[i]->name() << " = " << format(result[i]);
         }
         output(ss.str());
     }
@@ -471,16 +471,19 @@ void Parser::parse_definition() {
 
     std::string identifier = consume(IDENTIFIER).m_data;
 
-    // Parse dependencies
+    // Parse parameters
+    auto metadata = std::make_shared<Metadata>();
     Context &context = m_current_namespace->get_context();
     Context sub_context(m_current_namespace->get_context());
-    FunctionParameters dependencies = parse_parameters(sub_context);
-    // (if there are dependencies, we will use the sub_context for any further use)
-    Context &use_context = (dependencies.size() > 0) ? sub_context : context;
+    Telescope parameters = parse_parameters(sub_context, *metadata);
+    // (if there are parameters, we will use the sub_context for any further use)
+    Context &use_context = parameters.empty() ? context : sub_context;
 
     consume(SEPARATOR, ":=");
 
-    auto f = parse_expression(use_context, std::move(dependencies));
+    auto f = parse_expression(use_context, *metadata, std::move(parameters));
+    f->set_metadata(std::move(metadata));
+
     if (!context.put_function(identifier, f))
         throw ParserException(t_def, "name " + identifier + " already used in this context");
 
@@ -516,7 +519,7 @@ std::vector<std::string> Parser::parse_list_identifiers() {
     return list;
 }
 
-std::vector<FunctionPtr> Parser::parse_functions(Context &context) {
+std::vector<FunctionRef> Parser::parse_functions(Context &context) {
     /* FUNCTIONS =
         LIST_OF_IDENTIFIERS PARAMETERS : OUTPUT_TYPE
      */
@@ -524,9 +527,10 @@ std::vector<FunctionPtr> Parser::parse_functions(Context &context) {
     auto identifiers = parse_list_identifiers();
 
     // Parse parameters
+    auto metadata = std::make_shared<Metadata>();
     Context sub_context(context);
-    FunctionParameters parameters = parse_parameters(sub_context);
-    Context &use_context = (parameters.size() > 0) ? sub_context : context;
+    Telescope parameters = parse_parameters(sub_context, *metadata);
+    Context &use_context = parameters.empty() ? context : sub_context;
 
     // Parse type
     consume(SEPARATOR, ":");
@@ -534,51 +538,57 @@ std::vector<FunctionPtr> Parser::parse_functions(Context &context) {
     auto type = parse_expression(use_context);
     if (type.type() != m_session.TYPE && type.type() != m_session.PROP)
         throw ParserException(token, "expected a Type or Prop");
-    if (type->parameters().size() > 0) // TODO: I don't think this is expected behaviour..
+    if (!type->parameters().empty())
         throw ParserException(token, "forgot arguments");
 
     // Actually create the functions
-    std::vector<FunctionPtr> output;
+    std::vector<FunctionRef> output;
     for (std::string &identifier: identifiers) {
-        // don't move, since we use the parameters multiple times. Could make it shared in the future?
-        auto f = type.pool().create_function(type, parameters);
+        // Don't move parameters, since they are used multiple times
+        auto f = Function::make(type, parameters);
+        f->set_metadata(metadata);
         if (!context.put_function(identifier, f))
             throw ParserException(m_current_token, "identifier '" + identifier + "' already used in this context");
-        output.push_back(f);
+        output.push_back(std::move(f));
     }
 
     return output;
 }
 
-FunctionParameters Parser::parse_parameters(Context &context) {
-    FunctionParameters dependencies;
+Telescope Parser::parse_parameters(Context &context, Metadata &metadata) {
+    Telescope dependencies;
     bool is_explicit;
     while ((is_explicit = found(SEPARATOR, "(")) || found(SEPARATOR, "{")) {
         consume();
-        for (auto &f: parse_functions(context)) {
-            dependencies.m_functions.push_back(f);
-            dependencies.m_explicits.push_back(is_explicit);
+        for (const auto &f: parse_functions(context)) {
+            dependencies.add(f);
+            metadata.m_explicit_parameters.push_back(is_explicit);
         }
         consume(SEPARATOR, is_explicit ? ")" : "}");
     }
 
-    // Check if the implicit dependencies were actually used
-    size_t n = dependencies.size();
-    for (int i = 0; i < n; ++i) {
-        if (!dependencies.m_explicits[i] && !context.is_used(dependencies.m_functions[i]))
-            throw ParserException(m_current_token,
-                                  "implicit parameter '" + Formatter::to_string(dependencies.m_functions[i]) +
-                                  "' unused");
-    }
+    // Check if the implicit dependencies were actually used TODO: can be done using `signature_depends_on` methods
+//    size_t n = dependencies.size();
+//    for (int i = 0; i < n; ++i) {
+//        if (!dependencies.m_explicits[i] && !context.is_used(dependencies.m_functions[i]))
+//            throw ParserException(m_current_token,
+//                                  "implicit parameter '" + Formatter::to_string(dependencies.m_functions[i]) +
+//                                  "' unused");
+//    }
 
     return dependencies;
 }
 
-FunctionPtr Parser::parse_expression(Context &context) {
-    return parse_expression(context, {});
+FunctionRef Parser::parse_expression(Context &context) {
+    // TODO: this construction with metadata is really sketchy.. Whose job is it really to deal with the metadata?
+    auto metadata = std::make_shared<Metadata>();
+    auto f = parse_expression(context, *metadata, {});
+    if (f->metadata() == nullptr)
+        f->set_metadata(std::move(metadata));
+    return f;
 }
 
-FunctionPtr Parser::parse_expression(Context &context, FunctionParameters parameters) {
+FunctionRef Parser::parse_expression(Context &context, Metadata &metadata, Telescope parameters) {
     /* EXPRESSION =
         TERM | TERM TERM+
      */
@@ -588,14 +598,14 @@ FunctionPtr Parser::parse_expression(Context &context, FunctionParameters parame
     if (found(SEPARATOR, "\\") || found(SEPARATOR, "λ")) {
         consume();
         Context lambda_context(context);
-        FunctionParameters lambda_parameters = parse_parameters(lambda_context);
+        Telescope lambda_parameters = parse_parameters(lambda_context, metadata);
         consume(SEPARATOR, "->");
         // Combine parameters with the λ-parameters
-        return parse_expression(lambda_context, parameters + lambda_parameters);
+        return parse_expression(lambda_context, metadata, parameters + lambda_parameters);
     }
 
     // Get a list of following terms
-    std::vector<FunctionPtr> terms;
+    std::vector<FunctionRef> terms;
     for (auto term = parse_term(context); term != nullptr; term = parse_term(context))
         terms.push_back(term);
 
@@ -604,30 +614,41 @@ FunctionPtr Parser::parse_expression(Context &context, FunctionParameters parame
     if (n == 0)
         throw ParserException(m_current_token, "expected expression but not found");
 
-    FunctionPtr base = terms[0];
+    FunctionRef base = terms[0];
 
-    // If there is only one term and no parameters, return that term
-    // If there are parameters, specialize the term with its own arguments, but with parameters!
+    // If there is only one term and no parameters, simply return that term
+    if (n == 1 && parameters.empty())
+        return base;
+
+    // If there is one term with parameters, specialize the term with its own arguments, but with parameters!
     if (n == 1) {
-        if (parameters.size() == 0)
-            return base;
         try {
-            return base.specialize(base->arguments(), std::move(parameters));
+            return base.specialize(std::move(parameters), base->arguments());
         } catch (SpecializationException &e) {
             throw ParserException(m_current_token, e.m_message);
         }
     }
 
     // If there is more than one term, specialize
-    terms.erase(terms.begin());
+    // Insert `nullptr` for implicit arguments
+    std::vector<FunctionRef> arguments;
+    auto base_metadata = (Metadata *) base->metadata();
+    auto it_terms = terms.begin() + 1;
+    const auto m = base->parameters().size();
+    for (int i = 0; i < m; ++i) {
+        if (base_metadata->m_explicit_parameters[i])
+            arguments.push_back(std::move(*it_terms++));
+        else
+            arguments.emplace_back(nullptr);
+    }
     try {
-        return base.specialize(terms, std::move(parameters));
+        return base.specialize(std::move(parameters), std::move(arguments));
     } catch (SpecializationException &e) {
         throw ParserException(m_current_token, e.m_message);
     }
 }
 
-FunctionPtr Parser::parse_term(Context &context) {
+FunctionRef Parser::parse_term(Context &context) {
     /* TERM =
         PATH | ( EXPRESSION )
      */
@@ -645,7 +666,7 @@ FunctionPtr Parser::parse_term(Context &context) {
             if (f != nullptr) return f;
         }
         // If that failed, look through the other open namespaces
-        std::vector<FunctionPtr> candidates;
+        std::vector<FunctionRef> candidates;
         for (auto &space: m_open_namespaces) {
             f = space->get_function(path);
             if (f != nullptr) candidates.push_back(f);
@@ -693,10 +714,10 @@ void Parser::set_location(std::string &directory, std::string &filename) {
     m_filename = filename;
 }
 
-void Parser::set_documentation(std::unordered_map<FunctionPtr, std::string> *documentation) {
+void Parser::set_documentation(std::unordered_map<FunctionRef, std::string> *documentation) {
     m_documentation = documentation;
 }
 
-std::string Parser::format(const FunctionPtr &f) const {
+std::string Parser::format(const FunctionRef &f) const {
     return Formatter::to_string(f, false, m_options.explict);
 }

@@ -2,14 +2,15 @@
 // Created by Jesse Vogel on 01/07/2021.
 //
 
-#include "Session.h"
 #include <memory>
+#include "Session.h"
+#include "Namespace.h"
 
 Session::Session() {
-    TYPE = m_pool.create_Type();
-    PROP = m_pool.create_function(TYPE, {});
+    TYPE = Function::make(nullptr, Telescope{});
+    PROP = Function::make(TYPE, Telescope{});
 
-    m_global_namespace = std::unique_ptr<Namespace>(new Namespace(*this));
+    m_global_namespace = std::unique_ptr<Namespace>(new Namespace());
     m_global_namespace->get_context().put_function("Type", TYPE);
     m_global_namespace->get_context().put_function("Prop", PROP);
 }

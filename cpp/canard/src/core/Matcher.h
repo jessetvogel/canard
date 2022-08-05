@@ -10,28 +10,26 @@
 
 class Matcher {
 
-    static FunctionPtr null;
+    static FunctionRef null;
 
     Matcher *const m_parent;
-    const std::vector<FunctionPtr> &m_indeterminates;
-    std::unordered_map<FunctionPtr, FunctionPtr> m_solutions;
+    const std::vector<FunctionRef> &m_indeterminates;
+    std::unordered_map<FunctionRef, FunctionRef> m_solutions;
 
-    bool put_solution(const FunctionPtr &, const FunctionPtr &);
-    bool is_indeterminate(const FunctionPtr &);
+    bool put_solution(const FunctionRef &, const FunctionRef &);
+    bool is_indeterminate(const FunctionRef &);
 
 public:
 
-    explicit Matcher(const std::vector<FunctionPtr> &);
-    Matcher(Matcher *, const std::vector<FunctionPtr> &);
+    explicit Matcher(const std::vector<FunctionRef> &);
+    Matcher(Matcher *, const std::vector<FunctionRef> &);
 
-    bool matches(const FunctionPtr &, const FunctionPtr &);
-    void assert_matches(const FunctionPtr &, const FunctionPtr &);
+    bool matches(const FunctionRef &, const FunctionRef &);
+    void assert_matches(const FunctionRef &, const FunctionRef &);
 
-    const FunctionPtr &get_solution(const FunctionPtr &) const;
-    FunctionPtr convert(const FunctionPtr &);
-    FunctionPtr clone(const FunctionPtr &);
-    FunctionPtr cheap_clone(const FunctionPtr &);
-
-    std::string to_string();
+    const FunctionRef &get_solution(const FunctionRef &) const;
+    FunctionRef convert(const FunctionRef &);
+    FunctionRef clone(const FunctionRef &);
+    FunctionRef cheap_clone(const FunctionRef &);
 
 };

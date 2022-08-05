@@ -3,14 +3,12 @@
 //
 
 #include <sstream>
-#include <iomanip>
 #include "Message.h"
-#include <iostream>
 
 std::string Message::escape(const std::string &raw) {
     std::ostringstream ss;
     char u_buf[5];
-    for(auto it = raw.begin(); it != raw.end(); ++it) {
+    for (auto it = raw.begin(); it != raw.end(); ++it) {
         unsigned char c = *it;
         if (c == '\"') ss << "\\\"";
         else if (c == '\\') ss << "\\\\";
@@ -24,8 +22,7 @@ std::string Message::escape(const std::string &raw) {
             int u = ((c & 0b00011111) << 6) + (*(++it) & 0b00111111);
             snprintf(u_buf, sizeof(u_buf), "%04X", u);
             ss << "\\u" << u_buf;
-        }
-        else {
+        } else {
             ss << "?";
         }
     }
@@ -36,15 +33,15 @@ const std::string status_strings[] = {"success", "fail", "error"};
 
 std::string Message::create(MessageStatus status, const std::string &data) {
     std::ostringstream ss;
-    ss << "{\"status\":\"" << status_strings[status] << "\",\"data\":\"" << escape(data) << "\"}";
+    ss << R"({"status":")" << status_strings[status] << R"(","data":")" << escape(data) << "\"}";
     return ss.str();
 }
 
 std::string Message::create(MessageStatus status, const std::vector<std::string> &data) {
     std::ostringstream ss;
-    ss << "{\"status\":\"" << status_strings[status] << "\",\"data\":[";
+    ss << R"({"status":")" << status_strings[status] << R"(","data":[)";
     bool first = true;
-    for (const std::string &s : data) {
+    for (const std::string &s: data) {
         if (!first) ss << ',';
         first = false;
         ss << '"' << escape(s) << '"';
@@ -57,7 +54,7 @@ std::string
 Message::create(MessageStatus status, const std::vector<std::string> &keys, const std::vector<std::string> &values) {
     std::ostringstream ss;
     size_t n = keys.size();
-    ss << "{\"status\":\"" << status_strings[status] << "\",\"data\":[{";
+    ss << R"({"status":")" << status_strings[status] << R"(","data":[{)";
     bool first = true;
     for (int i = 0; i < n; ++i) {
         if (!first) ss << ',';

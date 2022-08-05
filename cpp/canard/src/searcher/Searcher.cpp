@@ -3,7 +3,7 @@
 //
 
 #include "Searcher.h"
-#include "../core/Namespace.h"
+#include "../interpreter/Namespace.h"
 #include "../core/macros.h"
 #include <algorithm>
 
@@ -16,11 +16,11 @@ void Searcher::add_namespace(Namespace &space) {
     auto theorems = space.get_functions();
     m_all_theorems.insert(m_all_theorems.end(), theorems.begin(), theorems.end());
 
-    for (FunctionPtr &thm: theorems) {
+    for (FunctionRef &thm: theorems) {
         auto thm_type_base = thm.type().base();
 
         // If the thmTypeBase is a dependency of the theorem, then store in the 'general' category
-        auto &thm_parameters = thm->parameters().m_functions;
+        auto &thm_parameters = thm->parameters().functions();
         if (std::find(thm_parameters.begin(), thm_parameters.end(), thm_type_base) != thm_parameters.end()) {
             m_generic_theorems.push_back(thm);
             continue;
@@ -33,7 +33,7 @@ void Searcher::add_namespace(Namespace &space) {
         }
 
         // Alternatively, create a new entry in the index
-        m_index.emplace(thm_type_base, std::vector<FunctionPtr>({thm}));
+        m_index.emplace(thm_type_base, std::vector<FunctionRef>({thm}));
     }
 }
 
@@ -102,7 +102,7 @@ void Searcher::search_loop() {
         }
 
         // If the type base is an indeterminate of q, there is nothing better to do then to try all theorems
-        FunctionPtr h_type_base = q->last_indeterminate().type().base();
+        FunctionRef h_type_base = q->last_indeterminate().type().base();
         if (q->is_indeterminate(h_type_base)) {
             for (auto &thm: m_all_theorems) {
                 if (search_helper(q, thm, reductions))
@@ -152,7 +152,7 @@ void Searcher::search_loop() {
 //    CANARD_LOG("END THREAD");
 }
 
-bool Searcher::search_helper(std::shared_ptr<Query> &query, FunctionPtr &thm,
+bool Searcher::search_helper(std::shared_ptr<Query> &query, FunctionRef &thm,
                              std::vector<std::shared_ptr<Query>> &reductions) {
     // Try reducing query using thm
     auto sub_query = Query::reduce(query, thm);

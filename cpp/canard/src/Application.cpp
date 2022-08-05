@@ -5,7 +5,7 @@
 #include "Application.h"
 #include "parser/Parser.h"
 #include "core/macros.h"
-#include "core/Formatter.h"
+#include "interpreter/Formatter.h"
 #include <cstdlib>
 #include <fstream>
 #include <thread>

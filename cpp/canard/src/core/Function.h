@@ -4,104 +4,76 @@
 
 #pragma once
 
-#include <utility>
 #include <string>
 #include <vector>
 #include <unordered_set>
-#include <atomic>
-
-class Namespace;
+#include "Telescope.h"
 
 class Function;
 
-class FunctionPool;
+class FunctionRef;
 
-struct FunctionParameters;
+class FunctionRef {
+public:
 
-struct FunctionPtr {
-    FunctionPtr() = default;
-    FunctionPtr(std::nullptr_t) {};
-    FunctionPtr(FunctionPool *, Function *);
-    FunctionPtr(const FunctionPtr &other); // copy constructor
-    ~FunctionPtr();
+    FunctionRef() = default;
+    FunctionRef(std::nullptr_t) {};
+    FunctionRef(std::shared_ptr<Function>);
+    FunctionRef(const FunctionRef &other); // copy constructor
 
-    const FunctionPtr &type() const;
-    const FunctionPtr &base() const;
-    FunctionPool &pool() const { return *m_pool; }
+    const FunctionRef &type() const;
+    const FunctionRef &base() const;
 
-    FunctionPtr specialize(std::vector<FunctionPtr>, FunctionParameters);
+    FunctionRef specialize(Telescope parameters, std::vector<FunctionRef> arguments) const;
+
+    bool equivalent(const FunctionRef &) const;
 
     inline bool operator==(std::nullptr_t) const { return m_f == nullptr; }
     inline bool operator!=(std::nullptr_t) const { return m_f != nullptr; }
-    inline bool operator==(const FunctionPtr &other) const { return m_f == other.m_f; }
-    inline bool operator!=(const FunctionPtr &other) const { return m_f != other.m_f; }
-    inline Function *operator->() const { return m_f; }
-    FunctionPtr &operator=(FunctionPtr other);
-
-    bool equivalent(const FunctionPtr &) const;
+    inline bool operator==(const FunctionRef &other) const { return m_f == other.m_f; }
+    inline bool operator!=(const FunctionRef &other) const { return m_f != other.m_f; }
+    inline Function *operator->() const { return m_f.get(); }
+    FunctionRef &operator=(FunctionRef other);
 
 private:
-    FunctionPool *m_pool = nullptr;
-    Function *m_f = nullptr;
+
+    std::shared_ptr<Function> m_f = nullptr;
 };
 
-struct FunctionParameters {
-    std::vector<FunctionPtr> m_functions;
-    std::vector<bool> m_explicits;
-
-    inline size_t size() const { return m_functions.size(); }
-    inline size_t empty() const { return m_functions.empty(); }
-
-    FunctionParameters operator+(const FunctionParameters &other) const {
-        std::vector<FunctionPtr> new_functions = m_functions;
-        std::vector<bool> new_explicits = m_explicits;
-        new_functions.insert(new_functions.end(), other.m_functions.begin(), other.m_functions.end());
-        new_explicits.insert(new_explicits.end(), other.m_explicits.begin(), other.m_explicits.end());
-        return {
-                .m_functions = new_functions,
-                .m_explicits = new_explicits
-        };
-    }
-};
-
-struct Function {
+class Function {
 public:
 
-    const FunctionParameters &parameters() const;
-    const std::vector<FunctionPtr> &arguments() const;
-    std::vector<FunctionPtr> explicit_parameters() const;
+    static FunctionRef make(const FunctionRef &type, Telescope parameters);
+    static FunctionRef make(const FunctionRef &type, Telescope parameters, const FunctionRef &base, std::vector<FunctionRef> arguments);
 
-    const std::string &label() const;
-    Namespace *space() const;
-    void set_label(const std::string &label);
-    void set_namespace(Namespace *space);
+    const Telescope &parameters() const;
+    const std::vector<FunctionRef> &arguments() const;
+
+    const std::string &name() const;
+    void set_name(const std::string &label);
 
     inline bool is_base() const { return m_base == nullptr; }
-    bool depends_on(const std::vector<FunctionPtr> &);
-    bool depends_on(const std::unordered_set<FunctionPtr> &);
-    bool signature_depends_on(const std::vector<FunctionPtr> &);
+    bool depends_on(const std::vector<FunctionRef> &);
+    bool depends_on(const std::unordered_set<FunctionRef> &);
+    bool signature_depends_on(const std::vector<FunctionRef> &);
+
+    void *metadata() const { return m_metadata.get(); }
+    void set_metadata(std::shared_ptr<void>);
 
 private:
 
-    Namespace *m_space;
-    std::string m_label;
+    Function(const FunctionRef &type, Telescope parameters);
+    Function(const FunctionRef &type, Telescope parameters, const FunctionRef &base, std::vector<FunctionRef> arguments);
 
-    FunctionPtr m_type = nullptr;
-    FunctionPtr m_base = nullptr;
-    FunctionParameters m_parameters;
-    std::vector<FunctionPtr> m_arguments;
+    std::string m_name;
+    FunctionRef m_type = nullptr;
+    FunctionRef m_base = nullptr;
+    Telescope m_parameters;
+    std::vector<FunctionRef> m_arguments;
 
-    std::atomic<uint32_t> m_reference_count;
+    std::shared_ptr<void> m_metadata = nullptr;
 
-    void init();
-    void init(const FunctionPtr &type, FunctionParameters parameters);
-    void init(const FunctionPtr &type, FunctionParameters parameters,
-              const FunctionPtr &base, std::vector<FunctionPtr> arguments);
-
-    friend class FunctionPool;
-
-    friend class FunctionPtr;
-
+    friend class FunctionRef;
 };
 
 struct SpecializationException : public std::exception {
@@ -115,8 +87,8 @@ struct SpecializationException : public std::exception {
 
 namespace std {
     template<>
-    struct hash<FunctionPtr> {
-        size_t operator()(const FunctionPtr &ptr) const {
+    struct hash<FunctionRef> {
+        size_t operator()(const FunctionRef &ptr) const {
             return reinterpret_cast<size_t>(ptr.operator->());
         }
     };

@@ -5,21 +5,21 @@
 #pragma once
 
 #include "Namespace.h"
-#include "Function.h"
-#include "FunctionPool.h"
+#include "../core/Function.h"
 
 class Session {
 private:
 
-    FunctionPool m_pool; // (Note that we put this in the top of the header-file so that it gets destructed last)
+//    FunctionPool m_pool; // (Note that we put this in the top of the header-file so that it gets destructed last)
     std::unique_ptr<Namespace> m_global_namespace;
 
 public:
 
-    FunctionPtr TYPE = nullptr, PROP = nullptr;
-
     Session();
 
+    FunctionRef TYPE = nullptr;
+    FunctionRef PROP = nullptr;
+    
     Namespace &get_global_namespace();
 
 };

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "core/Session.h"
+#include "interpreter/Session.h"
 #include "parser/Parser.h"
 
 class Application {
@@ -18,7 +18,7 @@ private:
 
     Session m_session;
     Parser::Options m_options = {};
-    std::unordered_map<FunctionPtr, std::string> m_documentation;
+    std::unordered_map<FunctionRef, std::string> m_documentation;
 
     bool parse_file(const std::string &);
 };

@@ -4,24 +4,20 @@
 
 #include "Matcher.h"
 #include "macros.h"
-#include "Formatter.h"
-#include "FunctionPool.h"
 
 #include <utility>
-#include <iostream>
-#include <sstream>
 #include <algorithm>
 #include <memory>
 
-FunctionPtr Matcher::null = nullptr;
+FunctionRef Matcher::null = nullptr;
 
-Matcher::Matcher(const std::vector<FunctionPtr> &indeterminates) : m_parent(nullptr),
+Matcher::Matcher(const std::vector<FunctionRef> &indeterminates) : m_parent(nullptr),
                                                                    m_indeterminates(indeterminates) {}
 
-Matcher::Matcher(Matcher *parent, const std::vector<FunctionPtr> &indeterminates) : m_parent(parent),
+Matcher::Matcher(Matcher *parent, const std::vector<FunctionRef> &indeterminates) : m_parent(parent),
                                                                                     m_indeterminates(indeterminates) {}
 
-bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
+bool Matcher::put_solution(const FunctionRef &f, const FunctionRef &g) {
     // Case f = g: we are not going to map f -> f (causes infinite loops), but we will return true nonetheless
     if (f == g) return true;
 
@@ -54,7 +50,7 @@ bool Matcher::put_solution(const FunctionPtr &f, const FunctionPtr &g) {
     return true;
 }
 
-const FunctionPtr &Matcher::get_solution(const FunctionPtr &f) const {
+const FunctionRef &Matcher::get_solution(const FunctionRef &f) const {
     // Look for solution for f, it not found, ask parent
     auto it_solution_f = m_solutions.find(f);
     if (it_solution_f == m_solutions.end())
@@ -65,7 +61,7 @@ const FunctionPtr &Matcher::get_solution(const FunctionPtr &f) const {
     return (h == nullptr) ? it_solution_f->second : h;
 }
 
-bool Matcher::is_indeterminate(const FunctionPtr &f) {
+bool Matcher::is_indeterminate(const FunctionRef &f) {
     // Checks whether f is an indeterminate of this or some parent
     for (Matcher *matcher = this; matcher != nullptr; matcher = matcher->m_parent) {
         const auto &indeterminates = matcher->m_indeterminates;
@@ -75,7 +71,7 @@ bool Matcher::is_indeterminate(const FunctionPtr &f) {
     return false;
 }
 
-bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
+bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
     // If f equals g, there is obviously a match, and nothing more to do
     if (f == g) return true;
 
@@ -86,14 +82,14 @@ bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
         return false;
 
     // Parameters themselves should match
-    auto sub_matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.m_functions)) : nullptr;
+    auto sub_matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.functions())) : nullptr;
     Matcher &use_matcher = (n > 0) ? *sub_matcher : *this;
     for (int i = 0; i < n; ++i) {
-        // Explicitness must match
-        if (f_parameters.m_explicits[i] != g_parameters.m_explicits[i])
-            return false;
+        // Explicitness must match // TODO: should it?
+//        if (f_parameters.m_explicits[i] != g_parameters.m_explicits[i])
+//            return false;
         // Functions must match
-        if (!use_matcher.matches(f_parameters.m_functions[i], g_parameters.m_functions[i]))
+        if (!use_matcher.matches(f_parameters.functions()[i], g_parameters.functions()[i]))
             return false;
     }
 
@@ -136,15 +132,14 @@ bool Matcher::matches(const FunctionPtr &f, const FunctionPtr &g) {
     return false;
 }
 
-void Matcher::assert_matches(const FunctionPtr &f, const FunctionPtr &g) {
+void Matcher::assert_matches(const FunctionRef &f, const FunctionRef &g) {
     bool match = matches(f, g);
-    CANARD_ASSERT(match, "Matching " << Formatter::to_string(f, true, false) << " to "
-                                     << Formatter::to_string(g, true, false));
+    CANARD_ASSERT(match, "Matching  << Formatter::to_string(f, true, false) <<  to << Formatter::to_string(g, true, false)");
 }
 
-FunctionPtr Matcher::convert(const FunctionPtr &f) {
+FunctionRef Matcher::convert(const FunctionRef &f) {
     // If f -> g, return g
-    const FunctionPtr &g = get_solution(f);
+    const FunctionRef &g = get_solution(f);
     if (g != nullptr) return g;
 
     // If f is a base function (and has no solution), then the conversion can only be f itself
@@ -153,26 +148,26 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     // Convert parameters if needed
     // E.g. something like "λ (f : Hom X X) := comp f f" must be converted under "X -> Spec R"
     // to "λ (f : Hom (Spec R) (Spec R)) := comp f f"
-    FunctionParameters converted_parameters;
-    const FunctionParameters &f_parameters = f->parameters();
+    Telescope converted_parameters;
+    const Telescope &f_parameters = f->parameters();
     const size_t n = f_parameters.size();
 
     std::unique_ptr<Matcher> matcher = (n > 0)
-                                       ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.m_functions))
+                                       ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.functions()))
                                        : nullptr;
     Matcher &sub_matcher = (n > 0) ? *matcher : *this;
     for (int i = 0; i < n; ++i) {
-        const auto &x = f_parameters.m_functions[i];
+        const auto &x = f_parameters.functions()[i];
         auto clone = sub_matcher.clone(x);
         sub_matcher.assert_matches(x, clone);
 
-        converted_parameters.m_functions.push_back(std::move(clone));
-        converted_parameters.m_explicits.push_back(f_parameters.m_explicits[i]);
+        converted_parameters.add(std::move(clone));
+//        converted_parameters.m_explicits.push_back(f_parameters.m_explicits[i]);
     }
 
     // Otherwise, when f is a specialization, we convert each argument of f
     bool changes = false;
-    std::vector<FunctionPtr> converted_arguments;
+    std::vector<FunctionRef> converted_arguments;
     for (auto &arg: f->arguments()) {
         auto converted_argument = sub_matcher.convert(arg);
         if (!changes && !converted_argument.equivalent(arg))
@@ -181,10 +176,10 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     }
 
     // Note: also possibly the base should be converted!
-    const FunctionPtr &f_base = f.base();
-    const FunctionPtr &f_base_solution = get_solution(f_base);
+    const FunctionRef &f_base = f.base();
+    const FunctionRef &f_base_solution = get_solution(f_base);
     bool f_base_changed = (f_base_solution != nullptr && f_base_solution != f_base);
-    const FunctionPtr &f_base_new = f_base_changed ? f_base_solution : f_base;
+    const FunctionRef &f_base_new = f_base_changed ? f_base_solution : f_base;
     changes |= f_base_changed;
 
     // If no actual changes were made to the arguments or the base, we can simply return the original f
@@ -194,48 +189,46 @@ FunctionPtr Matcher::convert(const FunctionPtr &f) {
     // Because the type is determined by the arguments provided to the base Function,
     // since we replace those now, the type should be re-determined
     auto &f_base_parameters = f_base_new->parameters();
-    Matcher sub_sub_matcher(&sub_matcher, f_base_parameters.m_functions);
+    Matcher sub_sub_matcher(&sub_matcher, f_base_parameters.functions());
     const size_t m = f_base_parameters.size();
     int j = 0;
-    for (int i = 0; i < m; ++i) {
-        if (f_base_parameters.m_explicits[i])
-            sub_sub_matcher.assert_matches(f_base_parameters.m_functions[i], converted_arguments[j++]);
-    }
+    for (int i = 0; i < m; ++i)
+        sub_sub_matcher.assert_matches(f_base_parameters.functions()[i], converted_arguments[j++]);
 
-    return f.pool().create_specialization(
+    return Function::make(
             sub_sub_matcher.convert(f.type()), std::move(converted_parameters),
             f_base_new, std::move(converted_arguments)
     );
 }
 
-FunctionPtr Matcher::clone(const FunctionPtr &f) {
+FunctionRef Matcher::clone(const FunctionRef &f) {
     // Since we only use this for duplicating parameters, and parameters are always their own base function!
     CANARD_ASSERT(f->is_base(), "Can only clone base functions");
     // TODO: does it make sense to duplicate a specialization ?
     // TODO: are there any shortcuts we can take so that we can simply immediately return x itself ?
 
     // Duplicate *its* parameters
-    FunctionParameters converted_parameters;
+    Telescope converted_parameters;
     const auto &f_parameters = f->parameters();
     const size_t n = f_parameters.size();
 
-    std::unique_ptr<Matcher> matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.m_functions))
+    std::unique_ptr<Matcher> matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.functions()))
                                                : nullptr;
     Matcher &sub_matcher = (n > 0) ? *matcher : *this;
     for (int i = 0; i < n; ++i) {
-        auto clone = sub_matcher.clone(f_parameters.m_functions[i]);
-        sub_matcher.assert_matches(f_parameters.m_functions[i], clone);
-        converted_parameters.m_functions.push_back(std::move(clone));
+        auto clone = sub_matcher.clone(f_parameters.functions()[i]);
+        sub_matcher.assert_matches(f_parameters.functions()[i], clone);
+        converted_parameters.add(std::move(clone));
     }
-    converted_parameters.m_explicits = f_parameters.m_explicits;
+//    converted_parameters.m_explicits = f_parameters.m_explicits;
 
     // Create a new Function
-    auto g = f.pool().create_function(sub_matcher.convert(f.type()), std::move(converted_parameters));
-    g->set_label(f->label());
+    auto g = Function::make(sub_matcher.convert(f.type()), std::move(converted_parameters));
+    g->set_name(f->name());
     return g;
 }
 
-FunctionPtr Matcher::cheap_clone(const FunctionPtr &f) {
+FunctionRef Matcher::cheap_clone(const FunctionRef &f) {
     // Should return x itself when x does not depend on any indeterminate (and neither on an indeterminate of some parent)
     for (Matcher *m = this; m != nullptr; m = m->m_parent) {
         if (f->signature_depends_on(m->m_indeterminates))
@@ -244,25 +237,25 @@ FunctionPtr Matcher::cheap_clone(const FunctionPtr &f) {
     return f;
 }
 
-std::string Matcher::to_string() {
-    std::stringstream ss;
-    ss << "{[";
-    bool first = true;
-    for (auto &f: m_indeterminates) {
-        if (!first)
-            ss << ", ";
-        first = false;
-        ss << Formatter::to_string(f);
-    }
-    ss << "] ";
-
-    first = true;
-    for (auto &m_solution: m_solutions) {
-        if (!first)
-            ss << ", ";
-        first = false;
-        ss << Formatter::to_string(m_solution.first) << " -> " << Formatter::to_string(m_solution.second);
-    }
-    ss << '}';
-    return ss.str();
-}
+//std::string Matcher::to_string() {
+//    std::stringstream ss;
+//    ss << "{[";
+//    bool first = true;
+//    for (auto &f: m_indeterminates) {
+//        if (!first)
+//            ss << ", ";
+//        first = false;
+//        ss << Formatter::to_string(f);
+//    }
+//    ss << "] ";
+//
+//    first = true;
+//    for (auto &m_solution: m_solutions) {
+//        if (!first)
+//            ss << ", ";
+//        first = false;
+//        ss << Formatter::to_string(m_solution.first) << " -> " << Formatter::to_string(m_solution.second);
+//    }
+//    ss << '}';
+//    return ss.str();
+//}

@@ -6,6 +6,7 @@
 
 #include "Query.h"
 #include "ThreadManager.h"
+#include "../interpreter/Namespace.h"
 #include <queue>
 #include <mutex>
 
@@ -19,7 +20,7 @@ public:
     bool search(const std::shared_ptr<Query> &);
 //    void optimize(const std::shared_ptr<Query> &);
 
-    std::vector<FunctionPtr> result() const { return m_result; }
+    std::vector<FunctionRef> result() const { return m_result; }
 
 private:
 
@@ -29,12 +30,12 @@ private:
     ThreadManager m_thread_manager;
     std::mutex m_mutex;
     std::vector<std::queue<std::shared_ptr<Query>>> m_depth_queues;
-    std::vector<FunctionPtr> m_all_theorems, m_generic_theorems;
-    std::unordered_map<FunctionPtr, std::vector<FunctionPtr>> m_index;
-    std::vector<FunctionPtr> m_result;
+    std::vector<FunctionRef> m_all_theorems, m_generic_theorems;
+    std::unordered_map<FunctionRef, std::vector<FunctionRef>> m_index;
+    std::vector<FunctionRef> m_result;
 
     void search_loop();
-    bool search_helper(std::shared_ptr<Query> &, FunctionPtr &, std::vector<std::shared_ptr<Query>> &);
+    bool search_helper(std::shared_ptr<Query> &, FunctionRef &, std::vector<std::shared_ptr<Query>> &);
     bool is_redundant(const std::shared_ptr<Query> &, const std::shared_ptr<Query> &);
 
 };

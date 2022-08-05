@@ -3,15 +3,16 @@
 //
 
 #include "Namespace.h"
+#include "Metadata.h"
+#include "../core/macros.h"
 #include <utility>
 
-Namespace::Namespace(Session &session) : m_session(session), m_parent(nullptr), m_name(std::string()), m_context() {}
+Namespace::Namespace() : m_name(std::string()) {}
 
-Namespace::Namespace(Namespace &parent, std::string name) : m_session(parent.m_session),
-                                                            m_parent(&parent),
+Namespace::Namespace(Namespace &parent, std::string name) : m_parent(&parent),
                                                             m_name(std::move(name)), m_context() {}
 
-FunctionPtr Namespace::get_function(const std::string &path) {
+FunctionRef Namespace::get_function(const std::string &path) {
     size_t i = path.find('.');
     if (i == std::string::npos)
         return m_context.get_function(path);
@@ -25,9 +26,13 @@ FunctionPtr Namespace::get_function(const std::string &path) {
     return it->second->get_function(sub_path);
 }
 
-void Namespace::put_function(const FunctionPtr &f) {
+void Namespace::put_function(const FunctionRef &f) {
     m_functions.push_back(f);
-    f->set_namespace(this);
+    auto metadata = (Metadata *) f->metadata();
+    if (metadata == nullptr)
+        CANARD_ERROR("Function has no metadata!");
+    else
+        metadata->m_space = this;
 }
 
 Namespace *Namespace::get_parent() {
@@ -77,9 +82,9 @@ std::string Namespace::to_string() {
 }
 
 std::vector<Namespace *> Namespace::get_children() {
-    std::vector<Namespace*> children;
+    std::vector<Namespace *> children;
     children.reserve(m_children.size());
-    for(auto& entry : m_children)
+    for (auto &entry: m_children)
         children.push_back(entry.second.get());
     return children;
 }
