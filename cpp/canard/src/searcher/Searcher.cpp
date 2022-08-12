@@ -13,11 +13,14 @@ Searcher::Searcher(const int max_depth, const int max_threads) : m_max_depth(max
 void Searcher::add_namespace(Namespace &space) {
     // Make a list of lists of all functions that can be used during the search
     // We do this in advance so that we don't constantly create new arraylists
-    auto theorems = space.get_functions();
-    m_all_theorems.insert(m_all_theorems.end(), theorems.begin(), theorems.end());
+    auto theorems = space.context().functions();
+    for (auto &entry: theorems)
+        m_all_theorems.push_back(entry.second); // TODO: optimize ?
+//        m_all_theorems.insert(m_all_theorems.end(), theorems.begin(), theorems.end());
 
-    for (FunctionRef &thm: theorems) {
-        auto thm_type_base = thm.type().base();
+    for (auto &entry: theorems) {
+        const auto &thm = entry.second;
+        const auto &thm_type_base = thm.type().base();
 
         // If the thmTypeBase is a dependency of the theorem, then store in the 'general' category
         auto &thm_parameters = thm->parameters().functions();
@@ -47,7 +50,7 @@ bool Searcher::search(const std::shared_ptr<Query> &query) {
     for (int depth = 0; depth < m_max_depth; ++depth)
         m_depth_queues.emplace_back();
 
-    // The initial query has depth 0
+    // The initial query contains depth 0
     m_depth_queues[0].push(query);
 
     // Create a pool of threads

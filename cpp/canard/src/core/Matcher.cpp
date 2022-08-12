@@ -9,8 +9,6 @@
 #include <algorithm>
 #include <memory>
 
-FunctionRef Matcher::null = nullptr;
-
 Matcher::Matcher(const std::vector<FunctionRef> &indeterminates) : m_parent(nullptr),
                                                                    m_indeterminates(indeterminates) {}
 
@@ -54,7 +52,7 @@ const FunctionRef &Matcher::get_solution(const FunctionRef &f) const {
     // Look for solution for f, it not found, ask parent
     auto it_solution_f = m_solutions.find(f);
     if (it_solution_f == m_solutions.end())
-        return (m_parent == nullptr) ? null : m_parent->get_solution(f);
+        return (m_parent == nullptr) ? FunctionRef::null() : m_parent->get_solution(f);
 
     // To deal with cases like f -> g -> h, call get_solution recursively
     const auto &h = get_solution(it_solution_f->second);
@@ -72,6 +70,8 @@ bool Matcher::is_indeterminate(const FunctionRef &f) {
 }
 
 bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
+    // TODO: at some point, implement that two proofs of the same proposition should match
+
     // If f equals g, there is obviously a match, and nothing more to do
     if (f == g) return true;
 
@@ -116,7 +116,7 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
     const auto &f_base = f.base();
     const auto &g_base = g.base();
 
-    // TODO: what if fBase/gBase is an indeterminate, but also it has parameters ?
+    // TODO: what if fBase/gBase is an indeterminate, but also it contains parameters ?
     //  At some points problems appear, because there will be multiple solutions..
     if (f_base == g_base || ((is_indeterminate(f_base) || is_indeterminate(g_base)) && matches(f_base, g_base))) {
         auto &f_arguments = f->arguments(), &g_arguments = g->arguments();
@@ -142,7 +142,7 @@ FunctionRef Matcher::convert(const FunctionRef &f) {
     const FunctionRef &g = get_solution(f);
     if (g != nullptr) return g;
 
-    // If f is a base function (and has no solution), then the conversion can only be f itself
+    // If f is a base function (and contains no solution), then the conversion can only be f itself
     if (f->is_base()) return f; // (Note that this is actually a special case of the next step!)
 
     // Convert parameters if needed
@@ -202,30 +202,33 @@ FunctionRef Matcher::convert(const FunctionRef &f) {
 }
 
 FunctionRef Matcher::clone(const FunctionRef &f) {
-    // Since we only use this for duplicating parameters, and parameters are always their own base function!
-    CANARD_ASSERT(f->is_base(), "Can only clone base functions");
-    // TODO: does it make sense to duplicate a specialization ?
-    // TODO: are there any shortcuts we can take so that we can simply immediately return x itself ?
+    // Clone the parameters
+    Telescope cloned_parameters;
+    const auto &parameters = f->parameters();
+    bool has_parameters = !parameters.empty();
 
-    // Duplicate *its* parameters
-    Telescope converted_parameters;
-    const auto &f_parameters = f->parameters();
-    const size_t n = f_parameters.size();
-
-    std::unique_ptr<Matcher> matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.functions()))
-                                               : nullptr;
-    Matcher &sub_matcher = (n > 0) ? *matcher : *this;
-    for (int i = 0; i < n; ++i) {
-        auto clone = sub_matcher.clone(f_parameters.functions()[i]);
-        sub_matcher.assert_matches(f_parameters.functions()[i], clone);
-        converted_parameters.add(std::move(clone));
+    std::unique_ptr<Matcher> matcher = has_parameters ? std::unique_ptr<Matcher>(new Matcher(this, parameters.functions())) : nullptr;
+    Matcher &sub_matcher = has_parameters ? *matcher : *this;
+    for (const auto &g: parameters.functions()) {
+        auto clone = sub_matcher.clone(g);
+        sub_matcher.assert_matches(g, clone);
+        cloned_parameters.add(std::move(clone));
     }
-//    converted_parameters.m_explicits = f_parameters.m_explicits;
 
-    // Create a new Function
-    auto g = Function::make(sub_matcher.convert(f.type()), std::move(converted_parameters));
-    g->set_name(f->name());
-    return g;
+    FunctionRef clone;
+    if (f->is_base()) {
+        // Create a new function
+        clone = Function::make(sub_matcher.convert(f.type()), std::move(cloned_parameters));
+    } else {
+        // Convert arguments
+        std::vector<FunctionRef> converted_arguments;
+        for (const auto &argument: f->arguments())
+            converted_arguments.push_back(sub_matcher.convert(argument));
+        clone = Function::make(sub_matcher.convert(f.type()), std::move(cloned_parameters),
+                               sub_matcher.convert(f.base()), std::move(converted_arguments));
+    }
+    clone->set_name(f->name());
+    return clone;
 }
 
 FunctionRef Matcher::cheap_clone(const FunctionRef &f) {
@@ -235,6 +238,15 @@ FunctionRef Matcher::cheap_clone(const FunctionRef &f) {
             return m->clone(f);
     }
     return f;
+}
+
+bool Matcher::solved() {
+    // A Matcher is `solved` if all indeterminates have a solution
+    for (const auto &f: m_indeterminates) {
+        if (m_solutions.find(f) == m_solutions.end())
+            return false;
+    }
+    return true;
 }
 
 //std::string Matcher::to_string() {

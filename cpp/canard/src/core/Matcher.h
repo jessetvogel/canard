@@ -10,15 +10,6 @@
 
 class Matcher {
 
-    static FunctionRef null;
-
-    Matcher *const m_parent;
-    const std::vector<FunctionRef> &m_indeterminates;
-    std::unordered_map<FunctionRef, FunctionRef> m_solutions;
-
-    bool put_solution(const FunctionRef &, const FunctionRef &);
-    bool is_indeterminate(const FunctionRef &);
-
 public:
 
     explicit Matcher(const std::vector<FunctionRef> &);
@@ -31,5 +22,16 @@ public:
     FunctionRef convert(const FunctionRef &);
     FunctionRef clone(const FunctionRef &);
     FunctionRef cheap_clone(const FunctionRef &);
+
+    bool solved();
+
+private:
+    
+    Matcher *const m_parent;
+    const std::vector<FunctionRef> &m_indeterminates;
+    std::unordered_map<FunctionRef, FunctionRef> m_solutions;
+
+    bool put_solution(const FunctionRef &, const FunctionRef &);
+    bool is_indeterminate(const FunctionRef &);
 
 };

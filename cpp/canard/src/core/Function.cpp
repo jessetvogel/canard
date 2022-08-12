@@ -4,15 +4,21 @@
 
 #include "Function.h"
 #include "Matcher.h"
+#include "macros.h"
 #include <utility>
 #include <memory>
+
+const FunctionRef &FunctionRef::null() {
+    static FunctionRef null = nullptr;
+    return null;
+}
 
 FunctionRef::FunctionRef(std::shared_ptr<Function> ptr) {
     m_f = std::move(ptr);
 }
 
 FunctionRef::FunctionRef(const FunctionRef &other) {
-    m_f = other.m_f;
+    m_f = other.m_f; // TODO: Is this just the trivial copy constructor? Would '= default' suffice?
 }
 
 const FunctionRef &FunctionRef::type() const {
@@ -118,40 +124,52 @@ void Function::set_metadata(std::shared_ptr<void> metadata) {
 
 FunctionRef FunctionRef::specialize(Telescope parameters, std::vector<FunctionRef> arguments) const {
     // Check that the number of arguments equals the number of parameters
-    const size_t m = m_f->m_parameters.size();
+    const auto &f_parameter_functions = m_f->parameters().functions();
+    const size_t m = f_parameter_functions.size();
     const size_t n = arguments.size();
-    if (n != m)
-        throw SpecializationException( // TODO: change SpecializationException so that formatting can be done on the level where the exception is catched!
-                "Formatter::to_string(*this) +  expected " + std::to_string(m) +
-                " arguments but received " + std::to_string(n));
-
+    if (n > m)
+        throw SpecializationException(*this, nullptr,
+                                      "{f} expected " + std::to_string(m) + " arguments but received " + std::to_string(n));
+    
     // Base case: if there are no arguments and no given parameters, immediately return
     if (n == 0 && parameters.empty())
         return *this;
 
-    // Create a matcher that matches the dependencies to the arguments given
-    Matcher matcher(m_f->parameters().functions());
+    // Create a matcher that matches the (first n) parameters to the (n) arguments given
+    // Note: only the base functions (i.e. not specializations) are the indeterminates!
+    std::vector<FunctionRef> indeterminates; // TODO: copying a whole vector... does this make it slow ??
+    std::copy_if(f_parameter_functions.begin(), f_parameter_functions.end(), std::back_inserter(indeterminates),
+                 [](const FunctionRef &f) { return f->is_base(); });
+    Matcher matcher(indeterminates);
     for (int i = 0; i < n; ++i) {
-        const FunctionRef &parameter = m_f->parameters().functions()[i];
+        const FunctionRef &parameter = f_parameter_functions[i];
         const FunctionRef &argument = arguments[i];
         if (argument == nullptr) // `nullptr` indicates an implicit argument
             continue;
         if (!matcher.matches(parameter, argument))
-            throw SpecializationException(
-                    "argument ' + Formatter::to_string(argument) + ' does not match ' + Formatter::to_string(parameter) + '");
+            throw SpecializationException(argument, parameter, "argument {f} does not match {g}");
     }
 
     // Swap any `nullptr` arguments with their match
     for (int i = 0; i < n; ++i) {
         if (arguments[i] == nullptr) {
-            const auto &solution = matcher.get_solution(m_f->parameters().functions()[i]);
+            const auto &solution = matcher.get_solution(f_parameter_functions[i]);
             if (solution == nullptr)
-                throw SpecializationException("Could not deduce implicit argument " + std::to_string(i));
+                throw SpecializationException(nullptr, nullptr, "Could not deduce implicit argument '" + arguments[i]->name() + "'");
             arguments[i] = solution;
         }
     }
 
-    // TODO: this must change at some point !!
+    // If less arguments were given than f has parameters, clone the excess parameters of f
+    // and add them both to the parameters of the specialization and the arguments
+    for (int i = (int) n; i < m; ++i) {
+        auto clone = matcher.clone(f_parameter_functions[i]);
+        matcher.assert_matches(f_parameter_functions[i], clone);
+        parameters.add(clone);
+        arguments.push_back(clone);
+    }
+
+    // TODO: this must(?) change at some point !
     // If this is a specialization itself,
     // we convert the arguments to arguments for the base, and then return a specialization of the base.
     // Note this must be done recursively, since specializing the base requires a different Matcher

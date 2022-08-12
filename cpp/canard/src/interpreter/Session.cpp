@@ -5,16 +5,20 @@
 #include <memory>
 #include "Session.h"
 #include "Namespace.h"
+#include "Metadata.h"
 
 Session::Session() {
+    m_global_namespace = std::unique_ptr<Namespace>(new Namespace());
+
     TYPE = Function::make(nullptr, Telescope{});
     PROP = Function::make(TYPE, Telescope{});
 
-    m_global_namespace = std::unique_ptr<Namespace>(new Namespace());
-    m_global_namespace->get_context().put_function("Type", TYPE);
-    m_global_namespace->get_context().put_function("Prop", PROP);
-}
+    TYPE->set_name("Type");
+    PROP->set_name("Prop");
 
-Namespace &Session::get_global_namespace() {
-    return *m_global_namespace;
+    TYPE->set_metadata(std::make_shared<Metadata>());
+    PROP->set_metadata(std::make_shared<Metadata>());
+
+    m_global_namespace->context().put(TYPE);
+    m_global_namespace->context().put(PROP);
 }

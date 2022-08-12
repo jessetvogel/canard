@@ -18,7 +18,7 @@ private:
 
     Session m_session;
     Parser::Options m_options = {};
-    std::unordered_map<FunctionRef, std::string> m_documentation;
+    std::unordered_map<std::string, std::string> m_documentation;
 
     bool parse_file(const std::string &);
 };

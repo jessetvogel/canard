@@ -6,9 +6,6 @@
 #include "Message.h"
 #include "../searcher/Searcher.h"
 #include "../core/macros.h"
-#include <algorithm>
-#include <climits>
-#include <cstdlib>
 #include <fstream>
 
 Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session, Options options)
@@ -80,6 +77,10 @@ Token Parser::consume(TokenType type, const std::string &data) {
     }
 }
 
+std::string to_path(const Namespace &space, const std::string &name) {
+    return space.name().empty() ? name : space.full_name() + '.' + name;
+}
+
 bool Parser::parse() {
     try {
         m_running = true;
@@ -127,11 +128,6 @@ bool Parser::parse_statement() {
         return true;
     }
 
-    if (found(KEYWORD, "def")) {
-        parse_definition();
-        return true;
-    }
-
     if (found(KEYWORD, "check")) {
         parse_check();
         return true;
@@ -149,6 +145,11 @@ bool Parser::parse_statement() {
 
     if (found(KEYWORD, "namespace")) {
         parse_namespace();
+        return true;
+    }
+
+    if (found(KEYWORD, "structure")) {
+        parse_structure();
         return true;
     }
 
@@ -190,18 +191,16 @@ void Parser::parse_inspect() {
 
     // Get namespace
     std::string path = parse_path();
-    auto space = m_session.get_global_namespace().get_namespace(path);
+    auto space = m_session.get_global_namespace().get_namespace(path); // TODO: resolve_namespace ? (where resolve means also asking parents)
     if (space == nullptr)
         throw ParserException(t_inspect, "unknown namespace '" + path + "'");
 
     // Construct list of identifiers
+    Formatter formatter;
+    formatter.show_namespaces(m_options.show_namespaces);
     std::vector<std::string> identifiers;
-    std::string prefix = m_options.explict ? space->to_string() + "." : "";
-    for (auto &f: space->get_functions()) {
-        std::string identifier = prefix + f->name();
-        if (!identifier.empty())
-            identifiers.push_back(identifier);
-    }
+    for (auto &entry: space->context().functions())
+        identifiers.push_back(entry.first);
 
     // Output
     if (m_options.json)
@@ -213,15 +212,15 @@ void Parser::parse_inspect() {
 
 void Parser::parse_doc() {
     /*
-        inspect IDENTIFIER
+        doc IDENTIFIER
     */
 
     Token t_doc = consume(KEYWORD, "doc");
-    auto f = parse_expression(m_current_namespace->get_context());
+    auto path = parse_path();
 
     std::string doc;
     if (m_options.documentation && m_documentation != nullptr) {
-        auto it = m_documentation->find(f);
+        auto it = m_documentation->find(path); // TODO: first find thing, and then convert to full path ?
         if (it != m_documentation->end())
             doc = it->second;
     }
@@ -234,12 +233,12 @@ void Parser::parse_doc() {
 
 void add_namespaces_with_children(std::unordered_set<Namespace *> &set, Namespace *space) {
     set.insert(space);
-    for (auto child: space->get_children())
+    for (auto child: space->children())
         add_namespaces_with_children(set, child);
 }
 
 void Parser::parse_open() {
-    /*_
+    /*
         open NAMESPACE
      */
 
@@ -248,7 +247,7 @@ void Parser::parse_open() {
     // `open *` opens all available namespaces
     if (found(SEPARATOR, "*")) {
         consume();
-        for (auto space: m_session.get_global_namespace().get_children())
+        for (auto space: m_session.get_global_namespace().children())
             add_namespaces_with_children(m_open_namespaces, space);
         return;
     }
@@ -257,7 +256,7 @@ void Parser::parse_open() {
     std::string path = parse_path();
     auto space = m_session.get_global_namespace().get_namespace(path);
     if (space == nullptr)
-        throw ParserException(t_open, "invalid namespace name '" + path + "'");
+        throw ParserException(t_open, "no namespace '" + path + "'");
     m_open_namespaces.insert(space);
 }
 
@@ -279,7 +278,7 @@ void Parser::parse_close() {
     std::string path = parse_path();
     auto space = m_session.get_global_namespace().get_namespace(path);
     if (space == nullptr)
-        throw ParserException(t_close, "invalid namespace name '" + path + "'");
+        throw ParserException(t_close, "no namespace '" + path + "'");
     m_open_namespaces.erase(space);
 }
 
@@ -294,6 +293,7 @@ void Parser::parse_import() {
 
     // Convert path to normalized path
     std::string path = m_directory + filename;
+    // TODO: WTF is this ?
     char normalized_path[PATH_MAX]; // PATH_MAX includes the \0 so +1 is not required
     char *result = realpath(path.c_str(), normalized_path);
     if (!result) {
@@ -341,16 +341,77 @@ void Parser::parse_namespace() {
      */
 
     consume(KEYWORD, "namespace");
-    std::string name = consume(IDENTIFIER).m_data;
+    std::string identifier = consume(IDENTIFIER).m_data;
     // If namespace already exists, use that one. Otherwise, create a new one
-    auto space = m_current_namespace->get_namespace(name);
-    m_current_namespace = (space != nullptr) ? space : m_current_namespace->create_subspace(name);
+    auto space = m_current_namespace->get_namespace(identifier);
+    m_current_namespace = (space != nullptr) ? space : m_current_namespace->create_subspace(identifier);
 
     while (parse_statement());
 
     consume(KEYWORD, "end");
-    consume(IDENTIFIER, name);
-    m_current_namespace = m_current_namespace->get_parent();
+    consume(IDENTIFIER, identifier);
+    m_current_namespace = m_current_namespace->parent();
+}
+
+void Parser::parse_structure() {
+    /*
+        structure IDENTIFIER PARAMETERS := {
+            FUNCTION , FUNCTION , ...
+        }
+     */
+
+    // TODO: handle documentation as well
+
+    Token t_structure = consume(KEYWORD, "structure");
+
+    auto identifier = consume(IDENTIFIER).m_data;
+
+    // Parse parameters
+    Context sub_context(m_current_namespace->context());
+    Telescope parameters = parse_parameters(sub_context);
+
+    consume(SEPARATOR, ":=");
+    consume(SEPARATOR, "{");
+
+    std::vector<FunctionRef> fields;
+    while (true) {
+        // Add fields (TODO: more efficient way of extending a vector ?)
+        for (auto &f: parse_functions(sub_context))
+            fields.push_back(f);
+
+        // Continue if there is a comma
+        if (found(SEPARATOR, ",")) {
+            consume();
+            continue;
+        }
+        break;
+    }
+
+    consume(SEPARATOR, "}");
+
+    // Create a function for the structure type (e.g. `let Algebra  (k : Ring) : Type`)
+    auto structure = Function::make(m_session.TYPE, parameters);
+    // Create a constructor (e.g. `let Algebra.mk (k : Ring) (ring : Ring) (map : Morphism k ring) : Algebra k`)
+    Telescope parameters_constructor = parameters;
+    for (const auto &f: fields)
+        parameters_constructor.add(f);
+    auto constructor = Function::make(
+            structure.specialize({}, parameters.functions()),
+            std::move(parameters_constructor)
+    );
+
+    // Set metadata
+    auto metadata = std::make_shared<Metadata>();
+    metadata->m_space = m_current_namespace;
+    metadata->m_constructor = constructor;
+    structure->set_name(identifier);
+    structure->set_metadata(std::move(metadata));
+    auto metadata_constructor = std::make_shared<Metadata>();
+    constructor->set_metadata(std::move(metadata_constructor));
+    constructor->set_name(identifier + ".mk");
+
+    // Put to context
+    m_current_namespace->context().put(structure);
 }
 
 void Parser::parse_search() {
@@ -362,7 +423,7 @@ void Parser::parse_search() {
 
     // Parse indeterminates
     std::vector<FunctionRef> indeterminates;
-    Context sub_context(m_current_namespace->get_context());
+    Context sub_context(m_current_namespace->context());
     while (found(SEPARATOR, "(")) {
         consume();
         auto functions = parse_functions(sub_context);
@@ -373,7 +434,7 @@ void Parser::parse_search() {
     // Create searcher and specify the searching space
     Searcher searcher(m_options.max_search_depth, m_options.max_search_threads);
     std::unordered_set<Namespace *> added_namespaces;
-    for (auto space = m_current_namespace; space != nullptr; space = space->get_parent()) {
+    for (auto space = m_current_namespace; space != nullptr; space = space->parent()) {
         searcher.add_namespace(*space);
         added_namespaces.insert(space);
     }
@@ -392,6 +453,9 @@ void Parser::parse_search() {
 
     auto result = searcher.result();
 
+    Formatter formatter;
+    formatter.show_namespaces(m_options.show_namespaces);
+
     if (m_options.json) {
         if (success) {
             std::vector<std::string> keys, values;
@@ -400,7 +464,7 @@ void Parser::parse_search() {
             for (auto &f: indeterminates)
                 keys.push_back(f->name());
             for (auto &g: result)
-                values.push_back(format(g));
+                values.push_back(formatter.to_string(g));
             output(Message::create(SUCCESS, keys, values));
         } else {
             output(Message::create(SUCCESS, std::vector<std::string>()));
@@ -418,7 +482,7 @@ void Parser::parse_search() {
         for (int i = 0; i < n; ++i) {
             if (!first) ss << ", ";
             first = false;
-            ss << indeterminates[i]->name() << " = " << format(result[i]);
+            ss << indeterminates[i]->name() << " = " << formatter.to_string(result[i]);
         }
         output(ss.str());
     }
@@ -433,65 +497,40 @@ void Parser::parse_check() {
      */
 
     consume(KEYWORD, "check");
-    auto f_str = Formatter::to_string(parse_expression(m_current_namespace->get_context()), true, m_options.explict);
+
+    Formatter formatter;
+    formatter.show_namespaces(m_options.show_namespaces);
+    auto f = parse_expression(m_current_namespace->context());
+    auto str = formatter.to_string_full(f);
 
     if (m_options.json)
-        output(Message::create(SUCCESS, f_str));
+        output(Message::create(SUCCESS, str));
     else
-        output("🦆 " + f_str);
+        output("🦆 " + str);
 }
 
 void Parser::parse_declaration() {
     /*
-        let IDENTIFIER DEPENDENCIES : TYPE
+        let IDENTIFIER PARAMETERS : TYPE
      */
 
     consume(KEYWORD, "let");
 
     bool has_doc = (m_documentation != nullptr && m_comment_token.m_type == COMMENT);
-    std::string doc = has_doc ? m_comment_token.m_data : "";
 
-    for (auto &f: parse_functions(m_current_namespace->get_context())) {
-        m_current_namespace->put_function(f);
+    for (auto &f: parse_functions(m_current_namespace->context())) {
+        // Store namespace in metadata (for base functions)
+        if (f->is_base()) {
+            auto &metadata = *(Metadata *) f->metadata();
+            metadata.m_space = m_current_namespace;
+        }
 
         // Store documentation
-        if (has_doc) m_documentation->emplace(f, doc);
+        if (has_doc) {
+            auto path = to_path(*m_current_namespace, f->name());
+            m_documentation->emplace(std::move(path), m_comment_token.m_data);
+        }
     }
-}
-
-void Parser::parse_definition() {
-    /*
-        def IDENTIFIER DEPENDENCIES := EXPRESSION
-     */
-
-    Token t_def = consume(KEYWORD, "def");
-
-    bool has_doc = (m_documentation != nullptr && m_comment_token.m_type == COMMENT);
-    std::string doc = has_doc ? m_comment_token.m_data : "";
-
-    std::string identifier = consume(IDENTIFIER).m_data;
-
-    // Parse parameters
-    auto metadata = std::make_shared<Metadata>();
-    Context &context = m_current_namespace->get_context();
-    Context sub_context(m_current_namespace->get_context());
-    Telescope parameters = parse_parameters(sub_context, *metadata);
-    // (if there are parameters, we will use the sub_context for any further use)
-    Context &use_context = parameters.empty() ? context : sub_context;
-
-    consume(SEPARATOR, ":=");
-
-    auto f = parse_expression(use_context, *metadata, std::move(parameters));
-    f->set_metadata(std::move(metadata));
-
-    if (!context.put_function(identifier, f))
-        throw ParserException(t_def, "name " + identifier + " already used in this context");
-
-    m_current_namespace->put_function(f);
-
-    // Store documentation
-    if (has_doc)
-        m_documentation->emplace(f, doc);
 }
 
 std::string Parser::parse_path() {
@@ -520,77 +559,143 @@ std::vector<std::string> Parser::parse_list_identifiers() {
 }
 
 std::vector<FunctionRef> Parser::parse_functions(Context &context) {
-    /* FUNCTIONS =
-        LIST_OF_IDENTIFIERS PARAMETERS : OUTPUT_TYPE
+    /*
+            LIST_OF_IDENTIFIERS PARAMETERS : OUTPUT_TYPE
+          | LIST_OF_IDENTIFIERS PARAMETERS := EXPRESSION
      */
 
     auto identifiers = parse_list_identifiers();
 
     // Parse parameters
-    auto metadata = std::make_shared<Metadata>();
     Context sub_context(context);
-    Telescope parameters = parse_parameters(sub_context, *metadata);
+    Telescope parameters = parse_parameters(sub_context);
     Context &use_context = parameters.empty() ? context : sub_context;
 
-    // Parse type
-    consume(SEPARATOR, ":");
-    Token token = m_current_token;
-    auto type = parse_expression(use_context);
-    if (type.type() != m_session.TYPE && type.type() != m_session.PROP)
-        throw ParserException(token, "expected a Type or Prop");
-    if (!type->parameters().empty())
-        throw ParserException(token, "forgot arguments");
+    // Case declaration
+    if (found(SEPARATOR, ":")) {
+        Token t_colon = consume();
+        auto type = parse_expression(use_context);
 
-    // Actually create the functions
-    std::vector<FunctionRef> output;
-    for (std::string &identifier: identifiers) {
-        // Don't move parameters, since they are used multiple times
-        auto f = Function::make(type, parameters);
-        f->set_metadata(metadata);
-        if (!context.put_function(identifier, f))
-            throw ParserException(m_current_token, "identifier '" + identifier + "' already used in this context");
-        output.push_back(std::move(f));
+        if (type.type() != m_session.TYPE && type.type() != m_session.PROP)
+            throw ParserException(t_colon, "expected a Type or Prop");
+        // TODO: might omit this condition at some point, instead just concat the parameters!
+        if (!type->parameters().empty())
+            throw ParserException(t_colon, "type of function cannot have parameters");
+
+        auto &type_metadata = *(Metadata *) type->metadata();
+
+        // Create the functions
+        std::vector<FunctionRef> output;
+        for (auto &identifier: identifiers) {
+            // If the type has a constructor (i.e. comes from a structure)
+            if (type_metadata.m_constructor != nullptr) {
+                // TODO: this doesn't work currently ... `let B (X : Scheme) : Algebra`
+
+                const auto &constructor = type_metadata.m_constructor; // TODO: this assumes the constructor has no parameters other than the fields, is that right?
+
+                std::vector<FunctionRef> constructor_arguments;
+                for (const auto &field: constructor->parameters().functions()) {
+                    // TODO: not general enough of course, but works for base functions
+                    auto g = Function::make(field.type(), parameters + field->parameters());
+                    g->set_metadata(std::make_shared<Metadata>());
+                    g->set_name(identifier + '.' + field->name());
+                    output.push_back(g);
+                    if (!context.put(g))
+                        throw ParserException(m_current_token, "failed to add " + g->name() + " to context");
+
+                    constructor_arguments.push_back(g.specialize({}, parameters.functions()));
+                }
+                // Specialize the constructor
+                auto f = constructor.specialize(parameters, constructor_arguments);
+                f->set_name(identifier);
+                f->set_metadata(std::make_shared<Metadata>());
+                if (!context.put(f))
+                    throw ParserException(m_current_token, "identifier '" + identifier + "' already used in this context");
+                output.push_back(f);
+            }
+                // If no constructor, just make a function in the regular way
+            else {
+                // Note: don't move parameters, since they are used multiple times
+                auto f = Function::make(type, parameters);
+                f->set_metadata(std::make_shared<Metadata>());
+                f->set_name(identifier);
+                if (!context.put(f))
+                    throw ParserException(t_colon, "identifier '" + identifier + "' already used in this context");
+                output.push_back(std::move(f));
+            }
+        }
+        return output;
     }
 
-    return output;
+    // Case definition
+    if (found(SEPARATOR, ":=")) {
+        Token t_def = consume();
+
+        // Only makes sense to have a single
+        if (identifiers.size() != 1)
+            throw ParserException(t_def, "Multiple identifiers doesn't make sense here!");
+        const auto &identifier = identifiers[0];
+
+        // Parse expression
+        auto f = parse_expression(use_context, std::move(parameters));
+
+        // Note: only if f does not have a name yet, it is 'safe' to give it one. Otherwise, we might be overwriting an existing name!
+        if (f->name().empty())
+            f->set_name(identifier);
+        if (!context.put(identifier, f))
+            throw ParserException(t_def, "identifier '" + identifier + "' already used in this context");
+
+        return {f};
+    }
+
+    throw ParserException(m_current_token, "unexpected token");
 }
 
-Telescope Parser::parse_parameters(Context &context, Metadata &metadata) {
-    Telescope dependencies;
-    bool is_explicit;
-    while ((is_explicit = found(SEPARATOR, "(")) || found(SEPARATOR, "{")) {
+Telescope Parser::parse_parameters(Context &context) {
+    Telescope parameters;
+    bool is_implicit;
+    while ((is_implicit = found(SEPARATOR, "{")) || found(SEPARATOR, "(")) {
         consume();
         for (const auto &f: parse_functions(context)) {
-            dependencies.add(f);
-            metadata.m_explicit_parameters.push_back(is_explicit);
+            ((Metadata *) f->metadata())->m_implicit = is_implicit;
+            parameters.add(f);
         }
-        consume(SEPARATOR, is_explicit ? ")" : "}");
+        consume(SEPARATOR, is_implicit ? "}" : ")");
     }
 
-    // Check if the implicit dependencies were actually used TODO: can be done using `signature_depends_on` methods
-//    size_t n = dependencies.size();
+    // TODO: Check if the implicit parameters were actually used TODO: can be done using `signature_depends_on` methods. Or maybe using a Matcher and .solved() ??
+//    size_t n = parameters.size();
 //    for (int i = 0; i < n; ++i) {
-//        if (!dependencies.m_explicits[i] && !context.is_used(dependencies.m_functions[i]))
+//        if (!parameters.m_explicits[i] && !context.is_used(parameters.m_functions[i]))
 //            throw ParserException(m_current_token,
-//                                  "implicit parameter '" + Formatter::to_string(dependencies.m_functions[i]) +
+//                                  "implicit parameter '" + Formatter::to_string(parameters.m_functions[i]) +
 //                                  "' unused");
 //    }
 
-    return dependencies;
+    return parameters;
 }
 
 FunctionRef Parser::parse_expression(Context &context) {
-    // TODO: this construction with metadata is really sketchy.. Whose job is it really to deal with the metadata?
-    auto metadata = std::make_shared<Metadata>();
-    auto f = parse_expression(context, *metadata, {});
-    if (f->metadata() == nullptr)
-        f->set_metadata(std::move(metadata));
-    return f;
+    return parse_expression(context, {});
 }
 
-FunctionRef Parser::parse_expression(Context &context, Metadata &metadata, Telescope parameters) {
-    /* EXPRESSION =
-        TERM | TERM TERM+
+std::string Parser::format_specialization_exception(SpecializationException &exception) const {
+    Formatter formatter;
+    formatter.show_namespaces(m_options.show_namespaces);
+
+    std::string message = exception.m_message;
+    auto it_f = message.find("{f}");
+    if (it_f != std::string::npos)
+        message = message.replace(it_f, 3, formatter.to_string_full(exception.m_f));
+    auto it_g = message.find("{g}");
+    if (it_g != std::string::npos)
+        message = message.replace(it_g, 3, formatter.to_string_full(exception.m_g));
+    return message;
+}
+
+FunctionRef Parser::parse_expression(Context &context, Telescope parameters) {
+    /*
+        EXPRESSION = TERM | TERM TERM+
      */
 
     // Support for lambda expressions
@@ -598,74 +703,76 @@ FunctionRef Parser::parse_expression(Context &context, Metadata &metadata, Teles
     if (found(SEPARATOR, "\\") || found(SEPARATOR, "λ")) {
         consume();
         Context lambda_context(context);
-        Telescope lambda_parameters = parse_parameters(lambda_context, metadata);
-        consume(SEPARATOR, "->");
+        Telescope lambda_parameters = parse_parameters(lambda_context);
+        consume(SEPARATOR, ":=");
         // Combine parameters with the λ-parameters
-        return parse_expression(lambda_context, metadata, parameters + lambda_parameters);
+        return parse_expression(lambda_context, parameters + lambda_parameters);
     }
 
-    // Get a list of following terms
-    std::vector<FunctionRef> terms;
-    for (auto term = parse_term(context); term != nullptr; term = parse_term(context))
-        terms.push_back(term);
-
-    // If there are no terms
-    size_t n = terms.size();
-    if (n == 0)
+    // Parse an initial term
+    FunctionRef initial = parse_term(context);
+    if (initial == nullptr)
         throw ParserException(m_current_token, "expected expression but not found");
 
-    FunctionRef base = terms[0];
+    // Parse trailing terms
+    std::vector<FunctionRef> trailing;
+    for (auto term = parse_term(context); term != nullptr; term = parse_term(context))
+        trailing.push_back(term);
 
-    // If there is only one term and no parameters, simply return that term
-    if (n == 1 && parameters.empty())
-        return base;
+    // Shortcut: if there are no trailing terms, and no parameters, simply return the initial term
+    const size_t n = trailing.size();
+    if (n == 0 && parameters.empty())
+        return initial;
 
-    // If there is one term with parameters, specialize the term with its own arguments, but with parameters!
-    if (n == 1) {
-        try {
-            return base.specialize(std::move(parameters), base->arguments());
-        } catch (SpecializationException &e) {
-            throw ParserException(m_current_token, e.m_message);
-        }
-    }
-
-    // If there is more than one term, specialize
-    // Insert `nullptr` for implicit arguments
+    // Generally, we need to specialize
     std::vector<FunctionRef> arguments;
-    auto base_metadata = (Metadata *) base->metadata();
-    auto it_terms = terms.begin() + 1;
-    const auto m = base->parameters().size();
-    for (int i = 0; i < m; ++i) {
-        if (base_metadata->m_explicit_parameters[i])
-            arguments.push_back(std::move(*it_terms++));
-        else
+    auto it_trailing = trailing.begin();
+    const auto m = initial->parameters().size();
+    for (int i = 0; i < m && it_trailing !=
+                             trailing.end(); ++i) { // tricky for-loop: meant to range over first n explicit parameters of `initial`, but m != n necessarily
+        auto parameter_metadata = (Metadata *) initial->parameters().functions()[i]->metadata();
+        // Insert `nullptr` for each implicit argument.
+        if (parameter_metadata && parameter_metadata->m_implicit)
             arguments.emplace_back(nullptr);
+        else
+            arguments.push_back(std::move(*it_trailing++));
     }
+
     try {
-        return base.specialize(std::move(parameters), std::move(arguments));
+        auto f = initial.specialize(std::move(parameters), std::move(arguments));
+        f->set_metadata(std::make_shared<Metadata>());
+        return f;
     } catch (SpecializationException &e) {
-        throw ParserException(m_current_token, e.m_message);
+        throw ParserException(m_current_token, format_specialization_exception(e));
     }
 }
 
 FunctionRef Parser::parse_term(Context &context) {
-    /* TERM =
-        PATH | ( EXPRESSION )
+    /*
+        TERM = PATH | ( EXPRESSION )
      */
+
+    if (found(SEPARATOR, "(")) {
+        consume();
+        auto f = parse_expression(context);
+        consume(SEPARATOR, ")");
+        return f;
+    }
 
     if (found(IDENTIFIER)) {
         Token token = m_current_token;
         std::string path = parse_path();
-        // First look through the context
-        auto f = context.get_function(path);
-        if (f != nullptr) return f;
+        // (1) Look through the context
+        auto f = context.get(path);
+        if (f != nullptr)
+            return f;
 
-        // Then look through namespaces from the current one to the top
-        for (auto space = m_current_namespace; space != nullptr; space = space->get_parent()) {
-            f = space->get_function(path);
-            if (f != nullptr) return f;
-        }
-        // If that failed, look through the other open namespaces
+        // (2) Look through namespaces from the current one to the top
+        f = m_current_namespace->resolve_function(path);
+        if (f != nullptr)
+            return f;
+
+        // (3) Look through the other open namespaces
         std::vector<FunctionRef> candidates;
         for (auto &space: m_open_namespaces) {
             f = space->get_function(path);
@@ -676,23 +783,18 @@ FunctionRef Parser::parse_term(Context &context) {
             return candidates[0];
         // If more than one candidate, its ambiguous
         if (candidates.size() > 1) {
+            Formatter formatter;
+            formatter.show_namespaces(true);
             std::ostringstream ss;
             for (int i = 0; i < candidates.size(); ++i) {
                 if (i == candidates.size() - 1) ss << " or ";
-                ss << Formatter::to_string(candidates[i], false, true);
+                ss << formatter.to_string(candidates[i]);
                 if (i < candidates.size() - 2) ss << ", ";
             }
             throw ParserException(token, "ambiguous identifier '" + path + "', could be " + ss.str());
         }
-        // Otherwise, if no candidates, throw unknown
+        // (4) Otherwise, if no candidates, throw unknown
         throw ParserException(token, "unknown identifier '" + path + "'");
-    }
-
-    if (found(SEPARATOR, "(")) {
-        consume();
-        auto expression = parse_expression(context);
-        consume(SEPARATOR, ")");
-        return expression;
     }
 
     return nullptr;
@@ -714,10 +816,6 @@ void Parser::set_location(std::string &directory, std::string &filename) {
     m_filename = filename;
 }
 
-void Parser::set_documentation(std::unordered_map<FunctionRef, std::string> *documentation) {
+void Parser::set_documentation(std::unordered_map<std::string, std::string> *documentation) {
     m_documentation = documentation;
-}
-
-std::string Parser::format(const FunctionRef &f) const {
-    return Formatter::to_string(f, false, m_options.explict);
 }

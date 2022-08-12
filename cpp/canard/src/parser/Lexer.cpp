@@ -5,9 +5,10 @@
 #include <algorithm>
 #include "Lexer.h"
 
+// TODO: https://stackoverflow.com/questions/48938090/how-to-deal-with-static-storage-duration-warnings
 const std::vector<std::string> Lexer::KEYWORDS(
-        {"let", "def", "check", "search", "import", "namespace", "end", "open", "close", "exit", "inspect", "doc"});
-const std::vector<std::string> Lexer::SEPARATORS({":", "(", ")", "{", "}", "_", ";", ".", ":=", "--", "*", "\\", "λ", "->"});
+        {"let", "check", "search", "import", "namespace", "end", "open", "close", "structure", "exit", "inspect", "doc"});
+const std::vector<std::string> Lexer::SEPARATORS({":", "(", ")", "{", "}", "_", ";", ".", ":=", "--", "*", "\\", "λ", "->", ","});
 
 bool Lexer::is_keyword(const std::string &str) {
     return std::find(KEYWORDS.begin(), KEYWORDS.end(), str) != KEYWORDS.end();

@@ -6,7 +6,7 @@
 
 #include "Lexer.h"
 #include "../interpreter/Session.h"
-#include "../core/Context.h"
+#include "../interpreter/Context.h"
 #include "../interpreter/Formatter.h"
 #include "../interpreter/Metadata.h"
 
@@ -15,16 +15,16 @@ public:
 
     struct Options {
         bool json = false;
-        bool explict = false;
+        bool show_namespaces = false;
         bool documentation = false;
         int max_search_depth = 5;
-        uint32_t max_search_threads = 1;
+        int max_search_threads = 1;
     };
 
     Parser(std::istream &, std::ostream &, Session &, Options options);
     Parser(const Parser &) = delete;
 
-    void set_documentation(std::unordered_map<FunctionRef, std::string> *);
+    void set_documentation(std::unordered_map<std::string, std::string> *);
     void set_location(std::string &, std::string &);
     bool parse();
 
@@ -44,7 +44,7 @@ private:
 
     // Other fields
     Session &m_session;
-    std::unordered_map<FunctionRef, std::string> *m_documentation = nullptr;
+    std::unordered_map<std::string, std::string> *m_documentation = nullptr;
     Token m_comment_token = {NONE};
     Options m_options;
 
@@ -63,6 +63,7 @@ private:
     void parse_close();
     void parse_import();
     void parse_namespace();
+    void parse_structure();
     void parse_search();
     void parse_check();
     void parse_declaration();
@@ -72,17 +73,15 @@ private:
     std::string parse_path();
     std::vector<std::string> parse_list_identifiers();
     std::vector<FunctionRef> parse_functions(Context &);
-    Telescope parse_parameters(Context &, Metadata &);
+    Telescope parse_parameters(Context &);
     FunctionRef parse_expression(Context &);
-    FunctionRef parse_expression(Context &, Metadata &, Telescope);
+    FunctionRef parse_expression(Context &, Telescope);
     FunctionRef parse_term(Context &);
-
-    // Formatting method
-    std::string format(const FunctionRef &f) const;
 
     // Output methods
     void output(const std::string &);
     void error(const std::string &);
+    std::string format_specialization_exception(SpecializationException &) const;
 };
 
 struct ParserException : public std::exception {

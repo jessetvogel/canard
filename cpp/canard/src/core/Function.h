@@ -11,10 +11,10 @@
 
 class Function;
 
-class FunctionRef;
-
 class FunctionRef {
 public:
+
+    static const FunctionRef &null();
 
     FunctionRef() = default;
     FunctionRef(std::nullptr_t) {};
@@ -34,8 +34,9 @@ public:
     inline bool operator!=(const FunctionRef &other) const { return m_f != other.m_f; }
     inline Function *operator->() const { return m_f.get(); }
     FunctionRef &operator=(FunctionRef other);
+    inline std::shared_ptr<Function> get() const { return m_f; }
 
-private:
+protected:
 
     std::shared_ptr<Function> m_f = nullptr;
 };
@@ -50,7 +51,7 @@ public:
     const std::vector<FunctionRef> &arguments() const;
 
     const std::string &name() const;
-    void set_name(const std::string &label);
+    void set_name(const std::string &);
 
     inline bool is_base() const { return m_base == nullptr; }
     bool depends_on(const std::vector<FunctionRef> &);
@@ -60,10 +61,12 @@ public:
     void *metadata() const { return m_metadata.get(); }
     void set_metadata(std::shared_ptr<void>);
 
-private:
+protected:
 
     Function(const FunctionRef &type, Telescope parameters);
     Function(const FunctionRef &type, Telescope parameters, const FunctionRef &base, std::vector<FunctionRef> arguments);
+
+private:
 
     std::string m_name;
     FunctionRef m_type = nullptr;
@@ -78,9 +81,12 @@ private:
 
 struct SpecializationException : public std::exception {
 
+    const FunctionRef m_f, m_g;
     const std::string m_message;
 
-    explicit SpecializationException(std::string message) : m_message(std::move(message)) {};
+    // TODO: this must really be done differently!
+    SpecializationException(const FunctionRef &f, const FunctionRef &g, std::string message)
+            : m_f(f), m_g(g), m_message(std::move(message)) {};
 };
 
 #include <utility>

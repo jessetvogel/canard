@@ -9,6 +9,9 @@
 struct Metadata {
 
     Namespace *m_space = nullptr;
-    std::vector<bool> m_explicit_parameters;
+
+    bool m_implicit = false;
+
+    FunctionRef m_constructor = nullptr;
 
 };

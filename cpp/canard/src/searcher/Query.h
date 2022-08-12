@@ -30,9 +30,10 @@ public:
 
     const std::shared_ptr<Query> &parent() const { return m_parent; }
     const std::vector<FunctionRef> &locals() const { return m_locals; }
+    const std::vector<FunctionRef> &indeterminates() const { return m_indeterminates; }
     const FunctionRef &last_indeterminate() const { return m_indeterminates.back(); }
 
-    int depth();
+    int depth() const;
 
     size_t indeterminates_size() { return m_indeterminates.size(); }
 
@@ -44,7 +45,6 @@ public:
     static std::shared_ptr<Query> reduce(const std::shared_ptr<Query> &, const FunctionRef &);
     static std::vector<FunctionRef> final_solutions(const std::shared_ptr<Query> &);
     bool injects_into(const std::shared_ptr<Query> &);
-    std::string to_string();
 
 //    int hash_code();
 

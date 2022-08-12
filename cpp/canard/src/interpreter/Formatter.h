@@ -5,11 +5,24 @@
 #pragma once
 
 #include "../core/Function.h"
+#include "../searcher/Query.h"
 
 class Formatter {
 public:
 
-    static std::string to_string(const FunctionRef &);
-    static std::string to_string(const FunctionRef &, bool, bool);
+    std::string to_string(const FunctionRef &);
+    std::string to_string_full(const FunctionRef &);
+    std::string to_string(const Telescope &);
+    std::string to_string(const Query &);
+
+    inline void show_namespaces(bool b) { m_flag_namespaces = b; }
+
+private:
+
+    static const char *INDENT;
+
+    bool m_flag_namespaces = false;
+
+    std::string format_expression(const FunctionRef &);
 
 };

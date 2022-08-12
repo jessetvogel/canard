@@ -6,7 +6,7 @@
 
 #include <unordered_map>
 #include <string>
-#include "../core/Context.h"
+#include "Context.h"
 
 class Session;
 
@@ -16,16 +16,19 @@ public:
     Namespace();
     Namespace(Namespace &, std::string);
 
-    Context &get_context();
-    FunctionRef get_function(const std::string &);
-    const std::vector<FunctionRef> &get_functions() { return m_functions; }
-    Namespace *get_parent();
-    std::vector<Namespace *> get_children();
-    Namespace *get_namespace(const std::string &);
-    void put_function(const FunctionRef &);
-    Namespace *create_subspace(const std::string &);
+    Context &context() { return m_context; }
+    const std::string &name() const { return m_name; }
 
-    std::string to_string();
+    Namespace *parent() const;
+    std::vector<Namespace *> children();
+
+    Namespace *create_subspace(const std::string &); // TODO: as put() ?
+    Namespace *get_namespace(const std::string &);
+
+    std::string full_name() const;
+
+    const FunctionRef &get_function(const std::string &);
+    const FunctionRef &resolve_function(const std::string &);
 
 private:
 
@@ -33,6 +36,5 @@ private:
     Namespace *m_parent = nullptr;
     std::unordered_map<std::string, std::unique_ptr<Namespace>> m_children;
     Context m_context;
-    std::vector<FunctionRef> m_functions; // TODO: should we use a vector here?
 
 };

@@ -15,7 +15,7 @@ Application::Application(const std::vector<std::string> &arguments) {
     // Read flags
     for (const auto &arg: arguments) {
         if (arg == "--json") m_options.json = true;
-        if (arg == "--explicit") m_options.explict = true;
+        if (arg == "--explicit") m_options.show_namespaces = true;
         if (arg == "--doc") m_options.documentation = true;
         if (arg == "--multithreading") m_options.max_search_threads = std::thread::hardware_concurrency();
     }

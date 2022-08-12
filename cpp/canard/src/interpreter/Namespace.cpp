@@ -12,30 +12,21 @@ Namespace::Namespace() : m_name(std::string()) {}
 Namespace::Namespace(Namespace &parent, std::string name) : m_parent(&parent),
                                                             m_name(std::move(name)), m_context() {}
 
-FunctionRef Namespace::get_function(const std::string &path) {
-    size_t i = path.find('.');
-    if (i == std::string::npos)
-        return m_context.get_function(path);
+//FunctionRef Namespace::get_function(const std::string &path) {
+//    size_t i = path.find('.');
+//    if (i == std::string::npos)
+//        return m_context.get_function(path);
+//
+//    // Otherwise, ask a child
+//    auto it = m_children.find(path.substr(0, i));
+//    if (it == m_children.end())
+//        return nullptr;
+//
+//    std::string sub_path = path.substr(i + 1);
+//    return it->second->get_function(sub_path);
+//}
 
-    // Otherwise, ask a child
-    auto it = m_children.find(path.substr(0, i));
-    if (it == m_children.end())
-        return nullptr;
-
-    std::string sub_path = path.substr(i + 1);
-    return it->second->get_function(sub_path);
-}
-
-void Namespace::put_function(const FunctionRef &f) {
-    m_functions.push_back(f);
-    auto metadata = (Metadata *) f->metadata();
-    if (metadata == nullptr)
-        CANARD_ERROR("Function has no metadata!");
-    else
-        metadata->m_space = this;
-}
-
-Namespace *Namespace::get_parent() {
+Namespace *Namespace::parent() const {
     return m_parent;
 }
 
@@ -44,7 +35,7 @@ Namespace *Namespace::get_namespace(const std::string &path) {
         return this;
 
     size_t i = path.find('.');
-    if (i == std::string::npos) { // if path has no dots, return one of the children
+    if (i == std::string::npos) { // if path contains no dots, return one of the children
         auto it = m_children.find(path);
         if (it == m_children.end())
             return nullptr;
@@ -59,10 +50,6 @@ Namespace *Namespace::get_namespace(const std::string &path) {
     return it->second->get_namespace(sub_path);
 }
 
-Context &Namespace::get_context() {
-    return m_context;
-}
-
 Namespace *Namespace::create_subspace(const std::string &name) {
     auto subspace = new Namespace(*this, name);
     std::unique_ptr<Namespace> child(subspace);
@@ -70,21 +57,46 @@ Namespace *Namespace::create_subspace(const std::string &name) {
     return subspace;
 }
 
-std::string Namespace::to_string() {
-    if (m_parent == nullptr)
-        return m_name;
-
-    std::string parent_str = m_parent->to_string();
-    if (parent_str.empty())
-        return m_name;
-
-    return parent_str + '.' + m_name;
-}
-
-std::vector<Namespace *> Namespace::get_children() {
+std::vector<Namespace *> Namespace::children() {
     std::vector<Namespace *> children;
     children.reserve(m_children.size());
     for (auto &entry: m_children)
         children.push_back(entry.second.get());
     return children;
+}
+
+std::string Namespace::full_name() const {
+    if (m_parent == nullptr)
+        return m_name;
+    auto parent_full_name = m_parent->full_name();
+    return parent_full_name.empty() ? m_name : parent_full_name + '.' + m_name;
+}
+
+const FunctionRef &Namespace::get_function(const std::string &path) {
+    // First try context
+    const auto &f = m_context.get(path);
+    if (f != nullptr)
+        return f;
+
+    // If path has a dot, can try to go to a child namespace
+    const size_t i = path.find('.');
+    if (i == std::string::npos)
+        return FunctionRef::null();
+
+    auto it = m_children.find(path.substr(0, i));
+    if (it == m_children.end())
+        return FunctionRef::null();
+
+    return it->second->get_function(path.substr(i + 1));
+}
+
+const FunctionRef &Namespace::resolve_function(const std::string &path) {
+    const auto &f = get_function(path);
+    if (f != nullptr)
+        return f;
+
+    if (m_parent)
+        return m_parent->resolve_function(path);
+
+    return FunctionRef::null();
 }
