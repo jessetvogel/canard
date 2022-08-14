@@ -8,7 +8,7 @@
 
 class Function;
 
-struct FunctionRef;
+class FunctionRef;
 
 class Telescope {
 public:
@@ -19,8 +19,8 @@ public:
     void add(FunctionRef);
 
     inline const std::vector<FunctionRef> &functions() const { return m_functions; }
-    size_t size() const;
-    bool empty() const;
+    size_t size() const { return m_functions.size(); }
+    bool empty() const { return m_functions.empty(); }
 
     Telescope operator+(const Telescope &other) const;
 

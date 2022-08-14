@@ -34,7 +34,7 @@ private:
     Scanner m_scanner;
     Lexer m_lexer;
     std::string m_filename, m_directory;
-    Token m_current_token = {NONE};
+    Token m_current_token = {NONE, std::string(), 0, 0};
     bool m_running = false;
 
     // Namespace related fields
@@ -45,7 +45,7 @@ private:
     // Other fields
     Session &m_session;
     std::unordered_map<std::string, std::string> *m_documentation = nullptr;
-    Token m_comment_token = {NONE};
+    Token m_comment_token = {NONE, std::string(), 0, 0};
     Options m_options;
 
     // Token methods
@@ -67,7 +67,6 @@ private:
     void parse_search();
     void parse_check();
     void parse_declaration();
-    void parse_definition();
     void parse_doc();
 
     std::string parse_path();
@@ -75,8 +74,9 @@ private:
     std::vector<FunctionRef> parse_functions(Context &);
     Telescope parse_parameters(Context &);
     FunctionRef parse_expression(Context &);
-    FunctionRef parse_expression(Context &, Telescope);
+    FunctionRef parse_expression(Context &, const Telescope &);
     FunctionRef parse_term(Context &);
+    Telescope parse_fields(Context &context);
 
     // Output methods
     void output(const std::string &);

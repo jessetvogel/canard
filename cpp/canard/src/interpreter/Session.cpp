@@ -10,8 +10,8 @@
 Session::Session() {
     m_global_namespace = std::unique_ptr<Namespace>(new Namespace());
 
-    TYPE = Function::make(nullptr, Telescope{});
-    PROP = Function::make(TYPE, Telescope{});
+    TYPE = Function::make({}, nullptr);
+    PROP = Function::make({}, TYPE);
 
     TYPE->set_name("Type");
     PROP->set_name("Prop");

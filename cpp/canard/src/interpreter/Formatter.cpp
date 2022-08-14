@@ -39,7 +39,7 @@ std::string Formatter::format_expression(const FunctionRef &f) {
         ss << to_string(f.base());
         const auto &f_base_parameters = f.base()->parameters().functions();
         const auto m = f_base_parameters.size();
-        for (int i = 0; i < m; ++i) {
+        for (int i = 0; i < (int) m; ++i) {
             // Skip implicit arguments
             auto parameter_metadata = (Metadata *) f_base_parameters[i]->metadata();
             if (parameter_metadata && parameter_metadata->m_implicit)
@@ -68,7 +68,7 @@ std::string Formatter::to_string_full(const FunctionRef &f) {
         // If it is a structure (i.e. has a constructor), also print the fields
         auto metadata = (Metadata *) f->metadata();
         if (metadata && metadata->m_constructor != nullptr) {
-            ss << " {\n";
+            ss << " := {\n";
             const auto &fields = metadata->m_constructor->parameters().functions();
             for (auto it = fields.begin() + (int) f->parameters().size(); it != fields.end(); ++it)
                 ss << INDENT << to_string_full(*it) << ((it == fields.end() - 1) ? "\n" : ",\n");
@@ -131,3 +131,26 @@ std::string Formatter::to_string(const Query &query) {
         ss << " (" << to_string_full(f) << ")";
     return ss.str();
 }
+
+//std::string Matcher::to_string() {
+//    std::stringstream ss;
+//    ss << "{[";
+//    bool first = true;
+//    for (auto &f: m_indeterminates) {
+//        if (!first)
+//            ss << ", ";
+//        first = false;
+//        ss << Formatter::to_string(f);
+//    }
+//    ss << "] ";
+//
+//    first = true;
+//    for (auto &m_solution: m_solutions) {
+//        if (!first)
+//            ss << ", ";
+//        first = false;
+//        ss << Formatter::to_string(m_solution.first) << " -> " << Formatter::to_string(m_solution.second);
+//    }
+//    ss << '}';
+//    return ss.str();
+//}

@@ -24,10 +24,11 @@ public:
     const FunctionRef &type() const;
     const FunctionRef &base() const;
 
-    FunctionRef specialize(Telescope parameters, std::vector<FunctionRef> arguments) const;
+    FunctionRef specialize(const Telescope &parameters, std::vector<FunctionRef> arguments) const;
 
     bool equivalent(const FunctionRef &) const;
 
+    inline explicit operator bool() const { return m_f != nullptr; }
     inline bool operator==(std::nullptr_t) const { return m_f == nullptr; }
     inline bool operator!=(std::nullptr_t) const { return m_f != nullptr; }
     inline bool operator==(const FunctionRef &other) const { return m_f == other.m_f; }
@@ -44,8 +45,8 @@ protected:
 class Function {
 public:
 
-    static FunctionRef make(const FunctionRef &type, Telescope parameters);
-    static FunctionRef make(const FunctionRef &type, Telescope parameters, const FunctionRef &base, std::vector<FunctionRef> arguments);
+    static FunctionRef make(Telescope parameters, const FunctionRef &type);
+    static FunctionRef make(Telescope parameters, const FunctionRef &type, const FunctionRef &base, std::vector<FunctionRef> arguments);
 
     const Telescope &parameters() const;
     const std::vector<FunctionRef> &arguments() const;
@@ -63,8 +64,8 @@ public:
 
 protected:
 
-    Function(const FunctionRef &type, Telescope parameters);
-    Function(const FunctionRef &type, Telescope parameters, const FunctionRef &base, std::vector<FunctionRef> arguments);
+    Function(Telescope parameters, const FunctionRef &type);
+    Function(Telescope parameters, const FunctionRef &type, const FunctionRef &base, std::vector<FunctionRef> arguments);
 
 private:
 

@@ -52,7 +52,7 @@ let ZZ_not_lc : not (local ZZ)
 -- The ring $\QQ$ is a field.
 let QQ_is_field : field QQ
 -- The ring $\QQ$ is not trivial.
-def QQ_not_trivial := not_trivial_of_dm (domain_of_field QQ_is_field)
+let QQ_not_trivial := not_trivial_of_dm (domain_of_field QQ_is_field)
 -- The ring $\RR$ is a field.
 let RR_is_field : field RR
 -- The ring $\CC$ is a field.
@@ -70,9 +70,9 @@ let QQ_to_RR : Morphism QQ RR
 -- The inclusion of rings $\RR \to \CC$.
 let RR_to_CC : Morphism RR CC
 -- The inclusion of rings $\ZZ \to \RR$.
-def ZZ_to_RR := comp QQ_to_RR ZZ_to_QQ
+let ZZ_to_RR := comp QQ_to_RR ZZ_to_QQ
 -- The inclusion of rings $\QQ \to \CC$.
-def QQ_to_CC := comp RR_to_CC QQ_to_RR
+let QQ_to_CC := comp RR_to_CC QQ_to_RR
 
 -- The field $\FF_2$ consisting of 2 elements.
 let FF2 : Ring

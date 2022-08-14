@@ -107,10 +107,11 @@ bool Parser::parse() {
             error("Lexing error in " + m_filename + " at " + std::to_string(e.m_line) + ":" +
                   std::to_string(e.m_position) + ": " + e.m_message);
         return false;
-    } catch (std::exception &e) {
-        error("Exception: " + std::string(e.what()));
-        return false;
     }
+//    catch (std::exception &e) {
+//        error("Exception: " + std::string(e.what()));
+//        return false;
+//    }
 }
 
 bool Parser::parse_statement() {
@@ -371,7 +372,7 @@ void Parser::parse_structure() {
     Telescope parameters = parse_parameters(sub_context);
 
     consume(SEPARATOR, ":=");
-    consume(SEPARATOR, "{");
+    consume(SEPARATOR, "{"); // TODO: is this also just `parse_fields` ?
 
     std::vector<FunctionRef> fields;
     while (true) {
@@ -390,14 +391,14 @@ void Parser::parse_structure() {
     consume(SEPARATOR, "}");
 
     // Create a function for the structure type (e.g. `let Algebra  (k : Ring) : Type`)
-    auto structure = Function::make(m_session.TYPE, parameters);
+    auto structure = Function::make(parameters, m_session.TYPE);
     // Create a constructor (e.g. `let Algebra.mk (k : Ring) (ring : Ring) (map : Morphism k ring) : Algebra k`)
     Telescope parameters_constructor = parameters;
     for (const auto &f: fields)
         parameters_constructor.add(f);
     auto constructor = Function::make(
-            structure.specialize({}, parameters.functions()),
-            std::move(parameters_constructor)
+            std::move(parameters_constructor),
+            structure.specialize({}, parameters.functions())
     );
 
     // Set metadata
@@ -521,8 +522,8 @@ void Parser::parse_declaration() {
     for (auto &f: parse_functions(m_current_namespace->context())) {
         // Store namespace in metadata (for base functions)
         if (f->is_base()) {
-            auto &metadata = *(Metadata *) f->metadata();
-            metadata.m_space = m_current_namespace;
+            auto metadata = (Metadata *) f->metadata();
+            if (metadata) metadata->m_space = m_current_namespace;
         }
 
         // Store documentation
@@ -589,34 +590,35 @@ std::vector<FunctionRef> Parser::parse_functions(Context &context) {
         for (auto &identifier: identifiers) {
             // If the type has a constructor (i.e. comes from a structure)
             if (type_metadata.m_constructor != nullptr) {
-                // TODO: this doesn't work currently ... `let B (X : Scheme) : Algebra`
-
-                const auto &constructor = type_metadata.m_constructor; // TODO: this assumes the constructor has no parameters other than the fields, is that right?
-
-                std::vector<FunctionRef> constructor_arguments;
-                for (const auto &field: constructor->parameters().functions()) {
-                    // TODO: not general enough of course, but works for base functions
-                    auto g = Function::make(field.type(), parameters + field->parameters());
-                    g->set_metadata(std::make_shared<Metadata>());
-                    g->set_name(identifier + '.' + field->name());
-                    output.push_back(g);
+                // TODO: this assumes the constructor has no parameters other than the fields, is that right?
+                //  I believe so as types are not allowed to have parameters.
+                //  If this ever changes, move the parameters of the type to the parameters of the function before this code.
+                const auto &constructor = type_metadata.m_constructor;
+                // The fields of the structure are encoded in the parameters of the constructor, cloning them gives us fields of a new instance of the structure
+                Matcher matcher({});
+                std::unique_ptr<Matcher> sub_matcher;
+                Telescope fields = matcher.clone(parameters, constructor->parameters(), &sub_matcher);
+                // Update names
+                for (auto &g: fields.functions()) {
+                    auto metadata = std::make_shared<Metadata>();
+                    metadata->m_implicit = true;
+                    g->set_metadata(std::move(metadata));
+                    g->set_name(identifier + '.' + g->name());
                     if (!context.put(g))
                         throw ParserException(m_current_token, "failed to add " + g->name() + " to context");
-
-                    constructor_arguments.push_back(g.specialize({}, parameters.functions()));
+                    output.push_back(g);
                 }
-                // Specialize the constructor
-                auto f = constructor.specialize(parameters, constructor_arguments);
+                // Construct structure instance by specializing the constructor
+                auto f = constructor.specialize(parameters, sub_matcher->convert(constructor->parameters().functions()));
                 f->set_name(identifier);
-                f->set_metadata(std::make_shared<Metadata>());
                 if (!context.put(f))
-                    throw ParserException(m_current_token, "identifier '" + identifier + "' already used in this context");
-                output.push_back(f);
+                    throw ParserException(m_current_token, "failed to add " + f->name() + " to context");
+                output.push_back(std::move(f));
             }
                 // If no constructor, just make a function in the regular way
             else {
                 // Note: don't move parameters, since they are used multiple times
-                auto f = Function::make(type, parameters);
+                auto f = Function::make(parameters, type);
                 f->set_metadata(std::make_shared<Metadata>());
                 f->set_name(identifier);
                 if (!context.put(f))
@@ -637,7 +639,9 @@ std::vector<FunctionRef> Parser::parse_functions(Context &context) {
         const auto &identifier = identifiers[0];
 
         // Parse expression
-        auto f = parse_expression(use_context, std::move(parameters));
+        auto f = parse_expression(use_context, parameters);
+
+        // TODO: maybe here we should parse structure fields ?
 
         // Note: only if f does not have a name yet, it is 'safe' to give it one. Otherwise, we might be overwriting an existing name!
         if (f->name().empty())
@@ -653,26 +657,61 @@ std::vector<FunctionRef> Parser::parse_functions(Context &context) {
 
 Telescope Parser::parse_parameters(Context &context) {
     Telescope parameters;
+    std::vector<FunctionRef> implicits;
     bool is_implicit;
     while ((is_implicit = found(SEPARATOR, "{")) || found(SEPARATOR, "(")) {
         consume();
         for (const auto &f: parse_functions(context)) {
-            ((Metadata *) f->metadata())->m_implicit = is_implicit;
+            auto f_metadata = (Metadata *) f->metadata();
+            if (f_metadata) f_metadata->m_implicit |= is_implicit;
+
             parameters.add(f);
+
+            if (f_metadata && f_metadata->m_implicit) implicits.push_back(f);
         }
         consume(SEPARATOR, is_implicit ? "}" : ")");
     }
 
-    // TODO: Check if the implicit parameters were actually used TODO: can be done using `signature_depends_on` methods. Or maybe using a Matcher and .solved() ??
-//    size_t n = parameters.size();
-//    for (int i = 0; i < n; ++i) {
-//        if (!parameters.m_explicits[i] && !context.is_used(parameters.m_functions[i]))
-//            throw ParserException(m_current_token,
-//                                  "implicit parameter '" + Formatter::to_string(parameters.m_functions[i]) +
-//                                  "' unused");
-//    }
+    // Shortcut
+    if (implicits.empty())
+        return parameters;
 
-    return parameters;
+    // TODO: This seems very slow.. Can this be optimized?
+    // Re-order implicit parameters so that every implicit parameter can be inferred from the first explicit parameter following it
+    // To do this, first make a copy of the parameters to match with
+    Matcher dummy({});
+    Telescope copy = dummy.clone({}, parameters);
+
+    // Now reorder the parameters
+    Telescope reordered;
+    Matcher matcher(parameters.functions());
+    const size_t n = parameters.size();
+    for (int i = 0; i < n; ++i) {
+        const auto &f = parameters.functions()[i];
+        if (f->metadata() && ((Metadata *) f->metadata())->m_implicit)
+            continue;
+
+        matcher.assert_matches(f, copy.functions()[i]);
+
+        // Add all implicits that can be inferred now
+        for (auto it_implicits = implicits.begin(); it_implicits != implicits.end();) {
+            const auto &g = *it_implicits;
+            if (matcher.has_solution(g)) {
+                reordered.add(g);
+                it_implicits = implicits.erase(it_implicits);
+            } else {
+                ++it_implicits;
+            }
+        }
+        // Then add the explicit parameter afterwards
+        reordered.add(f);
+    }
+
+    // There should be no implicit parameters left at this point
+    if (!implicits.empty())
+        throw ParserException(m_current_token, "implicit parameter '" + implicits[0]->name() + "' cannot be inferred");
+
+    return reordered;
 }
 
 FunctionRef Parser::parse_expression(Context &context) {
@@ -693,13 +732,12 @@ std::string Parser::format_specialization_exception(SpecializationException &exc
     return message;
 }
 
-FunctionRef Parser::parse_expression(Context &context, Telescope parameters) {
+FunctionRef Parser::parse_expression(Context &context, const Telescope &parameters) {
     /*
-        EXPRESSION = TERM | TERM TERM+
+        EXPRESSION = TERM | TERM TERM+ | EXPRESSION { STRUCTURE_ARGUMENTS }
      */
 
-    // Support for lambda expressions
-    // (λ or \) PARAMETERS -> EXPRESSION
+    // Support for lambda expressions: (λ or \) PARAMETERS -> EXPRESSION
     if (found(SEPARATOR, "\\") || found(SEPARATOR, "λ")) {
         consume();
         Context lambda_context(context);
@@ -710,8 +748,8 @@ FunctionRef Parser::parse_expression(Context &context, Telescope parameters) {
     }
 
     // Parse an initial term
-    FunctionRef initial = parse_term(context);
-    if (initial == nullptr)
+    FunctionRef f = parse_term(context);
+    if (f == nullptr)
         throw ParserException(m_current_token, "expected expression but not found");
 
     // Parse trailing terms
@@ -719,32 +757,86 @@ FunctionRef Parser::parse_expression(Context &context, Telescope parameters) {
     for (auto term = parse_term(context); term != nullptr; term = parse_term(context))
         trailing.push_back(term);
 
-    // Shortcut: if there are no trailing terms, and no parameters, simply return the initial term
+    // If there are trailing terms, or there are parameters, we need to specialize
     const size_t n = trailing.size();
-    if (n == 0 && parameters.empty())
-        return initial;
-
-    // Generally, we need to specialize
-    std::vector<FunctionRef> arguments;
-    auto it_trailing = trailing.begin();
-    const auto m = initial->parameters().size();
-    for (int i = 0; i < m && it_trailing !=
-                             trailing.end(); ++i) { // tricky for-loop: meant to range over first n explicit parameters of `initial`, but m != n necessarily
-        auto parameter_metadata = (Metadata *) initial->parameters().functions()[i]->metadata();
-        // Insert `nullptr` for each implicit argument.
-        if (parameter_metadata && parameter_metadata->m_implicit)
-            arguments.emplace_back(nullptr);
-        else
-            arguments.push_back(std::move(*it_trailing++));
+    if (n > 0 || !parameters.empty()) {
+        std::vector<FunctionRef> arguments;
+        auto it_trailing = trailing.begin();
+        const auto m = f->parameters().size();
+        // (sorry for the tricky for-loop: meant to range over first n explicit parameters of `initial`, but m != n necessarily)
+        for (int i = 0; i < (int) m && it_trailing != trailing.end(); ++i) {
+            auto parameter_metadata = (Metadata *) f->parameters().functions()[i]->metadata();
+            // Insert `nullptr` for each implicit argument.
+            if (parameter_metadata && parameter_metadata->m_implicit)
+                arguments.emplace_back(nullptr);
+            else
+                arguments.push_back(std::move(*it_trailing++));
+        }
+        try {
+            auto metadata = std::make_shared<Metadata>();
+            // If initial has a constructor (i.e. is a structure), also specialize the constructor
+            auto f_metadata = (Metadata *) f->metadata();
+            if (f_metadata && f_metadata->m_constructor != nullptr)
+                metadata->m_constructor = f_metadata->m_constructor.specialize(parameters, arguments);
+            // Specialize f
+            f = f.specialize(parameters, std::move(arguments));
+            f->set_metadata(std::move(metadata));
+        } catch (SpecializationException &e) {
+            throw ParserException(m_current_token, format_specialization_exception(e));
+        }
     }
 
-    try {
-        auto f = initial.specialize(std::move(parameters), std::move(arguments));
-        f->set_metadata(std::make_shared<Metadata>());
-        return f;
-    } catch (SpecializationException &e) {
-        throw ParserException(m_current_token, format_specialization_exception(e));
+//    // Parse structure fields
+//    if (found(SEPARATOR, "{")) {
+//        // Make sure f has a constructor
+//        auto metadata = (Metadata *) f->metadata();
+//        if (!metadata || !metadata->m_constructor)
+//            throw ParserException(m_current_token, "trying to create structure instance without constructor");
+//        const auto &constructor = metadata->m_constructor;
+//        // Parse the fields
+//        Context &sub_context(context);
+//        Matcher matcher({});
+//        std::unique_ptr<Matcher> sub_matcher;
+//        std::unordered_map<std::string, FunctionRef> fields;
+//        for (const auto &g: matcher.clone(parameters, parse_fields(sub_context), &sub_matcher).functions())
+//            fields.emplace(g->name(), g);
+//
+//        std::vector<FunctionRef> constructor_arguments = parameters.functions();
+//        for ()
+//            constructor_arguments.push_back(fields.find(...));
+//        f = constructor.specialize(parameters, constructor_arguments)
+//
+//        // TODO: biggest problem is: how do we give the fields the proper names/identifiers and put them in the context ?
+//        //  maybe this part should actually be done in the parse_functions method ??
+//    }
+
+    return f;
+}
+
+Telescope Parser::parse_fields(Context &context) {
+    /*
+        { FUNCTIONS ( , FUNCTIONS )*  }
+     */
+
+    if (!found(SEPARATOR, "{"))
+        return {};
+
+    consume();
+
+    Telescope fields;
+    while (true) {
+        for (auto &field: parse_functions(context))
+            fields.add(field);
+        // Continue if there is a comma
+        if (found(SEPARATOR, ",")) {
+            consume();
+            continue;
+        }
+        break;
     }
+    consume(SEPARATOR, "}");
+
+    return fields;
 }
 
 FunctionRef Parser::parse_term(Context &context) {
@@ -786,10 +878,10 @@ FunctionRef Parser::parse_term(Context &context) {
             Formatter formatter;
             formatter.show_namespaces(true);
             std::ostringstream ss;
-            for (int i = 0; i < candidates.size(); ++i) {
-                if (i == candidates.size() - 1) ss << " or ";
+            for (int i = 0; i < (int) candidates.size(); ++i) {
+                if (i == (int) candidates.size() - 1) ss << " or ";
                 ss << formatter.to_string(candidates[i]);
-                if (i < candidates.size() - 2) ss << ", ";
+                if (i < (int) candidates.size() - 2) ss << ", ";
             }
             throw ParserException(token, "ambiguous identifier '" + path + "', could be " + ss.str());
         }

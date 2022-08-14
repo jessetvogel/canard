@@ -8,7 +8,7 @@ open commutative_algebra.ring
 namespace algebraic_geometry
 
 -- The empty scheme $\varnothing = \Spec(\{ 0 \})$.
-def empty_scheme := Spec zero_ring
+let empty_scheme := Spec zero_ring
 -- The empty scheme is empty.
 let empty_empty: empty empty_scheme
 -- The empty scheme is not irreducible.
@@ -54,7 +54,7 @@ let affine_line_to_base (X : Scheme) : Morphism (affine_line X) X
 let affine_line_to_base_ff (X : Scheme) : faithfully_flat (affine_line_to_base X)
 let affine_line_to_base_sm (X : Scheme) : smooth (affine_line_to_base X)
 let affine_line_to_base_fp (X : Scheme) : finitely_presented (affine_line_to_base X)
-def affine_line_rg {X : Scheme} (h : scheme.regular X) := src_rg_of_sm_trg_rg h (affine_line_to_base_sm X)
+let affine_line_rg {X : Scheme} (h : scheme.regular X) := src_rg_of_sm_trg_rg h (affine_line_to_base_sm X)
 
 -- The projective line over a given scheme $X$.
 let proj_line (X : Scheme) : Scheme
@@ -96,14 +96,14 @@ let ec_to_P1_sj {k : Ring} (h : field k) : scheme_map.surjective (ec_to_P1 h)
 let ec_to_P1_fp {k : Ring} (h : field k) : scheme_map.finitely_presented (ec_to_P1 h)
 
 -- Integral closure of $\ZZ$ in $\bar{\QQ}$.
-def Spec_ZZ_bar := Spec ZZ_bar
+let Spec_ZZ_bar := Spec ZZ_bar
 let ZZ_bar_not_cm : not (scheme.cohen_macaulay Spec_ZZ_bar)
 let ZZ_bar_int : scheme.integral Spec_ZZ_bar
 let ZZ_bar_not_lnt : not (scheme.locally_noetherian Spec_ZZ_bar)
 let ZZ_bar_nm : scheme.normal Spec_ZZ_bar
 
 -- Spec CC \to Spec RR
-def Spec_CC_to_Spec_RR := mSpec RR_to_CC
+let Spec_CC_to_Spec_RR := mSpec RR_to_CC
 let Spec_CC_to_Spec_RR_not_ci : not (closed_immersion Spec_CC_to_Spec_RR)
 let Spec_CC_to_Spec_RR_et : etale Spec_CC_to_Spec_RR
 let Spec_CC_to_Spec_RR_fn : scheme_map.finite Spec_CC_to_Spec_RR
@@ -138,10 +138,10 @@ let open_complement {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) :
 let open_complement_inclusion {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Morphism (open_complement h) X
 
 -- Spec QQ[sqrt{2}]
-def Spec_QQ_sqrt2 := Spec QQ_sqrt2
+let Spec_QQ_sqrt2 := Spec QQ_sqrt2
 
 -- Spec QQ[sqrt{2}] \to Spec QQ
-def Spec_QQ_sqrt2_to_Spec_QQ := mSpec QQ_to_QQ_sqrt2
+let Spec_QQ_sqrt2_to_Spec_QQ := mSpec QQ_to_QQ_sqrt2
 let Spec_QQ_sqrt2_to_Spec_QQ_not_zrc : not (zariski_cover Spec_QQ_sqrt2_to_Spec_QQ)
 let Spec_QQ_sqrt2_to_Spec_QQ_etc : etale_cover Spec_QQ_sqrt2_to_Spec_QQ
 let Spec_QQ_sqrt2_to_Spec_QQ_fn : scheme_map.finite Spec_QQ_sqrt2_to_Spec_QQ

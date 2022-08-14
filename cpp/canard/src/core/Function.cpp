@@ -18,7 +18,7 @@ FunctionRef::FunctionRef(std::shared_ptr<Function> ptr) {
 }
 
 FunctionRef::FunctionRef(const FunctionRef &other) {
-    m_f = other.m_f; // TODO: Is this just the trivial copy constructor? Would '= default' suffice?
+    m_f = other.m_f;
 }
 
 const FunctionRef &FunctionRef::type() const {
@@ -33,25 +33,25 @@ const FunctionRef &FunctionRef::base() const {
     return m_f->m_base == nullptr ? *this : m_f->m_base;
 }
 
-Function::Function(const FunctionRef &type, Telescope parameters) {
-    m_type = type;
+Function::Function(Telescope parameters, const FunctionRef &type) {
     m_parameters = std::move(parameters);
+    m_type = type;
     m_base = nullptr;
 }
 
-Function::Function(const FunctionRef &type, Telescope parameters, const FunctionRef &base, std::vector<FunctionRef> arguments) {
-    m_type = type;
+Function::Function(Telescope parameters, const FunctionRef &type, const FunctionRef &base, std::vector<FunctionRef> arguments) {
     m_parameters = std::move(parameters);
+    m_type = type;
     m_base = base;
     m_arguments = std::move(arguments);
 }
 
-FunctionRef Function::make(const FunctionRef &type, Telescope parameters) {
-    return std::shared_ptr<Function>(new Function(type, std::move(parameters)));
+FunctionRef Function::make(Telescope parameters, const FunctionRef &type) {
+    return std::shared_ptr<Function>(new Function(std::move(parameters), type));
 }
 
-FunctionRef Function::make(const FunctionRef &type, Telescope parameters, const FunctionRef &base, std::vector<FunctionRef> arguments) {
-    return std::shared_ptr<Function>(new Function(type, std::move(parameters), base, std::move(arguments)));
+FunctionRef Function::make(Telescope parameters, const FunctionRef &type, const FunctionRef &base, std::vector<FunctionRef> arguments) {
+    return std::shared_ptr<Function>(new Function(std::move(parameters), type, base, std::move(arguments)));
 }
 
 const std::string &Function::name() const {
@@ -122,7 +122,7 @@ void Function::set_metadata(std::shared_ptr<void> metadata) {
     m_metadata = std::move(metadata);
 }
 
-FunctionRef FunctionRef::specialize(Telescope parameters, std::vector<FunctionRef> arguments) const {
+FunctionRef FunctionRef::specialize(const Telescope &parameters, std::vector<FunctionRef> arguments) const {
     // Check that the number of arguments equals the number of parameters
     const auto &f_parameter_functions = m_f->parameters().functions();
     const size_t m = f_parameter_functions.size();
@@ -130,7 +130,7 @@ FunctionRef FunctionRef::specialize(Telescope parameters, std::vector<FunctionRe
     if (n > m)
         throw SpecializationException(*this, nullptr,
                                       "{f} expected " + std::to_string(m) + " arguments but received " + std::to_string(n));
-    
+
     // Base case: if there are no arguments and no given parameters, immediately return
     if (n == 0 && parameters.empty())
         return *this;
@@ -155,17 +155,20 @@ FunctionRef FunctionRef::specialize(Telescope parameters, std::vector<FunctionRe
         if (arguments[i] == nullptr) {
             const auto &solution = matcher.get_solution(f_parameter_functions[i]);
             if (solution == nullptr)
-                throw SpecializationException(nullptr, nullptr, "Could not deduce implicit argument '" + arguments[i]->name() + "'");
+                throw SpecializationException(nullptr, nullptr,
+                                              "could not infer implicit argument for parameter '" + f_parameter_functions[i]->name() + "'");
             arguments[i] = solution;
         }
     }
 
     // If less arguments were given than f has parameters, clone the excess parameters of f
     // and add them both to the parameters of the specialization and the arguments
+    Telescope parameters_full = parameters;
     for (int i = (int) n; i < m; ++i) {
         auto clone = matcher.clone(f_parameter_functions[i]);
+        // TODO: implicitness must also be copied!
         matcher.assert_matches(f_parameter_functions[i], clone);
-        parameters.add(clone);
+        parameters_full.add(clone);
         arguments.push_back(clone);
     }
 
@@ -174,12 +177,8 @@ FunctionRef FunctionRef::specialize(Telescope parameters, std::vector<FunctionRe
     // we convert the arguments to arguments for the base, and then return a specialization of the base.
     // Note this must be done recursively, since specializing the base requires a different Matcher
     // Note also that base must be converted as well! E.g. when specializing 'def dom {T : Type} {X Y : T} (f : Morphism X Y) := X'
-    if (!m_f->is_base()) {
-        std::vector<FunctionRef> base_arguments;
-        for (auto &f: m_f->arguments())
-            base_arguments.push_back(matcher.convert(f));
-        return matcher.convert(base()).specialize(std::move(parameters), std::move(base_arguments));
-    }
+    if (!m_f->is_base())
+        return matcher.convert(base()).specialize(parameters_full, matcher.convert(m_f->arguments()));
 
     // TODO: if the list of arguments equals the list of dependencies, we can just return the underlying base function right ??
 
@@ -187,7 +186,7 @@ FunctionRef FunctionRef::specialize(Telescope parameters, std::vector<FunctionRe
     // At this point everything is verified.
     // The last thing to do is to construct the type of the specialization.
     // Now create a new specialization with the right inputs
-    return Function::make(matcher.convert(type()), std::move(parameters), *this, std::move(arguments));
+    return Function::make(std::move(parameters_full), matcher.convert(type()), *this, std::move(arguments));
 }
 
 bool FunctionRef::equivalent(const FunctionRef &other) const {

@@ -23,7 +23,7 @@ let proj_of_free_module {R : Ring} {M : Module R} (h : free M) : projective M
 -- Any projective module is flat.
 let flat_of_proj_module {R : Ring} {M : Module R} (h : projective M) : flat M
 -- Any free module is flat.
-def flat_of_free_module {R : Ring} {M : Module R} (h : free M) := flat_of_proj_module (proj_of_free_module h)
+let flat_of_free_module {R : Ring} {M : Module R} (h : free M) := flat_of_proj_module (proj_of_free_module h)
 -- Every ring $R$ is a cyclic module over itself.
 let cyclic_module_self (R : Ring) : cyclic (module_self R)
 -- Every ring $R$ is a free module over itself.

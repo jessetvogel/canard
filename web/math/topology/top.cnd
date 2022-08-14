@@ -23,6 +23,6 @@ end top
 open topology.top
 
 let open_map closed_map proper compact_map quasi_compact_map dense galois_cover {X Y : Top} (f : Morphism X Y) : Prop
-def homeomorphism {X Y : Top} (f : Morphism X Y) := isomorphism f
+let homeomorphism {X Y : Top} (f : Morphism X Y) := isomorphism f
 
 end topology

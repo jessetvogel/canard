@@ -3,6 +3,8 @@ project(canard)
 
 # C++ version and optimization level
 set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 # Source files

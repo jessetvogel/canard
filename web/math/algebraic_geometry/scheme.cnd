@@ -13,7 +13,7 @@ namespace scheme
     -- The underlying topological space of a scheme.
     let to_top (X : Scheme) : Top
     -- A scheme is empty if its underlying topological space is empty.
-    def empty (X : Scheme) := topology.top.empty (to_top X)
+    let empty (X : Scheme) := topology.top.empty (to_top X)
     -- A scheme is affine if it is isomorphic to $\Spec(R)$ for some ring $R$.
     let affine (X : Scheme) : Prop
     -- A scheme is quasi-compact if its underlying topological space is quasi-compact. That is, for every open cover $\{ U_i \}_{i \in I}$ of $X$, there exists a finite subcover.

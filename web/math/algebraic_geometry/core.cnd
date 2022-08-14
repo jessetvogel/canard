@@ -12,11 +12,11 @@ namespace algebraic_geometry
 -- The scheme $\Spec(R)$ for a given ring $R$.
 let Spec (R : Ring) : Scheme
 let Spec_contravariant : contravariant Spec
-def mSpec {A B : Ring} (f : Morphism A B) := contramap Spec_contravariant f
+let mSpec {A B : Ring} (f : Morphism A B) := contramap Spec_contravariant f
 let sheaf_of_module {R : Ring} (M : Module R) : Sheaf (Spec R)
 
 -- The spectrum of the integers.
-def Spec_ZZ := Spec ZZ -- Even though this is a single step, this is the simplest scheme, so we want to consider it as a first case
+let Spec_ZZ := Spec ZZ -- Even though this is a single step, this is the simplest scheme, so we want to consider it as a first case
 
 end algebraic_geometry
 

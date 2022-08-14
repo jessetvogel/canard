@@ -5,17 +5,29 @@
 #include <algorithm>
 #include "Lexer.h"
 
-// TODO: https://stackoverflow.com/questions/48938090/how-to-deal-with-static-storage-duration-warnings
-const std::vector<std::string> Lexer::KEYWORDS(
-        {"let", "check", "search", "import", "namespace", "end", "open", "close", "structure", "exit", "inspect", "doc"});
-const std::vector<std::string> Lexer::SEPARATORS({":", "(", ")", "{", "}", "_", ";", ".", ":=", "--", "*", "\\", "λ", "->", ","});
+const std::vector<std::string> &Lexer::keywords() {
+    static const std::vector<std::string> KEYWORDS(
+            {
+                    "let", "check", "search", "import", "namespace", "end", "open", "close", "structure",
+                    "exit", "inspect", "doc"
+            });
+    return KEYWORDS;
+}
+
+const std::vector<std::string> &Lexer::separators() {
+    static const std::vector<std::string> SEPARATORS(
+            {
+                    ":", "(", ")", "{", "}", "_", ";", ".", ":=", "--", "*", "\\", "λ", "->", ","
+            });
+    return SEPARATORS;
+}
 
 bool Lexer::is_keyword(const std::string &str) {
-    return std::find(KEYWORDS.begin(), KEYWORDS.end(), str) != KEYWORDS.end();
+    return std::find(keywords().begin(), keywords().end(), str) != keywords().end();
 }
 
 bool Lexer::is_separator(const std::string &str) {
-    return std::find(SEPARATORS.begin(), SEPARATORS.end(), str) != SEPARATORS.end();
+    return std::find(separators().begin(), separators().end(), str) != separators().end();
 }
 
 bool Lexer::is_number(const std::string &str) {
@@ -33,12 +45,12 @@ bool Lexer::is_word(const std::string &str) {
 }
 
 bool Lexer::is_string(const std::string &str) {
-    size_t n = str.length();
+    const size_t n = str.length();
     return (n >= 2 && str[0] == '"' && str[n - 1] == '"');
 }
 
 bool Lexer::is_newline(const std::string &str) {
-    size_t n = str.length();
+    const size_t n = str.length();
     return (n == 1 && str[0] == '\n') || (n == 2 && str[0] == '\r' && str[1] == '\n');
 }
 

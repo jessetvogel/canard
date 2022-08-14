@@ -73,8 +73,8 @@ let sj_of_ffl {X Y : Scheme} {f : Morphism X Y} (h : faithfully_flat f) : surjec
 let sp_of_af_morph {X Y : Scheme} {f : Morphism X Y} (h : scheme_map.affine f) : scheme_map.separated f
 let qfn_of_fn {X Y : Scheme} {f : Morphism X Y} (h : finite f) : quasi_finite f
 let fl_of_sm {X Y : Scheme} {f : Morphism X Y} (h : smooth f) : flat f
-def ur_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := ur_of_fur_lft (fur_of_fet (fet_of_et h)) (lft_of_lfp (lfp_of_et h))
-def sm_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := sm_of_fsm_lfp (fsm_of_fet (fet_of_et h)) (lfp_of_et h)
+let ur_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := ur_of_fur_lft (fur_of_fet (fet_of_et h)) (lft_of_lfp (lfp_of_et h))
+let sm_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := sm_of_fsm_lfp (fsm_of_fet (fet_of_et h)) (lfp_of_et h)
 let qf_of_oi {X Y : Scheme} {f : Morphism X Y} (h : open_immersion f) : quasi_finite f
 let fn_of_pr_qf {X Y : Scheme} {f : Morphism X Y} (h1 : proper f) (h2 : quasi_finite f) : scheme_map.finite f
 let op_of_fl_lft {X Y : Scheme} {f : Morphism X Y} (h1 : scheme_map.flat f) (h2 : locally_finite_type f) : open_morphism f

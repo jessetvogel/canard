@@ -43,7 +43,7 @@ std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
     // Create a sub_query where h is replaced by a dependency-less version of h
     // This introduces new locals: the current parameters of h
     std::vector<FunctionRef> new_indeterminates = query->m_indeterminates;
-    auto new_h = Function::make(h.type(), Telescope{});
+    auto new_h = Function::make({}, h.type());
     new_indeterminates.back() = new_h;
     std::unordered_map<FunctionRef, FunctionRef> new_solutions;
     new_solutions.emplace(h, new_h);
@@ -376,10 +376,10 @@ std::vector<FunctionRef> Query::final_solutions(const std::shared_ptr<Query> &qu
                             new_parameters = h->parameters();
                         else {
 //                            new_parameters.m_explicits = h->parameters().m_explicits;
-                            for (int j = 0; j < m; ++j)
+                            for (int j = 0; j < (int) m; ++j)
                                 new_parameters.add(matchers.back()->convert(h->parameters().functions()[j]));
                         }
-                        g = g.specialize(std::move(new_parameters), {});
+                        g = g.specialize(new_parameters, {});
                     }
                     catch (SpecializationException &e) {
                         CANARD_ASSERT(false, e.m_message);
@@ -398,10 +398,7 @@ std::vector<FunctionRef> Query::final_solutions(const std::shared_ptr<Query> &qu
     // Finally, we can convert the indeterminates of the initial query
     // Note: this is the parent of the last query in the chain (because the initial query does not have a parent,
     // so it is not in the chain)
-    std::vector<FunctionRef> result;
-    for (auto &f: chain.back()->parent()->m_indeterminates)
-        result.push_back(matchers.back()->convert(f));
-    return result;
+    return matchers.back()->convert(chain.back()->parent()->m_indeterminates);
 }
 
 bool Query::injects_into(const std::shared_ptr<Query> &other) {

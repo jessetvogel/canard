@@ -39,7 +39,8 @@ public:
     Token get_token();
 
 private:
-    static const std::vector<std::string> KEYWORDS, SEPARATORS;
+    static const std::vector<std::string> &keywords();
+    static const std::vector<std::string> &separators();
 
     static bool is_keyword(const std::string &);
     static bool is_separator(const std::string &);

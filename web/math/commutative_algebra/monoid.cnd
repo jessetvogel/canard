@@ -52,9 +52,9 @@ namespace monoid_map
     -- A morphism of monoids is etale if [...]
     let etale {M N : Monoid} (f : Morphism M N) : Prop
     -- A morphism of monoids is injective if the underlying map of sets is injective.
-    def injective {M N : Monoid} (f : Morphism M N) := set_map.injective (fmap set_of_monoid_is_functor f)
+    let injective {M N : Monoid} (f : Morphism M N) := set_map.injective (fmap set_of_monoid_is_functor f)
     -- A morphism of monoids is surjective if the underlying map of sets is surjective.
-    def surjective {M N : Monoid} (f : Morphism M N) := set_map.surjective (fmap set_of_monoid_is_functor f)
+    let surjective {M N : Monoid} (f : Morphism M N) := set_map.surjective (fmap set_of_monoid_is_functor f)
 
 
     -- A submonoid $N$ of an integral monoid $M$ is integral.
@@ -72,7 +72,7 @@ let groupification (M : Monoid) : Group
 -- Given a ring $R$ and monoid $M$, the monoid ring $R[M]$.
 let monoid_ring (R : Ring) (M : Monoid) : Ring
 -- For any ring $R$, the map $M \mapsto R[M]$ is a functor.
-let monoid_ring_functor (R : Ring) : functor (λ (M : Monoid) -> monoid_ring R M)
+let monoid_ring_functor (R : Ring) : functor (λ (M : Monoid) := monoid_ring R M)
 -- Given a ring $R$ and monoid $M$, the ring morphism $R \to R[M]$, where $R[M]$ denotes the monoid ring.
 let monoid_ring_to_base (R : Ring) (M : Monoid) : Morphism R (monoid_ring R M)
 -- Any abelian group can be regarded as a commutative monoid.
