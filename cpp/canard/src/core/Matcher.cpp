@@ -4,10 +4,16 @@
 
 #include "Matcher.h"
 #include "macros.h"
+#include "../parser/Formatter.h"
 
 #include <utility>
 #include <algorithm>
 #include <memory>
+
+Matcher &Matcher::dummy() {
+    static Matcher dummy({});
+    return dummy;
+}
 
 Matcher::Matcher(const std::vector<FunctionRef> &indeterminates) : m_parent(nullptr),
                                                                    m_indeterminates(indeterminates) {}
@@ -114,16 +120,16 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
 
     // At this point, f and g agree up to their signature, i.e. their parameters and types match
 
-    // If f (resp. g) is an indeterminate, map f -> g (resp. g -> f).
+    // If f (resp. g) is an indeterminate base function, map f -> g (resp. g -> f).
     // Also treat the case where f or g is an indeterminate of some parent
-    // TODO: if a specialization is an indeterminate, should we just ignore it ? That would prevent copying a vector somewhere ..
-    for (Matcher *m = this; m != nullptr; m = m->m_parent) {
-        auto it_f = std::find(m->m_indeterminates.begin(), m->m_indeterminates.end(), f);
-        auto it_g = std::find(m->m_indeterminates.begin(), m->m_indeterminates.end(), g);
-        if (it_f != m->m_indeterminates.end() || it_g != m->m_indeterminates.end()) {
-            // If both f and g are indeterminates, we preferably map 'from left to right' in the list of indeterminates,
-            // to have some consistency at least
-            return (it_f < it_g) ? m->put_solution(f, g) : m->put_solution(g, f);
+    if (f->is_base() || g->is_base()) {
+        for (Matcher *m = this; m != nullptr; m = m->m_parent) {
+            auto it_f = f->is_base() ? std::find(m->m_indeterminates.begin(), m->m_indeterminates.end(), f) : m->m_indeterminates.end();
+            auto it_g = g->is_base() ? std::find(m->m_indeterminates.begin(), m->m_indeterminates.end(), g) : m->m_indeterminates.end();
+            if (it_f != m->m_indeterminates.end() || it_g != m->m_indeterminates.end()) {
+                // If both f and g are indeterminates, we preferably map 'from left to right' in the list of indeterminates, to have some consistency at least
+                return (it_f < it_g) ? m->put_solution(f, g) : m->put_solution(g, f);
+            }
         }
     }
 
@@ -131,26 +137,32 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
     // Note that the bases themselves can be indeterminates, so we have to account for that first.
     const auto &f_base = f.base();
     const auto &g_base = g.base();
-
-    // TODO: what if fBase/gBase is an indeterminate, but also it contains parameters ?
-    //  At some points problems appear, because there will be multiple solutions..
-    if (f_base == g_base || ((is_indeterminate(f_base) || is_indeterminate(g_base)) && matches(f_base, g_base))) {
-        auto &f_arguments = f->arguments(), &g_arguments = g->arguments();
-        size_t m = f_arguments.size(); // Since the bases already match, we know the number of arguments must agree as well
-        for (int i = 0; i < m; ++i) {
-            if (!matches(f_arguments[i], g_arguments[i]))
-                return false;
-        }
-        return true;
+    if (f_base != g_base) {
+        // Only way for different bases to match is if one of them is an indeterminate
+        if (!is_indeterminate(f_base) && !is_indeterminate(g_base))
+            return false;
+        if (!matches(f_base, g_base))
+            return false;
     }
 
-//    std::cerr << f->to_string() << " does not match " << g->to_string() << std::endl;
-    return false;
+    const auto &f_arguments = f->arguments(), &g_arguments = g->arguments();
+    const size_t m = f_arguments.size(); // since the bases already match, we know the number of arguments must agree as well
+    for (int i = 0; i < m; ++i) {
+        if (!matches(f_arguments[i], g_arguments[i]))
+            return false;
+    }
+
+    return true;
 }
 
 void Matcher::assert_matches(const FunctionRef &f, const FunctionRef &g) {
     bool match = matches(f, g);
-    CANARD_ASSERT(match, "Matching  << Formatter::to_string(f, true, false) <<  to << Formatter::to_string(g, true, false)");
+
+    if (!match) {
+        Formatter formatter;
+        CANARD_LOG(formatter.to_string(*this));
+        CANARD_ASSERT(match, "Matching " << formatter.to_string_full(f) << " to " << formatter.to_string_full(g));
+    }
 }
 
 FunctionRef Matcher::convert(const FunctionRef &f) {
@@ -159,7 +171,7 @@ FunctionRef Matcher::convert(const FunctionRef &f) {
     if (g != nullptr) return g;
 
     // If f is a base function (and has no solution), then the conversion can only be f itself
-    if (f->is_base()) return f;
+    if (f->is_base()) return f; // TODO: if f is an unsolved indeterminate, what should we return ??
 
     // Convert parameters
     std::unique_ptr<Matcher> matcher;
@@ -213,7 +225,7 @@ Telescope Matcher::clone(const Telescope &parameters, const Telescope &telescope
     // Shortcut
     if (telescope.empty()) return {};
 
-    // Clone the parameters
+    // Clone the telescope
     Telescope cloned;
     auto sub_matcher = std::unique_ptr<Matcher>(new Matcher(this, telescope.functions()));
     for (const auto &f: telescope.functions()) {
@@ -244,6 +256,8 @@ FunctionRef Matcher::clone(const Telescope &parameters, const FunctionRef &f) {
                  : Function::make(parameters + cloned_parameters, sub_matcher.convert(f.type()),
                                   sub_matcher.convert(f.base()), sub_matcher.convert(f->arguments()));
     clone->set_name(f->name());
+    clone->set_implicit(f->implicit());
+//    clone->set_constructor(...); // TODO
     return clone;
 }
 

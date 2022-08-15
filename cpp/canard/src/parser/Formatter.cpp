@@ -3,20 +3,17 @@
 //
 
 #include "Formatter.h"
-#include "Namespace.h"
-#include "Metadata.h"
+#include "../data/Namespace.h"
 #include <sstream>
 
 const char *Formatter::INDENT = "  ";
 
 std::string Formatter::to_string(const FunctionRef &f) {
     // For base functions and specializations with a name, just use the name (possibly with namespace)
-    if (f->is_base() || !f->name().empty()) {
+    if (f->is_base()) { // || !f->name().empty()
         std::ostringstream ss;
-        auto metadata = (Metadata *) f->metadata();
-        auto space = metadata ? metadata->m_space : nullptr;
-        if (m_flag_namespaces && space) {
-            std::string path = space->full_name();
+        if (m_flag_namespaces && f->space()) {
+            std::string path = ((Namespace *) f->space())->full_name();
             if (!path.empty()) ss << path << '.';
         }
         ss << (f->name().empty() ? "?" : f->name());
@@ -41,8 +38,7 @@ std::string Formatter::format_expression(const FunctionRef &f) {
         const auto m = f_base_parameters.size();
         for (int i = 0; i < (int) m; ++i) {
             // Skip implicit arguments
-            auto parameter_metadata = (Metadata *) f_base_parameters[i]->metadata();
-            if (parameter_metadata && parameter_metadata->m_implicit)
+            if (f_base_parameters[i]->implicit())
                 continue;
 
             // Stringify the argument, and possibly enclose it with parentheses
@@ -66,10 +62,9 @@ std::string Formatter::to_string_full(const FunctionRef &f) {
         ss << to_string(f->parameters());
 
         // If it is a structure (i.e. has a constructor), also print the fields
-        auto metadata = (Metadata *) f->metadata();
-        if (metadata && metadata->m_constructor != nullptr) {
+        if (f->constructor()) {
             ss << " := {\n";
-            const auto &fields = metadata->m_constructor->parameters().functions();
+            const auto &fields = f->constructor()->parameters().functions();
             for (auto it = fields.begin() + (int) f->parameters().size(); it != fields.end(); ++it)
                 ss << INDENT << to_string_full(*it) << ((it == fields.end() - 1) ? "\n" : ",\n");
             ss << "}";
@@ -79,7 +74,7 @@ std::string Formatter::to_string_full(const FunctionRef &f) {
         }
     } else {
         // Formatter for specializations
-        ss << (f->name().empty() ? "λ" : to_string(f));
+        ss << (f->name().empty() ? "λ" : f->name());
         ss << to_string(f->parameters());
         ss << " := ";
         ss << format_expression(f);
@@ -93,14 +88,13 @@ std::string Formatter::to_string(const Telescope &telescope) {
 
     const auto &functions = telescope.functions();
     for (auto it = functions.begin(); it != functions.end();) {
-        bool implicit = (*it)->metadata() && ((Metadata *) (*it)->metadata())->m_implicit;
+        bool implicit = (*it)->implicit();
 
         // Find maximal sequence of equivalent functions: group them for printing
         std::vector<FunctionRef> singleton = {*it};
         auto it_other = it + 1;
         for (; it_other != functions.end(); ++it_other) {
-            bool implicit_other = (*it_other)->metadata() && ((Metadata *) (*it_other)->metadata())->m_implicit;
-            if (implicit_other != implicit)
+            if ((*it_other)->implicit() != implicit)
                 break;
             Matcher matcher(singleton);
             if (!matcher.matches(*it, *it_other))
@@ -132,25 +126,13 @@ std::string Formatter::to_string(const Query &query) {
     return ss.str();
 }
 
-//std::string Matcher::to_string() {
-//    std::stringstream ss;
-//    ss << "{[";
-//    bool first = true;
-//    for (auto &f: m_indeterminates) {
-//        if (!first)
-//            ss << ", ";
-//        first = false;
-//        ss << Formatter::to_string(f);
-//    }
-//    ss << "] ";
-//
-//    first = true;
-//    for (auto &m_solution: m_solutions) {
-//        if (!first)
-//            ss << ", ";
-//        first = false;
-//        ss << Formatter::to_string(m_solution.first) << " -> " << Formatter::to_string(m_solution.second);
-//    }
-//    ss << '}';
-//    return ss.str();
-//}
+std::string Formatter::to_string(const Matcher &matcher) {
+    std::stringstream ss;
+    ss << "{\n";
+    for (const auto &f: matcher.indeterminates()) {
+        const auto &g = matcher.get_solution(f);
+        ss << INDENT << to_string(f) << " := " << ((g != nullptr) ? to_string(g) : "?") << "\n";
+    }
+    ss << "}";
+    return ss.str();
+}

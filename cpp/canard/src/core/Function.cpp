@@ -4,7 +4,6 @@
 
 #include "Function.h"
 #include "Matcher.h"
-#include "macros.h"
 #include <utility>
 #include <memory>
 
@@ -54,14 +53,6 @@ FunctionRef Function::make(Telescope parameters, const FunctionRef &type, const 
     return std::shared_ptr<Function>(new Function(std::move(parameters), type, base, std::move(arguments)));
 }
 
-const std::string &Function::name() const {
-    return m_name;
-}
-
-const Telescope &Function::parameters() const {
-    return m_parameters;
-}
-
 const std::vector<FunctionRef> &Function::arguments() const {
     // If the Function is a base-function, its arguments are its own parameters
     return is_base() ? m_parameters.functions() : m_arguments;
@@ -69,6 +60,18 @@ const std::vector<FunctionRef> &Function::arguments() const {
 
 void Function::set_name(const std::string &name) {
     m_name = name;
+}
+
+void Function::set_implicit(bool implicit) {
+    m_implicit = implicit;
+}
+
+void Function::set_constructor(const FunctionRef &constructor) {
+    m_constructor = constructor;
+}
+
+void Function::set_space(void *space) {
+    m_space = space;
 }
 
 bool Function::depends_on(const std::vector<FunctionRef> &list) {
@@ -118,10 +121,6 @@ bool Function::signature_depends_on(const std::vector<FunctionRef> &list) {
     return false;
 }
 
-void Function::set_metadata(std::shared_ptr<void> metadata) {
-    m_metadata = std::move(metadata);
-}
-
 FunctionRef FunctionRef::specialize(const Telescope &parameters, std::vector<FunctionRef> arguments) const {
     // Check that the number of arguments equals the number of parameters
     const auto &f_parameter_functions = m_f->parameters().functions();
@@ -136,11 +135,7 @@ FunctionRef FunctionRef::specialize(const Telescope &parameters, std::vector<Fun
         return *this;
 
     // Create a matcher that matches the (first n) parameters to the (n) arguments given
-    // Note: only the base functions (i.e. not specializations) are the indeterminates!
-    std::vector<FunctionRef> indeterminates; // TODO: copying a whole vector... does this make it slow ??
-    std::copy_if(f_parameter_functions.begin(), f_parameter_functions.end(), std::back_inserter(indeterminates),
-                 [](const FunctionRef &f) { return f->is_base(); });
-    Matcher matcher(indeterminates);
+    Matcher matcher(f_parameter_functions);
     for (int i = 0; i < n; ++i) {
         const FunctionRef &parameter = f_parameter_functions[i];
         const FunctionRef &argument = arguments[i];
@@ -180,13 +175,19 @@ FunctionRef FunctionRef::specialize(const Telescope &parameters, std::vector<Fun
     if (!m_f->is_base())
         return matcher.convert(base()).specialize(parameters_full, matcher.convert(m_f->arguments()));
 
-    // TODO: if the list of arguments equals the list of dependencies, we can just return the underlying base function right ??
-
-    // Now we deal with the case where this is a base function:
-    // At this point everything is verified.
-    // The last thing to do is to construct the type of the specialization.
-    // Now create a new specialization with the right inputs
-    return Function::make(std::move(parameters_full), matcher.convert(type()), *this, std::move(arguments));
+    // Specialize constructor if needed
+    auto constructor = (m_f->constructor())
+                       ? m_f->constructor().specialize(parameters, arguments)
+                       : nullptr;
+    // Create a new specialization with the right inputs
+    auto f = Function::make(
+            std::move(parameters_full), matcher.convert(type()),
+            *this, std::move(arguments)
+    );
+    // Set metadata
+    f->set_implicit(m_f->implicit());
+    f->set_constructor(constructor);
+    return f;
 }
 
 bool FunctionRef::equivalent(const FunctionRef &other) const {

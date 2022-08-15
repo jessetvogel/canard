@@ -5,10 +5,9 @@
 #pragma once
 
 #include "Lexer.h"
-#include "../interpreter/Session.h"
-#include "../interpreter/Context.h"
-#include "../interpreter/Formatter.h"
-#include "../interpreter/Metadata.h"
+#include "Formatter.h"
+#include "../data/Session.h"
+#include "../data/Context.h"
 
 class Parser {
 public:
@@ -45,7 +44,7 @@ private:
     // Other fields
     Session &m_session;
     std::unordered_map<std::string, std::string> *m_documentation = nullptr;
-    Token m_comment_token = {NONE, std::string(), 0, 0};
+    Token m_last_comment_token = {NONE, std::string(), 0, 0};
     Options m_options;
 
     // Token methods
@@ -58,25 +57,25 @@ private:
 
     // Parse methods
     bool parse_statement();
-    void parse_inspect();
     void parse_open();
     void parse_close();
     void parse_import();
-    void parse_namespace();
+    void parse_definition();
+    void parse_begin_namespace();
     void parse_structure();
-    void parse_search();
     void parse_check();
-    void parse_declaration();
-    void parse_doc();
+    void parse_search();
+    void parse_inspect();
+    void parse_docs();
 
     std::string parse_path();
     std::vector<std::string> parse_list_identifiers();
-    std::vector<FunctionRef> parse_functions(Context &);
+    std::vector<FunctionRef> parse_functions(Context &, const Telescope &);
     Telescope parse_parameters(Context &);
-    FunctionRef parse_expression(Context &);
-    FunctionRef parse_expression(Context &, const Telescope &);
+    Telescope parse_fields(Context &context, const Telescope &);
+    FunctionRef parse_expression(Context &, const Telescope &, Context * = nullptr, const std::string * = nullptr);
     FunctionRef parse_term(Context &);
-    Telescope parse_fields(Context &context);
+    Namespace *parse_namespace();
 
     // Output methods
     void output(const std::string &);

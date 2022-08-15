@@ -12,8 +12,12 @@ class Matcher {
 
 public:
 
+    static Matcher& dummy();
+
     explicit Matcher(const std::vector<FunctionRef> &);
     Matcher(Matcher *, const std::vector<FunctionRef> &);
+
+    const std::vector<FunctionRef> &indeterminates() const { return m_indeterminates; }
 
     bool matches(const FunctionRef &, const FunctionRef &);
     void assert_matches(const FunctionRef &, const FunctionRef &);

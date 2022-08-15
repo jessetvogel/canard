@@ -9,7 +9,7 @@ const std::vector<std::string> &Lexer::keywords() {
     static const std::vector<std::string> KEYWORDS(
             {
                     "let", "check", "search", "import", "namespace", "end", "open", "close", "structure",
-                    "exit", "inspect", "doc"
+                    "exit", "inspect", "docs"
             });
     return KEYWORDS;
 }
@@ -20,6 +20,29 @@ const std::vector<std::string> &Lexer::separators() {
                     ":", "(", ")", "{", "}", "_", ";", ".", ":=", "--", "*", "\\", "λ", "->", ","
             });
     return SEPARATORS;
+}
+
+const char *Lexer::to_string(const TokenType &type) {
+    switch (type) {
+        case NONE:
+            return "NONE";
+        case IDENTIFIER:
+            return "IDENTIFIER";
+        case SEPARATOR:
+            return "SEPARATOR";
+        case KEYWORD:
+            return "KEYWORD";
+        case NEWLINE:
+            return "NEWLINE";
+        case NUMBER:
+            return "NUMBER";
+        case STRING:
+            return "STRING";
+        case END_OF_FILE:
+            return "END_OF_FILE";
+        case COMMENT:
+            return "COMMENT";
+    }
 }
 
 bool Lexer::is_keyword(const std::string &str) {

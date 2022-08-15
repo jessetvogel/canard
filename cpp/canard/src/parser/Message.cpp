@@ -5,7 +5,7 @@
 #include <sstream>
 #include "Message.h"
 
-std::string Message::escape(const std::string &raw) {
+std::string Message::json_escape(const std::string &raw) {
     std::ostringstream ss;
     char u_buf[5];
     for (auto it = raw.begin(); it != raw.end(); ++it) {
@@ -33,7 +33,7 @@ const std::string status_strings[] = {"success", "fail", "error"};
 
 std::string Message::create(MessageStatus status, const std::string &data) {
     std::ostringstream ss;
-    ss << R"({"status":")" << status_strings[status] << R"(","data":")" << escape(data) << "\"}";
+    ss << R"({"status":")" << status_strings[status] << R"(","data":")" << json_escape(data) << "\"}";
     return ss.str();
 }
 
@@ -44,14 +44,13 @@ std::string Message::create(MessageStatus status, const std::vector<std::string>
     for (const std::string &s: data) {
         if (!first) ss << ',';
         first = false;
-        ss << '"' << escape(s) << '"';
+        ss << '"' << json_escape(s) << '"';
     }
     ss << "]}";
     return ss.str();
 }
 
-std::string
-Message::create(MessageStatus status, const std::vector<std::string> &keys, const std::vector<std::string> &values) {
+std::string Message::create(MessageStatus status, const std::vector<std::string> &keys, const std::vector<std::string> &values) {
     std::ostringstream ss;
     size_t n = keys.size();
     ss << R"({"status":")" << status_strings[status] << R"(","data":[{)";
@@ -59,7 +58,7 @@ Message::create(MessageStatus status, const std::vector<std::string> &keys, cons
     for (int i = 0; i < n; ++i) {
         if (!first) ss << ',';
         first = false;
-        ss << '"' << escape(keys[i]) << "\":\"" << escape(values[i]) << '"';
+        ss << '"' << json_escape(keys[i]) << "\":\"" << json_escape(values[i]) << '"';
     }
     ss << "}]}";
     return ss.str();

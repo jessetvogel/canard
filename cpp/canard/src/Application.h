@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "interpreter/Session.h"
+#include "data/Session.h"
 #include "parser/Parser.h"
 
 class Application {
@@ -21,6 +21,5 @@ private:
     std::unordered_map<std::string, std::string> m_documentation;
 
     bool parse_file(const std::string &);
+    void write_documentation(const std::string &);
 };
-
-

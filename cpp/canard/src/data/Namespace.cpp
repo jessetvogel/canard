@@ -3,8 +3,6 @@
 //
 
 #include "Namespace.h"
-#include "Metadata.h"
-#include "../core/macros.h"
 #include <utility>
 
 Namespace::Namespace() : m_name(std::string()) {}

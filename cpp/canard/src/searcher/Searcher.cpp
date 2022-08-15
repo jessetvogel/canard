@@ -3,7 +3,6 @@
 //
 
 #include "Searcher.h"
-#include "../interpreter/Namespace.h"
 #include "../core/macros.h"
 #include <algorithm>
 

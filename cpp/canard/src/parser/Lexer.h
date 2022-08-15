@@ -34,6 +34,8 @@ struct Token {
 class Lexer {
 public:
 
+    static const char *to_string(const TokenType &);
+
     explicit Lexer(Scanner &);
 
     Token get_token();

@@ -48,19 +48,22 @@ public:
     static FunctionRef make(Telescope parameters, const FunctionRef &type);
     static FunctionRef make(Telescope parameters, const FunctionRef &type, const FunctionRef &base, std::vector<FunctionRef> arguments);
 
-    const Telescope &parameters() const;
+    inline const Telescope &parameters() const { return m_parameters; }
     const std::vector<FunctionRef> &arguments() const;
-
-    const std::string &name() const;
-    void set_name(const std::string &);
 
     inline bool is_base() const { return m_base == nullptr; }
     bool depends_on(const std::vector<FunctionRef> &);
     bool depends_on(const std::unordered_set<FunctionRef> &);
     bool signature_depends_on(const std::vector<FunctionRef> &);
 
-    void *metadata() const { return m_metadata.get(); }
-    void set_metadata(std::shared_ptr<void>);
+    const std::string &name() const { return m_name; };
+    void set_name(const std::string &);
+    inline bool implicit() const { return m_implicit; }
+    void set_implicit(bool);
+    inline const FunctionRef &constructor() const { return m_constructor; }
+    void set_constructor(const FunctionRef &);
+    inline void *space() const { return m_space; }
+    void set_space(void *);
 
 protected:
 
@@ -75,7 +78,9 @@ private:
     Telescope m_parameters;
     std::vector<FunctionRef> m_arguments;
 
-    std::shared_ptr<void> m_metadata = nullptr;
+    bool m_implicit = false;
+    FunctionRef m_constructor = nullptr;
+    void *m_space = nullptr;
 
     friend class FunctionRef;
 };

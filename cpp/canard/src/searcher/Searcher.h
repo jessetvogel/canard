@@ -6,7 +6,7 @@
 
 #include "Query.h"
 #include "ThreadManager.h"
-#include "../interpreter/Namespace.h"
+#include "../data/Namespace.h"
 #include <queue>
 #include <mutex>
 

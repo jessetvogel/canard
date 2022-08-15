@@ -12,11 +12,13 @@ class FunctionRef;
 
 class Telescope {
 public:
-
+    
     Telescope() = default;
     explicit Telescope(std::vector<FunctionRef>);
 
     void add(FunctionRef);
+    void add(const std::vector<FunctionRef> &);
+    void add(const Telescope &);
 
     inline const std::vector<FunctionRef> &functions() const { return m_functions; }
     size_t size() const { return m_functions.size(); }
