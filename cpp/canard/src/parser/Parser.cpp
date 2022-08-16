@@ -395,11 +395,12 @@ void Parser::parse_search() {
     consume(KEYWORD, "search");
 
     // Parse telescope
-    Telescope telescope = parse_parameters(m_current_namespace->context());
+    Context sub_context(m_current_namespace->context());
+    Telescope telescope = parse_parameters(sub_context);
 
 //    CANARD_LOG("Searching for: ");
 //    Formatter form;
-//    for (const auto &f: indeterminates)
+//    for (const auto &f: telescope)
 //        CANARD_LOG(form.to_string_full(f));
 
     // Create searcher and specify the searching space
@@ -416,7 +417,7 @@ void Parser::parse_search() {
 
     // Make a query and do a search
     // Store the results in a list
-    auto query = std::make_shared<Query>(telescope.functions());
+    auto query = std::make_shared<Query>(telescope);
 
     auto start_time = std::chrono::system_clock::now();
     bool success = searcher.search(query);
@@ -474,7 +475,7 @@ void Parser::parse_inspect() {
     Formatter formatter;
     formatter.show_namespaces(m_options.show_namespaces);
     std::vector<std::string> identifiers;
-    for (auto &entry: space->context().functions())
+    for (auto &entry: space->context().map())
         identifiers.push_back(entry.first);
 
     // Output

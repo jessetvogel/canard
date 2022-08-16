@@ -35,7 +35,7 @@ private:
     std::vector<FunctionRef> m_result;
 
     void search_loop();
-    bool search_helper(std::shared_ptr<Query> &, FunctionRef &, std::vector<std::shared_ptr<Query>> &);
+    bool search_helper(std::shared_ptr<Query> &, const FunctionRef &, std::vector<std::shared_ptr<Query>> &);
     bool is_redundant(const std::shared_ptr<Query> &, const std::shared_ptr<Query> &);
 
 };

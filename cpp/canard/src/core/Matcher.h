@@ -29,7 +29,7 @@ public:
     FunctionRef clone(const FunctionRef &);
     FunctionRef clone(const Telescope &, const FunctionRef &);
     Telescope clone(const Telescope &, const Telescope &, std::unique_ptr<Matcher> * = nullptr);
-    FunctionRef cheap_clone(const FunctionRef &);
+    FunctionRef clone_cheaply(const FunctionRef &);
 
     bool solved();
 

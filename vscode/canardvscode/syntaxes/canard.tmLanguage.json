@@ -20,15 +20,15 @@
 		},{
 			"include": "#binders"
 		},{
-			"begin": ":(?!=)",
+			"begin": ":|:=",
 			"end": "$",
 			"patterns": [{
 				"include": "#expressions"
 			}]
 		}]
 	}, {
-		"comment": "definition by `def`",
-		"begin": "\\b(def)\\b",
+		"comment": "structures by `structure`",
+		"begin": "\\b(structure)\\b",
 		"end": "$",
 		"beginCaptures": {
 			"1": { "name": "keyword.other.canard" }

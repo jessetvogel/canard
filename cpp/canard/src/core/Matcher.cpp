@@ -31,7 +31,7 @@ bool Matcher::put_solution(const FunctionRef &f, const FunctionRef &g) {
 
     // If f -> k already, do some checks
     // TODO: we must prevent loops "f -> g -> f"
-    // NOTE: it is important we only look for solutions by THIS matcher, and not of any parent. This is because sub_matchers may overwrite certain indeterminates
+    // NOTE: it is important we only look for solutions by THIS matcher, and not of any parent. This is because sub_matchers may overwrite certain telescope
     auto it_solution_f = m_solutions.find(f);
     if (it_solution_f != m_solutions.end()) {
         const auto &k = it_solution_f->second;
@@ -46,7 +46,7 @@ bool Matcher::put_solution(const FunctionRef &f, const FunctionRef &g) {
         // If k is also an indeterminate (possibly of a parent!), then we are satisfied with mapping k -> g
         if (is_indeterminate(k)) return put_solution(k, g);
 
-        // In case g and k are both *not* indeterminates, they may still match! Let's check this:
+        // In case g and k are both *not* telescope, they may still match! Let's check this:
         return matches(k, g);
     }
 
@@ -127,14 +127,14 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
             auto it_f = f->is_base() ? std::find(m->m_indeterminates.begin(), m->m_indeterminates.end(), f) : m->m_indeterminates.end();
             auto it_g = g->is_base() ? std::find(m->m_indeterminates.begin(), m->m_indeterminates.end(), g) : m->m_indeterminates.end();
             if (it_f != m->m_indeterminates.end() || it_g != m->m_indeterminates.end()) {
-                // If both f and g are indeterminates, we preferably map 'from left to right' in the list of indeterminates, to have some consistency at least
+                // If both f and g are indeterminates, we preferably map 'from left to right' in the list of telescope, to have some consistency at least
                 return (it_f < it_g) ? m->put_solution(f, g) : m->put_solution(g, f);
             }
         }
     }
 
     // If the bases match, simply match the arguments
-    // Note that the bases themselves can be indeterminates, so we have to account for that first.
+    // Note that the bases themselves can be telescope, so we have to account for that first.
     const auto &f_base = f.base();
     const auto &g_base = g.base();
     if (f_base != g_base) {
@@ -173,7 +173,7 @@ FunctionRef Matcher::convert(const FunctionRef &f) {
     // If f is a base function (and has no solution), then the conversion can only be f itself
     if (f->is_base()) return f; // TODO: if f is an unsolved indeterminate, what should we return ??
 
-    // Convert parameters
+    // Clone parameters
     std::unique_ptr<Matcher> matcher;
     Telescope converted_parameters = clone({}, f->parameters(), &matcher);
     Matcher &sub_matcher = converted_parameters.empty() ? *this : *matcher;
@@ -257,11 +257,12 @@ FunctionRef Matcher::clone(const Telescope &parameters, const FunctionRef &f) {
                                   sub_matcher.convert(f.base()), sub_matcher.convert(f->arguments()));
     clone->set_name(f->name());
     clone->set_implicit(f->implicit());
-//    clone->set_constructor(...); // TODO
+//    if (f->constructor())
+//        clone->set_constructor(...); // TODO: tricky as type of new constructor should be `clone`
     return clone;
 }
 
-FunctionRef Matcher::cheap_clone(const FunctionRef &f) {
+FunctionRef Matcher::clone_cheaply(const FunctionRef &f) {
     // Should return x itself when x does not depend on any indeterminate (and neither on an indeterminate of some parent)
     for (Matcher *m = this; m != nullptr; m = m->m_parent) {
         if (f->signature_depends_on(m->m_indeterminates))
@@ -271,7 +272,7 @@ FunctionRef Matcher::cheap_clone(const FunctionRef &f) {
 }
 
 bool Matcher::solved() {
-    // A Matcher is `solved` if all indeterminates have a solution
+    // A Matcher is `is_solved` if all telescope have a solution
     for (const auto &f: m_indeterminates) {
         if (m_solutions.find(f) == m_solutions.end())
             return false;

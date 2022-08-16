@@ -50,11 +50,7 @@ public:
 
     inline const Telescope &parameters() const { return m_parameters; }
     const std::vector<FunctionRef> &arguments() const;
-
     inline bool is_base() const { return m_base == nullptr; }
-    bool depends_on(const std::vector<FunctionRef> &);
-    bool depends_on(const std::unordered_set<FunctionRef> &);
-    bool signature_depends_on(const std::vector<FunctionRef> &);
 
     const std::string &name() const { return m_name; };
     void set_name(const std::string &);
@@ -64,6 +60,9 @@ public:
     void set_constructor(const FunctionRef &);
     inline void *space() const { return m_space; }
     void set_space(void *);
+
+    bool depends_on(const std::vector<FunctionRef> &);
+    bool signature_depends_on(const std::vector<FunctionRef> &);
 
 protected:
 

@@ -88,31 +88,14 @@ bool Function::depends_on(const std::vector<FunctionRef> &list) {
             if (arg->depends_on(list))
                 return true;
         }
-        return false;
-    }
-}
-
-bool Function::depends_on(const std::unordered_set<FunctionRef> &set) {
-    if (is_base()) {
-        // A base function is said to 'depend' on the set, if it is contained in the set
-        for (const auto &ptr: set) {
-            if (ptr.operator->() == this)
-                return true;
-        }
-        return false;
-    } else {
-        // A specialization is said to 'depend' on the set, if one of its arguments depends on the set
-        for (auto &arg: m_arguments) {
-            if (arg->depends_on(set))
-                return true;
-        }
+        // TODO: what about the base ?
         return false;
     }
 }
 
 bool Function::signature_depends_on(const std::vector<FunctionRef> &list) {
     if (m_type == nullptr ? depends_on(list) : m_type->depends_on(list)) return true;
-//    return std::any_of(m_parameters.m_functions.begin(), m_parameters.m_functions.end(),
+//    return std::any_of(m_parameters.m_map.begin(), m_parameters.m_map.end(),
 //                       [list](auto &it) { return it->signature_depends_on(list); });
     for (const auto &param: m_parameters.functions()) {
         if (param->signature_depends_on(list))

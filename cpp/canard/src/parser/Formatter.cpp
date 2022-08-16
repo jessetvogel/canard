@@ -117,12 +117,14 @@ std::string Formatter::to_string(const Telescope &telescope) {
 
 std::string Formatter::to_string(const Query &query) {
     std::ostringstream ss;
-    ss << "Query@" << query.depth() << " {";
-    for (auto &f: query.locals())
-        ss << " (" << to_string_full(f) << ")";
-    ss << " } ";
-    for (auto &f: query.indeterminates())
-        ss << " (" << to_string_full(f) << ")";
+    ss << "{\n";
+    const auto n = query.telescope().size();
+    for (int i = 0; i < n; ++i) {
+        ss << INDENT << to_string_full(query.telescope().functions()[i])
+           << "; depth = " << query.depths()[i]
+           << "; context_depth = " << query.context_depths()[i] << "\n";
+    }
+    ss << "}";
     return ss.str();
 }
 
@@ -134,5 +136,20 @@ std::string Formatter::to_string(const Matcher &matcher) {
         ss << INDENT << to_string(f) << " := " << ((g != nullptr) ? to_string(g) : "?") << "\n";
     }
     ss << "}";
+    return ss.str();
+}
+
+std::string Formatter::to_string_tree(const Query &query) {
+    std::vector<const Query *> chain;
+    for (const Query *q = &query; q != nullptr; q = q->parent().get())
+        chain.push_back(q);
+    std::reverse(chain.begin(), chain.end());
+
+    std::ostringstream ss;
+    for (const auto q: chain) {
+        for (const auto &entry: q->solutions())
+            ss << "solved for " << to_string_full(entry.first) << " with " << to_string_full(entry.second) << "\n";
+        ss << to_string(*q) << "\n";
+    }
     return ss.str();
 }

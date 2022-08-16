@@ -21,6 +21,10 @@ void Telescope::add(const Telescope &other) {
     add(other.m_functions);
 }
 
+bool Telescope::contains(const FunctionRef &f) const {
+    return std::find(m_functions.begin(), m_functions.end(), f) != m_functions.end();
+}
+
 Telescope Telescope::operator+(const Telescope &other) const {
     std::vector<FunctionRef> new_functions = m_functions;
     new_functions.insert(new_functions.end(), other.m_functions.begin(), other.m_functions.end());

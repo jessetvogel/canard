@@ -10,13 +10,15 @@
 class Formatter {
 public:
 
+    inline void show_namespaces(bool b) { m_flag_namespaces = b; }
+
     std::string to_string(const FunctionRef &);
     std::string to_string_full(const FunctionRef &);
     std::string to_string(const Telescope &);
     std::string to_string(const Query &);
     std::string to_string(const Matcher &);
 
-    inline void show_namespaces(bool b) { m_flag_namespaces = b; }
+    std::string to_string_tree(const Query &);
 
 private:
 

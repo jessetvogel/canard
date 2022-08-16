@@ -3,3 +3,14 @@ import "ring.cnd"
 
 import "theorems.cnd"
 import "examples.cnd"
+
+open commutative_algebra.ring
+
+namespace commutative_algebra
+
+structure Algebra (k : Ring) := {
+    ring : Ring,
+    map : Morphism k ring
+}
+
+end commutative_algebra
