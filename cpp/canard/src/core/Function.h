@@ -6,7 +6,7 @@
 
 #include <string>
 #include <vector>
-#include <unordered_set>
+#include <unordered_map>
 #include "Telescope.h"
 
 class Function;
@@ -86,12 +86,11 @@ private:
 
 struct SpecializationException : public std::exception {
 
-    const FunctionRef m_f, m_g;
     const std::string m_message;
-
-    // TODO: this must really be done differently!
-    SpecializationException(const FunctionRef &f, const FunctionRef &g, std::string message)
-            : m_f(f), m_g(g), m_message(std::move(message)) {};
+    const std::unordered_map<std::string, FunctionRef> m_map;
+    
+    SpecializationException(std::string message, std::unordered_map<std::string, FunctionRef> map)
+            : m_message(std::move(message)), m_map(std::move(map)) {};
 };
 
 #include <utility>

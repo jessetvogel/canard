@@ -30,24 +30,31 @@ bool Matcher::put_solution(const FunctionRef &f, const FunctionRef &g) {
     if (h != nullptr) return put_solution(f, h);
 
     // If f -> k already, do some checks
-    // TODO: we must prevent loops "f -> g -> f"
-    // NOTE: it is important we only look for solutions by THIS matcher, and not of any parent. This is because sub_matchers may overwrite certain telescope
+    // Note: it is important we only look for solutions by THIS matcher, and not of any parent.
+    // This is because sub_matchers may overwrite certain indeterminates
     auto it_solution_f = m_solutions.find(f);
     if (it_solution_f != m_solutions.end()) {
         const auto &k = it_solution_f->second;
         if (k.equivalent(g)) return true;
 
-        // TODO: the order in which to put things: either g -> k or k -> g I'm not so sure about.
-        //  we want to keep some order: only map 'from left to right', so should we check whether k < g or k > g ?
+        auto it_g = std::find(m_indeterminates.begin(), m_indeterminates.end(), g);
+        auto it_k = std::find(m_indeterminates.begin(), m_indeterminates.end(), k);
 
-        // If g is an indeterminate, it was apparently not mapped before (because we checked for that). Hence, we will map g -> f -> k instead
-        if (is_indeterminate(g)) return put_solution(g, k); // Since f -> k, we might as well map g -> k directly!
+        bool bool_g = it_g != m_indeterminates.end();
+        bool bool_k = it_k != m_indeterminates.end();
 
-        // If k is also an indeterminate (possibly of a parent!), then we are satisfied with mapping k -> g
-        if (is_indeterminate(k)) return put_solution(k, g);
+        // If both g and k are indeterminates, we want to map from 'right to left'
+        // Otherwise, if any of g and k are indeterminates, map in the only possible way
+        if (bool_g && bool_k)
+            return (it_g > it_k) ? put_solution(g, k) : put_solution(k, g);
+        if (bool_g)
+            return put_solution(g, k);
+        if (bool_k)
+            return put_solution(k, g);
 
-        // In case g and k are both *not* telescope, they may still match! Let's check this:
+        // In case g and k are both not indeterminates, they may still match! Let's check this:
         return matches(k, g);
+
     }
 
     m_solutions.emplace(f, g);

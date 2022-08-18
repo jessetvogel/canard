@@ -123,7 +123,7 @@ void Application::write_documentation(const std::string &file) {
     output << "{";
     for (const auto &entry: m_documentation) {
         if (!entry.second.empty())
-            output << "\"" << entry.first << "\":\"" << Message::json_escape(entry.second) << "\","; // TODO: trim entry.second
+            output << "\"" << entry.first << "\":\"" << Message::json_escape(entry.second) << "\",";
     }
     output.seekp(-1, std::ios_base::cur);
     output << "}" << std::endl;

@@ -82,6 +82,23 @@ std::string to_path(const Namespace &space, const std::string &name) {
     return space.name().empty() ? name : space.full_name() + '.' + name;
 }
 
+void ltrim(std::string &s) { // trim from start (in place)
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+void rtrim(std::string &s) { // trim from end (in place)
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+void trim(std::string &s) { // trim from both ends (in place)
+    ltrim(s);
+    rtrim(s);
+}
+
 bool Parser::parse() {
     try {
         m_running = true;
@@ -183,18 +200,18 @@ bool Parser::parse_statement() {
         return true;
     }
 
-    if (found(KEYWORD, "debug_search")) {
-        parse_debug_search();
-        return true;
-    }
+//    if (found(KEYWORD, "debug_search")) {
+//        parse_debug_search();
+//        return true;
+//    }
 
     return false;
 }
 
 void add_namespaces_with_children(std::unordered_set<Namespace *> &set, Namespace *space) {
     set.insert(space);
-    for (auto child: space->children())
-        add_namespaces_with_children(set, child);
+    for (const auto &entry: space->children())
+        add_namespaces_with_children(set, entry.second.get());
 }
 
 void Parser::parse_open() {
@@ -207,8 +224,8 @@ void Parser::parse_open() {
     // `open *` opens all available namespaces
     if (found(SEPARATOR, "*")) {
         consume();
-        for (Namespace *space: m_session.get_global_namespace().children())
-            add_namespaces_with_children(m_open_namespaces, space);
+        for (const auto &entry: m_session.get_global_namespace().children())
+            add_namespaces_with_children(m_open_namespaces, entry.second.get());
         return;
     }
     // Otherwise, open by path
@@ -299,6 +316,7 @@ void Parser::parse_definition() {
         // Store documentation
         if (has_doc) {
             auto path = to_path(*m_current_namespace, f->name());
+            trim(m_last_comment_token.m_data);
             m_documentation->emplace(std::move(path), m_last_comment_token.m_data);
         }
     }
@@ -371,6 +389,7 @@ void Parser::parse_structure() {
     // Store documentation
     if (has_doc) {
         auto path = to_path(*m_current_namespace, identifier);
+        trim(m_last_comment_token.m_data);
         m_documentation->emplace(std::move(path), m_last_comment_token.m_data);
     }
 }
@@ -403,11 +422,6 @@ void Parser::parse_search() {
     // Parse telescope
     Context sub_context(m_current_namespace->context());
     Telescope telescope = parse_parameters(sub_context);
-
-//    CANARD_LOG("Searching for: ");
-//    Formatter form;
-//    for (const auto &f: telescope)
-//        CANARD_LOG(form.to_string_full(f));
 
     // Create searcher and specify the searching space
     Searcher searcher(m_options.max_search_depth, m_options.max_search_threads);
@@ -882,9 +896,11 @@ FunctionRef Parser::parse_term(Context &context) {
             return f;
 
         // (2) Look through namespaces from the current one to the top
-        f = m_current_namespace->resolve_function(path);
-        if (f != nullptr)
-            return f;
+        for (auto space = m_current_namespace; space != nullptr; space = space->parent()) {
+            f = space->get_function(path);
+            if (f != nullptr)
+                return f;
+        }
 
         // (3) Look through the other open namespaces
         std::vector<FunctionRef> candidates;
@@ -950,9 +966,9 @@ std::string Parser::format_specialization_exception(SpecializationException &exc
     std::string message = exception.m_message;
     auto it_f = message.find("{f}");
     if (it_f != std::string::npos)
-        message = message.replace(it_f, 3, formatter.to_string_full(exception.m_f));
+        message = message.replace(it_f, 3, formatter.to_string_full(exception.m_map.at("f")));
     auto it_g = message.find("{g}");
     if (it_g != std::string::npos)
-        message = message.replace(it_g, 3, formatter.to_string_full(exception.m_g));
+        message = message.replace(it_g, 3, formatter.to_string_full(exception.m_map.at("g")));
     return message;
 }

@@ -16,24 +16,22 @@ public:
     Namespace();
     Namespace(Namespace &, std::string);
 
-    Context &context() { return m_context; }
+    Namespace *parent() const { return m_parent; }
     const std::string &name() const { return m_name; }
+    const std::string &full_name() const { return m_full_name; }
+    Context &context() { return m_context; }
+    const std::unordered_map<std::string, std::unique_ptr<Namespace>> &children() const { return m_children; }
 
-    Namespace *parent() const;
-    std::vector<Namespace *> children();
-
-    Namespace *create_subspace(const std::string &); // TODO: as put() ?
+    Namespace *create_subspace(const std::string &);
     Namespace *get_namespace(const std::string &);
 
-    std::string full_name() const;
-
     const FunctionRef &get_function(const std::string &);
-    const FunctionRef &resolve_function(const std::string &);
 
 private:
 
     const std::string m_name;
-    Namespace *m_parent = nullptr;
+    const std::string m_full_name;
+    Namespace *const m_parent = nullptr;
     std::unordered_map<std::string, std::unique_ptr<Namespace>> m_children;
     Context m_context;
 

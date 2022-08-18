@@ -8,6 +8,7 @@
 #include "Formatter.h"
 #include "../data/Session.h"
 #include "../data/Context.h"
+#include <unordered_set>
 
 class Parser {
 public:
