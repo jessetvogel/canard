@@ -67,6 +67,7 @@ private:
     void parse_search();
     void parse_inspect();
     void parse_docs();
+    void parse_debug_search();
 
     std::string parse_path();
     std::vector<std::string> parse_list_identifiers();

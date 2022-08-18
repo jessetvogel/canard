@@ -6,6 +6,7 @@
 #include "Message.h"
 #include "../searcher/Searcher.h"
 #include "../core/macros.h"
+#include "../searcher/DebugSearcher.h"
 #include <fstream>
 
 Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session, Options options)
@@ -179,6 +180,11 @@ bool Parser::parse_statement() {
 
     if (found(KEYWORD, "docs")) {
         parse_docs();
+        return true;
+    }
+
+    if (found(KEYWORD, "debug_search")) {
+        parse_debug_search();
         return true;
     }
 
@@ -509,6 +515,77 @@ void Parser::parse_docs() {
         output(Message::create(SUCCESS, doc));
     else
         output("📝 " + (doc.empty() ? "No documentation" : doc));
+}
+
+void Parser::parse_debug_search() {
+    /*
+        debug_search LIST_OF_PARAMETERS
+     */
+
+    consume(KEYWORD, "debug_search");
+
+    // Parse telescope
+    Context sub_context(m_current_namespace->context());
+    Telescope telescope = parse_parameters(sub_context);
+    consume(SEPARATOR, ";");
+
+    // Create DebugSearcher
+    DebugSearcher searcher(std::make_shared<Query>(telescope));
+
+    Formatter formatter;
+    formatter.show_namespaces(m_options.show_namespaces);
+    while (!searcher.query().is_solved()) {
+        output("current query:\n" + formatter.to_string(searcher.query()));
+
+        Context current_context(m_current_namespace->context());
+        for (const auto &local_layer: searcher.query().locals()) {
+            for (const auto &f: local_layer)
+                current_context.put(f);
+        }
+
+        if (found(KEYWORD, "exit")) {
+            consume();
+            break;
+        }
+
+        auto thm = parse_expression(current_context, {});
+        consume(SEPARATOR, ";");
+
+        if (!searcher.apply(thm)) {
+            output("failed to apply " + formatter.to_string_full(thm));
+            continue;
+        }
+    }
+
+    if (!searcher.query().is_solved())
+        return;
+
+    output("QUERY TREE:");
+    output(formatter.to_string_tree(searcher.query()));
+
+    auto result = searcher.query().final_solutions();
+
+    if (m_options.json) {
+        std::vector<std::string> keys, values;
+        keys.reserve(telescope.functions().size());
+        values.reserve(result.size());
+        for (const auto &f: telescope.functions())
+            keys.push_back(f->name());
+        for (const auto &g: result)
+            values.push_back(formatter.to_string(g));
+        output(Message::create(SUCCESS, keys, values));
+    } else {
+        std::stringstream ss;
+        ss << "🔎 ";
+        size_t n = result.size();
+        bool first = true;
+        for (int i = 0; i < n; ++i) {
+            if (!first) ss << ", ";
+            first = false;
+            ss << telescope.functions()[i]->name() << " = " << formatter.to_string(result[i]);
+        }
+        output(ss.str());
+    }
 }
 
 std::string Parser::parse_path() {

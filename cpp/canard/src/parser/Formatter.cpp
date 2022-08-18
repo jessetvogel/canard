@@ -118,11 +118,18 @@ std::string Formatter::to_string(const Telescope &telescope) {
 std::string Formatter::to_string(const Query &query) {
     std::ostringstream ss;
     ss << "{\n";
+    const auto &locals = query.locals();
+    for (int i = 0; i < locals.size(); ++i) {
+        ss << "Locals @ " << i << ": ";
+        for (const auto &f: locals[i])
+            ss << to_string_full(f) << ", ";
+        ss << "\n";
+    }
     const auto n = query.telescope().size();
     for (int i = 0; i < n; ++i) {
         ss << INDENT << to_string_full(query.telescope().functions()[i])
            << "; depth = " << query.depths()[i]
-           << "; context_depth = " << query.context_depths()[i] << "\n";
+           << "; context_depth = " << query.locals_depths()[i] << "\n";
     }
     ss << "}";
     return ss.str();
@@ -133,7 +140,7 @@ std::string Formatter::to_string(const Matcher &matcher) {
     ss << "{\n";
     for (const auto &f: matcher.indeterminates()) {
         const auto &g = matcher.get_solution(f);
-        ss << INDENT << to_string(f) << " := " << ((g != nullptr) ? to_string(g) : "?") << "\n";
+        ss << INDENT << to_string_full(f) << " => " << ((g != nullptr) ? to_string_full(g) : "?") << "\n";
     }
     ss << "}";
     return ss.str();

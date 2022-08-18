@@ -98,8 +98,8 @@ void Searcher::search_loop() {
         std::vector<std::shared_ptr<Query>> reductions;
 
         // First list to search through is the list of local variables of q
-        for (Context *context = &q->context(); context != nullptr; context = context->parent()) {
-            for (const auto &thm: context->functions()) {
+        for (const auto &local_layer: q->locals()) {
+            for (const auto &thm: local_layer) {
                 if (search_helper(q, thm, reductions))
                     goto end; // TODO: can we get rid of `goto` ?
             }

@@ -23,46 +23,28 @@ Query::Query(Telescope telescope) :
         m_parent(nullptr),
         m_telescope(std::move(telescope)),
         m_depths(m_telescope.size(), 0),
-        m_depth(max(m_depths)),
-        m_context_depths(m_telescope.size(), 0) {
-    m_own_context = std::unique_ptr<Context>(new Context());
-    m_context = m_own_context.get();
-    m_context_depth = 0;
-}
+        m_depth(0),
+        m_locals_depths(m_telescope.size(), 0) {}
 
-Query::Query(std::shared_ptr<Query> parent, Telescope telescope, std::vector<int> depths, std::vector<int> context_depths,
+Query::Query(std::shared_ptr<Query> parent,
+             Telescope telescope,
+             std::vector<int> depths,
+             std::vector<std::vector<FunctionRef>> locals,
+             std::vector<int> locals_depths,
              std::unordered_map<FunctionRef, FunctionRef> solutions)
         : m_parent(std::move(parent)),
           m_telescope(std::move(telescope)),
           m_depths(std::move(depths)),
           m_depth(max(m_depths)),
-          m_context_depths(std::move(context_depths)),
-          m_solutions(std::move(solutions)) {
-    m_own_context = nullptr;
-    m_context = m_parent->m_context;
-    m_context_depth = m_parent->m_context_depth;
-}
-
-void Query::create_own_context() {
-    CANARD_ASSERT(m_own_context == nullptr, "query already has own context");
-    Context &parent = *m_context;
-    m_own_context = std::unique_ptr<Context>(new Context(parent));
-    m_context = m_own_context.get();
-    ++m_context_depth;
-}
-
-void Query::escape_to_context_depth(int context_depth) {
-    CANARD_ASSERT(m_context_depth >= context_depth, "cannot escape from context depth " << m_context_depth << " to " << context_depth);
-    while (m_context_depth > context_depth) {
-        m_context = m_context->parent();
-        --m_context_depth;
-    }
-    m_own_context = nullptr;
-}
+          m_locals(std::move(locals)),
+          m_locals_depths(std::move(locals_depths)),
+          m_solutions(std::move(solutions)) {}
 
 std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
     // Get last function of the telescope
     const auto &h = query->goal();
+    if (h == nullptr)
+        return query;
     CANARD_ASSERT(h->is_base(), "h must be a base function");
     // If h contains no parameters, nothing to do here
     if (h->parameters().empty())
@@ -74,21 +56,21 @@ std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
     auto new_h = Function::make({}, h.type());
     new_functions.back() = new_h;
 
-    std::vector<int> new_context_depths = query->m_context_depths;
-    new_context_depths.back()++; // increase context depth of new_h by one
+    // Add a layer of local functions given by the parameters of h
+    std::vector<std::vector<FunctionRef>> new_locals = query->m_locals;
+    new_locals.push_back(h->parameters().functions());
+
+    std::vector<int> new_locals_depths = query->m_locals_depths;
+    new_locals_depths.back()++; // increase locals depth of new_h by one
 
     std::shared_ptr<Query> sub_query(new Query(
             query,
             Telescope(new_functions),
             query->m_depths, // use the same depths, seems fair
-            std::move(new_context_depths),
+            std::move(new_locals),
+            std::move(new_locals_depths),
             {{h, new_h}} // TODO: look at this some time again, as parameters don't match..
     ));
-
-    // Create a sub-context filled with the parameters of h; these can then be used to solve for new_h
-    sub_query->create_own_context();
-    for (const auto &f: h->parameters().functions())
-        sub_query->context().put(f);
 
     return sub_query;
 }
@@ -99,47 +81,48 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     // At this point, h is asserted to have no parameters!
     CANARD_ASSERT(h->parameters().empty(), "h cannot have parameters");
     CANARD_ASSERT(h->is_base(), "h must be a base function");
-    if (query->m_context_depths.back() != query->m_context_depth) {
-        Formatter formatter;
-        CANARD_LOG(formatter.to_string_tree(*query));
-        CANARD_ASSERT(false, "h should have maximal context depth");
-    }
+    CANARD_ASSERT(query->m_locals_depths.back() == query->m_locals.size(), "h should have maximal context depth");
 
     // Create matcher with indeterminates from both telescope and thm parameters
-    std::vector<FunctionRef> all_indeterminates = query->telescope().functions();
+    std::vector<FunctionRef> indeterminates_total = query->telescope().functions();
     const auto &thm_parameters = thm->parameters().functions();
-    all_indeterminates.insert(all_indeterminates.end(), thm_parameters.begin(), thm_parameters.end());
-    Matcher matcher(all_indeterminates);
+    indeterminates_total.insert(indeterminates_total.end(), thm_parameters.begin(), thm_parameters.end());
+    Matcher matcher(indeterminates_total);
 
     // Note: we do not match h with thm, since they obviously need not match.
     // Instead, we match h.type() with thm.type() to see if thm can be applied to get a solution for h
     if (!matcher.matches(h.type(), thm.type()))
         return nullptr;
 
-#ifdef DEBUG
-    Formatter formatter;
-    CANARD_DEBUG("Solved for " << formatter.to_string_full(h) << " with " << formatter.to_string_full(thm) << " in " << formatter.to_string(*query));
-#endif
-
     // Create the new sub_query, and keep track of the solutions (for telescope) and the arguments (for thm)
     // and the new telescope (for the sub_query)
     std::vector<FunctionRef> new_indeterminates;
     std::unordered_map<FunctionRef, FunctionRef> new_solutions;
-    std::vector<int> new_depths, new_context_depths;
+    std::vector<int> new_depths, new_locals_depths;
     std::vector<FunctionRef> thm_arguments(thm_parameters.size());
+    std::vector<std::vector<FunctionRef>> new_locals(query->m_locals.size());
 
     const int h_depth = query->m_depths.back();
-    const int h_context_depth = query->m_context_depths.back();
+    const int h_context_depth = query->m_locals_depths.back();
 
-    std::vector<FunctionRef> mappable = all_indeterminates;
+    // TODO: come up with a better comment here. Important points:
+    //  - mappable: telescope functions (except h), thm parameters, and local functions may have solutions that all depend on each other
+    //  - therefore, we will be creating the `new_...` variables in an order
+    //  - sometimes functions must be cloned (because their signature depend functions that have solutions)
+    //  - call those functions that have solutions 'infected', so that we only clone those whose signature depends on an 'infected' function
+    //  - that function becomes infected then as well
+    //  - Furthermore, first insert locals (as rather have that something has as a solution a local function than the other way around)
 
     // The motivation here is that NOTHING should depend on h, as it is the last indeterminate.
     // It might happen that some local variable is depends on h, but in that case we should just throw it away
     // (because it cannot be that another indeterminate will depend on that local variable, as it would then in turn
     // depend on h again). So in conclusion, we can just forget about h for now, and then in the end construct
     // the value/solution for h!
-    mappable.erase(std::find(mappable.begin(), mappable.end(), h));
-    // mappable.insert(mappable.end(), query->m_locals.begin(), query->m_locals.end()); // locals might need mapping too! TODO: why? ?
+    std::vector<FunctionRef> mappable;
+    for (const auto &locals: query->m_locals)
+        mappable.insert(mappable.end(), locals.begin(), locals.end()); // locals might need mapping too
+    mappable.insert(mappable.end(), query->telescope().functions().begin(), query->telescope().functions().end() - 1); // don't include h
+    mappable.insert(mappable.end(), thm_parameters.begin(), thm_parameters.end());
 
     Matcher query_to_sub_query(mappable);
 
@@ -148,13 +131,41 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     std::vector<int> unmapped_thm_parameter_indices(thm->parameters().size());
     std::iota(unmapped_telescope_indices.begin(), unmapped_telescope_indices.end(), 0);
     std::iota(unmapped_thm_parameter_indices.begin(), unmapped_thm_parameter_indices.end(), 0);
+    std::vector<std::vector<FunctionRef>> unmapped_locals = query->m_locals;
 
-    int context_depth_tracker = 0; // the way in which the unmapped are resolved must be w.r.t. non-decreasing context depth, as otherwise there are non-allowed solutions
+    std::vector<FunctionRef> infected;
 
-    bool changes = true;
-    while (changes && !(unmapped_telescope_indices.empty() && unmapped_thm_parameter_indices.empty())) {
-        changes = false;
-        // Telescope functions
+    int locals_depth_tracker = 0; // the way in which the unmapped are resolved must be w.r.t. non-decreasing locals depth, as otherwise there are non-allowed solutions
+
+    while (!unmapped.empty()) {
+        // (1) Local functions // TODO: explain why order (1) (2) (3) should be this way (because of locals_depth_tracker)
+        for (int depth = 0; depth < unmapped_locals.size(); ++depth) {
+            auto &vector = unmapped_locals[depth];
+            for (auto it = vector.begin(); it != vector.end(); ++it) {
+                const auto &f = *it;
+                if (f->signature_depends_on(unmapped))
+                    continue;
+
+                // Clone the local function if it depends on an infected function
+                auto g = (f->signature_depends_on(infected))
+                         ? query_to_sub_query.clone(f)
+                         : f;
+
+                // ... and if so, match, set solution, and mark as infected
+                if (g != f) {
+                    query_to_sub_query.assert_matches(f, g);
+                    new_solutions.emplace(f, g);
+                    infected.push_back(f);
+                }
+
+                new_locals[depth].push_back(g);
+                unmapped.erase(std::find(unmapped.begin(), unmapped.end(), f)); // TODO: seems slow ?
+                vector.erase(it);
+                goto continue_while;
+            }
+        }
+
+        // (2) Telescope functions
         for (auto it = unmapped_telescope_indices.begin(); it != unmapped_telescope_indices.end(); ++it) {
             const int i = *it;
             const auto &f = query->telescope().functions()[i];
@@ -165,13 +176,9 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     continue;
 
                 // Check if `f_solution` is defined in the local context of f
-                const int f_context_depth = query->m_context_depths[i];
-                if (!query->is_allowed_solution(f_context_depth, f_solution)) {
-#ifdef DEBUG
-                    CANARD_DEBUG(formatter.to_string_full(f_solution) << " is not an allowed  solution for " << formatter.to_string_full(f));
-#endif
+                const int f_context_depth = query->m_locals_depths[i];
+                if (!query->is_allowed_solution(f_context_depth, f_solution))
                     return nullptr;
-                }
 
                 // Convert solution along matcher to get actual solution
                 f_solution = query_to_sub_query.convert(f_solution);
@@ -182,29 +189,32 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                     continue;
 
                 // This can be done cheaply, i.e. might preserve f as an indeterminate
-                f_solution = query_to_sub_query.clone_cheaply(f); // TODO: is it faster to just clone always ? profile this
-                // TODO: also, sometimes it can be done even cheaper, f may depend on indeterminates of query_to_sub_query, but they need not have solutions!
+                f_solution = (f->signature_depends_on(infected))
+                             ? query_to_sub_query.clone(f)
+                             : f;
 
                 new_indeterminates.push_back(f_solution);
                 new_depths.push_back(query->m_depths[i]); // same depth as f
-                new_context_depths.push_back(query->m_context_depths[i]); // same context depth as f
+                new_locals_depths.push_back(query->m_locals_depths[i]); // same context depth as f
             }
 
-            if (query->m_context_depths[i] < context_depth_tracker)
+            // Local depth condition
+            if (query->m_locals_depths[i] < locals_depth_tracker)
                 return nullptr;
-            context_depth_tracker = query->m_context_depths[i];
+            locals_depth_tracker = query->m_locals_depths[i];
 
             // Store solution, remove from unmapped, assert match, and signal changes
-            if (f_solution != f)
+            if (f_solution != f) {
                 new_solutions.emplace(f, f_solution);
+                infected.push_back(f);
+            }
             query_to_sub_query.assert_matches(f, f_solution);
-            unmapped.erase(std::find(unmapped.begin(), unmapped.end(), f)); // TODO: seems slow?
-            it = unmapped_telescope_indices.erase(it);
-            --it; // TODO: technically undefined behaviour
-            changes = true;
-            goto end_while;
+            unmapped.erase(std::find(unmapped.begin(), unmapped.end(), f)); // TODO: seems slow ?
+            unmapped_telescope_indices.erase(it);
+            goto continue_while;
         }
-        // Thm parameters
+
+        // (3) Thm parameters
         for (auto it = unmapped_thm_parameter_indices.begin(); it != unmapped_thm_parameter_indices.end(); ++it) {
             const int i = *it;
             const auto &f = thm_parameters[i]; // TODO: what if the thm parameter f is a specialization ?
@@ -224,36 +234,51 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                 if (f->signature_depends_on(unmapped))
                     continue;
 
+                // To find the context depth of a thm parameter is a bit tricky.
+                // If we reached this point in the code, then all the functions in unmapped_telescope depend on some thm parameter.
+                // If those functions depend on some thm parameter, then the local depth of that thm parameter can be at most the local depth of that function.
+                // TODO: can a similar thing happen with the local variables ?
+                int f_context_depth = h_context_depth; // by default, give it the maximum possible context depth
+                for (auto jt = unmapped_telescope_indices.begin(); jt != unmapped_telescope_indices.end(); ++jt) {
+                    const int j = *jt;
+                    const auto &g = query->telescope().functions()[j];
+                    const auto &g_solution = matcher.get_solution(g);
+                    if (g_solution ? g_solution->depends_on({f}) : g->signature_depends_on({f})) {
+                        f_context_depth = query->m_locals_depths[j];
+                        break; // since context depths are non-decreasing, we can simply break here
+                    }
+                }
+
                 // Note: no cheap clone for thm parameters, as theorems may get applied multiple times, so we need an actual clone
                 argument = query_to_sub_query.clone(f);
 
                 new_indeterminates.push_back(argument);
                 new_depths.push_back(h_depth + 1); // indeterminate was introduced because of h, so h_depth + 1
-                new_context_depths.push_back(h_context_depth); // similarly, h_context_depth
-
-                // TODO: again, these should be all, as h is allowed to anything!
-//                    // This new indeterminate may depend on the local variables that h was allowed to depend on
+                new_locals_depths.push_back(f_context_depth);
             }
 
-            if (h_context_depth < context_depth_tracker)
-                return nullptr;
-            context_depth_tracker = h_context_depth;
+//            // Now we can do the context depth check
+//            if (f_context_depth < locals_depth_tracker)
+//                return nullptr;
+//            locals_depth_tracker = f_context_depth;
 
             // Store solution, remove from unmapped, assert match, and signal changes
-            CANARD_ASSERT(argument != f, "argument cannot be f"); // TODO: why would it ever be ?
+            infected.push_back(f);
             thm_arguments[i] = argument;
             query_to_sub_query.assert_matches(f, argument);
-            unmapped.erase(std::find(unmapped.begin(), unmapped.end(), f)); // TODO: seems slow?
-            it = unmapped_thm_parameter_indices.erase(it);
-            --it; // TODO: technically undefined behaviour
-            changes = true;
-            goto end_while;
+            unmapped.erase(std::find(unmapped.begin(), unmapped.end(), f)); // TODO: seems slow ?
+            unmapped_thm_parameter_indices.erase(it);
+            goto continue_while;
         }
-        end_while:;
+
+        // (4) Break
+        break;
+
+        continue_while:;
     }
 
     // If there are still unmapped functions, there must be some circular dependence, and we concede
-    if (!(unmapped_telescope_indices.empty() && unmapped_thm_parameter_indices.empty())) {
+    if (!unmapped.empty()) {
         CANARD_DEBUG("circular dependence detected");
         return nullptr;
     }
@@ -261,7 +286,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     // Set solution for h as specialization of thm
     try {
         // Note that thm itself must also be converted, since it might have changed along the way to sub_query!
-        // E.g. for `search (P {A B : Prop} (h (a : A) : B) (x : A) : B)` // TODO: really ? I don't see how ?
+        // E.g. for something like (not precisely) `search (P {A B : Prop} (h (a : A) : B) (x : A) : B)`
         auto h_solution = query_to_sub_query.convert(thm).specialize({}, std::move(thm_arguments));
         new_solutions.emplace(h, std::move(h_solution));
     } catch (SpecializationException &e) {
@@ -269,27 +294,31 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     }
 
     // Create the reduced query based on the solutions and new indeterminates
-    const int new_context_depth = max(new_context_depths);
+    const int new_context_depth = max(new_locals_depths);
+    new_locals.erase(new_locals.begin() + new_context_depth, new_locals.end());
     std::shared_ptr<Query> sub_query(new Query(
             query,
             Telescope(new_indeterminates),
             std::move(new_depths),
-            std::move(new_context_depths),
+            std::move(new_locals),
+            std::move(new_locals_depths),
             std::move(new_solutions)
     ));
-    sub_query->escape_to_context_depth(new_context_depth);
 
     return sub_query;
 }
 
-std::vector<FunctionRef> Query::final_solutions() {
+std::vector<FunctionRef> Query::final_solutions() const {
     // This can only be done if this query is solved
     CANARD_ASSERT(is_solved(), "cannot call final_solutions on unsolved query");
 
+//    Formatter formatter;
+//    CANARD_LOG(formatter.to_string_tree(*this));
+
     // Create chain of queries, starting at the bottom, all the way up to the top
     // Note: we include every query which contains a parent, so the initial query will not be included
-    std::vector<Query *> chain;
-    for (Query *query = this; query->parent() != nullptr; query = query->parent().get())
+    std::vector<const Query *> chain;
+    for (const Query *query = this; query->parent() != nullptr; query = query->parent().get())
         chain.push_back(query);
     const Query &initial_query = *(chain.back()->parent());
 
@@ -310,6 +339,7 @@ std::vector<FunctionRef> Query::final_solutions() {
 
         // The indeterminates of the matcher are the keys of the solution set of the query
         auto next_indeterminates = std::unique_ptr<std::vector<FunctionRef>>(new std::vector<FunctionRef>());
+        // TODO: reserve
         for (auto &entry: query->m_solutions)
             next_indeterminates->push_back(entry.first);
         auto next_matcher = std::unique_ptr<Matcher>((i == 0)
@@ -317,14 +347,22 @@ std::vector<FunctionRef> Query::final_solutions() {
                                                      : new Matcher(matchers.back().get(), *next_indeterminates));
         indeterminates.push_back(std::move(next_indeterminates));
 
-        const auto &h = query->parent()->telescope().functions().back();
-        for (auto &entry: query->m_solutions) { // TODO: reason is that locals can also be mapped to solutions, and potentially not all telescope need to have solutions at each step ?
+        const auto &h = query->parent()->goal();
+        for (auto &entry: query->m_solutions) {
             const auto &f = entry.first;
             auto f_solution = entry.second;
 
             // First convert the solution along the previous matcher
-            if (i > 0)
+            if (i > 0) {
+//                bool f_is_local = std::any_of(query->parent()->locals().begin(), query->parent()->locals().end(),
+//                                              [&f](const std::vector<FunctionRef> &layer) {
+//                                                  return std::find(layer.begin(), layer.end(), f) != layer.end();
+//                                              });
+//                f_solution = f_is_local
+//                             ? matchers.back()->convert(f_solution)
+//                             : matchers.back()->clone(f_solution);
                 f_solution = matchers.back()->convert(f_solution);
+            }
 
             // Case f = h and h has parameters, we must reintroduce the parameters again
             // TODO: should these parameters be cloned again, or are they safe to use ?
@@ -347,7 +385,7 @@ std::vector<FunctionRef> Query::final_solutions() {
 }
 
 bool Query::injects_into(const std::shared_ptr<Query> &other) {
-    assert(other != nullptr);
+    CANARD_ASSERT(other != nullptr, "other = nullptr");
     // Goal is to map (injectively) all my indeterminates to other.telescope, but all other.locals to my locals
     // That is, we are checking if this query searches for less with more information.
 
@@ -434,16 +472,11 @@ bool Query::injects_into_helper(Matcher *matcher, std::vector<FunctionRef> unmap
 }
 
 bool Query::is_allowed_solution(const int context_depth, const FunctionRef &solution) {
+    CANARD_ASSERT(context_depth <= m_locals.size(), "context_depth > m_locals.size()");
     // A solution is allowed only if it does not depend on contexts deeper than context_depth
-    const Context *context = m_context;
-    int depth = m_context_depth;
-    while (depth > context_depth) {
-        if (solution->depends_on(context->functions()))
+    for (auto it = m_locals.begin() + context_depth; it != m_locals.end(); ++it) {
+        if (solution->depends_on(*it))
             return false;
-
-        context = context->parent();
-        --depth;
     }
-    // TODO: solution is also not allowed to depend on things from telescope that have a depth larger than context_depth !
     return true;
 }

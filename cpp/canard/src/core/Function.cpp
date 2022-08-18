@@ -139,6 +139,8 @@ FunctionRef FunctionRef::specialize(const Telescope &parameters, std::vector<Fun
         }
     }
 
+    // TODO: if f is base and parameters and arguments are precisely equal, we might want to return the base itself!
+
     // If less arguments were given than f has parameters, clone the excess parameters of f
     // and add them both to the parameters of the specialization and the arguments
     Telescope parameters_full = parameters;

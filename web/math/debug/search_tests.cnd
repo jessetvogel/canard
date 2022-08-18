@@ -37,6 +37,7 @@ search (R : Ring) (M : Module R) (h1 : module.flat M) (h2 : not (module.free M))
 search (P {U V W : Scheme} {g : Morphism U V} {h : Morphism V W} (gClosedImm : closed_immersion g) (hClosedImm : closed_immersion h) : scheme_map.proper (comp h g));
 
 search (X Y : Scheme) (f : Morphism X Y) (h : not (zariski_cover f));
+search (h1 : not (scheme_map.formally_etale (ec_to_P1 QQ_is_field))); -- ? ? ?
 search (h1 : not (scheme_map.formally_etale (ec_to_P1 QQ_is_field))) (h2 : not (scheme_map.open_immersion (ec_to_P1 QQ_is_field)));
 search (h : not (scheme_map.open_immersion (mSpec QQ_to_QQ_sqrt2)));
 

@@ -100,13 +100,13 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
     if (f == g) return true;
 
     // Number of parameters should agree
-    auto &f_parameters = f->parameters(), &g_parameters = g->parameters();
-    size_t n = f_parameters.size();
+    const auto &f_parameters = f->parameters(), &g_parameters = g->parameters();
+    const size_t n = f_parameters.size();
     if (n != g_parameters.size())
         return false;
 
     // Parameters themselves should match
-    auto sub_matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.functions())) : nullptr;
+    const auto sub_matcher = (n > 0) ? std::unique_ptr<Matcher>(new Matcher(this, f_parameters.functions())) : nullptr;
     Matcher &use_matcher = (n > 0) ? *sub_matcher : *this;
     for (int i = 0; i < n; ++i) {
         // Functions must match
@@ -126,15 +126,24 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
         for (Matcher *m = this; m != nullptr; m = m->m_parent) {
             auto it_f = f->is_base() ? std::find(m->m_indeterminates.begin(), m->m_indeterminates.end(), f) : m->m_indeterminates.end();
             auto it_g = g->is_base() ? std::find(m->m_indeterminates.begin(), m->m_indeterminates.end(), g) : m->m_indeterminates.end();
-            if (it_f != m->m_indeterminates.end() || it_g != m->m_indeterminates.end()) {
-                // If both f and g are indeterminates, we preferably map 'from left to right' in the list of telescope, to have some consistency at least
-                return (it_f < it_g) ? m->put_solution(f, g) : m->put_solution(g, f);
-            }
+
+            bool bool_f = (it_f != m->m_indeterminates.end());
+            bool bool_g = (it_g != m->m_indeterminates.end());
+
+            // If both f and g are indeterminates, we preferably map 'from right to left' / 'from new to old' in the list of telescope
+            // to have some consistency and control over what will happen in ambiguous cases
+            // If only one of them is an indeterminate, do the logical mapping
+            if (bool_f && bool_g)
+                return (it_f > it_g) ? m->put_solution(f, g) : m->put_solution(g, f);
+            if (bool_f)
+                return m->put_solution(f, g);
+            if (bool_g)
+                return m->put_solution(g, f);
         }
     }
 
     // If the bases match, simply match the arguments
-    // Note that the bases themselves can be telescope, so we have to account for that first.
+    // Note that the bases themselves can be indeterminates, so we have to account for that first.
     const auto &f_base = f.base();
     const auto &g_base = g.base();
     if (f_base != g_base) {
@@ -160,8 +169,10 @@ void Matcher::assert_matches(const FunctionRef &f, const FunctionRef &g) {
 
     if (!match) {
         Formatter formatter;
-        CANARD_LOG(formatter.to_string(*this));
-        CANARD_ASSERT(match, "Matching " << formatter.to_string_full(f) << " to " << formatter.to_string_full(g));
+        CANARD_ASSERT(match, "failed to match "
+                << formatter.to_string_full(f) << " to "
+                << formatter.to_string_full(g) << " in "
+                << formatter.to_string(*this));
     }
 }
 
@@ -260,22 +271,4 @@ FunctionRef Matcher::clone(const Telescope &parameters, const FunctionRef &f) {
 //    if (f->constructor())
 //        clone->set_constructor(...); // TODO: tricky as type of new constructor should be `clone`
     return clone;
-}
-
-FunctionRef Matcher::clone_cheaply(const FunctionRef &f) {
-    // Should return x itself when x does not depend on any indeterminate (and neither on an indeterminate of some parent)
-    for (Matcher *m = this; m != nullptr; m = m->m_parent) {
-        if (f->signature_depends_on(m->m_indeterminates))
-            return m->clone(f);
-    }
-    return f;
-}
-
-bool Matcher::solved() {
-    // A Matcher is `is_solved` if all telescope have a solution
-    for (const auto &f: m_indeterminates) {
-        if (m_solutions.find(f) == m_solutions.end())
-            return false;
-    }
-    return true;
 }

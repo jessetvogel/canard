@@ -12,7 +12,7 @@ class Matcher {
 
 public:
 
-    static Matcher& dummy();
+    static Matcher &dummy();
 
     explicit Matcher(const std::vector<FunctionRef> &);
     Matcher(Matcher *, const std::vector<FunctionRef> &);
@@ -29,9 +29,6 @@ public:
     FunctionRef clone(const FunctionRef &);
     FunctionRef clone(const Telescope &, const FunctionRef &);
     Telescope clone(const Telescope &, const Telescope &, std::unique_ptr<Matcher> * = nullptr);
-    FunctionRef clone_cheaply(const FunctionRef &);
-
-    bool solved();
 
 private:
 
