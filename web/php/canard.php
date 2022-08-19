@@ -19,7 +19,7 @@ $descriptorspec = array(
 // Create process
 $cwd = null;
 $env = array();
-$process = proc_open(dirname(__FILE__) . '/../bin/canard --json --explicit --doc --multithreading ' . dirname(__FILE__) . '/../math/main.cnd', $descriptorspec, $pipes, $cwd, $env);
+$process = proc_open(dirname(__FILE__) . '/../bin/canard --json --namespaces --threads max ' . dirname(__FILE__) . '/../math/main.cnd', $descriptorspec, $pipes, $cwd, $env);
 
 if (!is_resource($process))
     response_server_error('failed to start canard');
