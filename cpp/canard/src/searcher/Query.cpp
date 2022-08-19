@@ -41,27 +41,25 @@ Query::Query(std::shared_ptr<Query> parent,
           m_solutions(std::move(solutions)) {}
 
 std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
-    // Get last function of the telescope
-    const auto &h = query->goal();
-    if (h == nullptr)
-        return query;
-    CANARD_ASSERT(h->is_base(), "h must be a base function");
-    // If h contains no parameters, nothing to do here
-    if (h->parameters().empty())
+    // Get goal
+    int h_index;
+    const auto &h = query->goal(&h_index);
+    // If there is no goal, or there are no parameters, nothing to do here
+    if (h == nullptr || h->parameters().empty())
         return query;
 
     // Create a sub_query where h is replaced by a parameter-less version of h
     // This introduces new local functions: the parameters of h
     std::vector<FunctionRef> new_functions = query->telescope().functions();
     auto new_h = Function::make({}, h.type());
-    new_functions.back() = new_h;
+    new_functions[h_index] = new_h;
 
     // Add a layer of local functions given by the parameters of h
     std::vector<std::vector<FunctionRef>> new_locals = query->m_locals;
     new_locals.push_back(h->parameters().functions());
 
     std::vector<int> new_locals_depths = query->m_locals_depths;
-    new_locals_depths.back()++; // increase locals depth of new_h by one
+    new_locals_depths[h_index]++; // increase locals depth of new_h by one
 
     std::shared_ptr<Query> sub_query(new Query(
             query,
@@ -76,16 +74,17 @@ std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
 }
 
 std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const FunctionRef &thm) {
-    // Get last function of the telescope
-    const auto &h = query->goal();
+    // Get goal
+    int h_index;
+    const auto &h = query->goal(&h_index);
     // At this point, h is asserted to have no parameters!
     CANARD_ASSERT(h->parameters().empty(), "h cannot have parameters");
-    CANARD_ASSERT(h->is_base(), "h must be a base function");
-    CANARD_ASSERT(query->m_locals_depths.back() == query->m_locals.size(), "h should have maximal context depth");
+    CANARD_ASSERT(query->m_locals_depths[h_index] == query->m_locals.size(), "h should have maximal context depth");
 
     // Create matcher with indeterminates from both telescope and thm parameters
-    std::vector<FunctionRef> indeterminates_total = query->telescope().functions();
+    const auto &telescope = query->telescope().functions();
     const auto &thm_parameters = thm->parameters().functions();
+    std::vector<FunctionRef> indeterminates_total = telescope;
     indeterminates_total.insert(indeterminates_total.end(), thm_parameters.begin(), thm_parameters.end());
     Matcher matcher(indeterminates_total);
 
@@ -102,8 +101,8 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     std::vector<FunctionRef> thm_arguments(thm_parameters.size());
     std::vector<std::vector<FunctionRef>> new_locals(query->m_locals.size());
 
-    const int h_depth = query->m_depths.back();
-    const int h_context_depth = query->m_locals_depths.back();
+    const int h_depth = query->m_depths[h_index];
+    const int h_context_depth = query->m_locals_depths[h_index];
 
     // Local functions, telescope functions and thm parameters can all depend on one another, so they must be carefully mapped to the new query.
     // Let `mappable` be all of these functions (except for h, it will be treated later on).
@@ -114,21 +113,33 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     //  - we first insert local functions (as rather have that something has a local function as solution than the other way around)
     //  - we keep track of context depth, it should be non-decreasing along the way
     //  - the order (1) local functions, (2) telescope functions, (3) thm parameters is important!
-    std::vector<FunctionRef> mappable;
+    std::vector<FunctionRef> unmapped;
+    std::vector<std::vector<FunctionRef>> unmapped_locals = query->m_locals;
+    std::vector<int> unmapped_telescope_indices;
+    unmapped_telescope_indices.reserve(telescope.size() - 1);
+    std::vector<int> unmapped_thm_parameter_indices;
+    unmapped_thm_parameter_indices.reserve(thm_parameters.size());
     for (const auto &locals: query->m_locals)
-        mappable.insert(mappable.end(), locals.begin(), locals.end()); // locals might need mapping too
-    mappable.insert(mappable.end(), query->telescope().functions().begin(), query->telescope().functions().end() - 1); // don't include h
-    mappable.insert(mappable.end(), thm_parameters.begin(), thm_parameters.end());
+        unmapped.insert(unmapped.end(), locals.begin(), locals.end()); // locals might need mapping too
+    for (int i = 0; i < telescope.size(); ++i) {
+        const auto &f = telescope[i];
+        if (f->is_base() && f != h) {
+            unmapped.push_back(f);
+            unmapped_telescope_indices.push_back(i);
+        }
+    }
+    for (int i = 0; i < thm_parameters.size(); ++i) {
+        const auto &f = thm_parameters[i];
+        if (f->is_base()) {
+            unmapped.push_back(f);
+            unmapped_thm_parameter_indices.push_back(i);
+        }
+    }
+    // Create matcher
+    std::vector<FunctionRef> mappable = unmapped;
     Matcher query_to_sub_query(mappable);
 
-    std::vector<FunctionRef> unmapped = mappable; // keep track of which functions still need to be mapped
-    std::vector<int> unmapped_telescope_indices(query->telescope().size() - 1); // h is treated later on
-    std::vector<int> unmapped_thm_parameter_indices(thm->parameters().size());
-    std::iota(unmapped_telescope_indices.begin(), unmapped_telescope_indices.end(), 0);
-    std::iota(unmapped_thm_parameter_indices.begin(), unmapped_thm_parameter_indices.end(), 0);
-    std::vector<std::vector<FunctionRef>> unmapped_locals = query->m_locals;
-
-    std::vector<FunctionRef> infected;
+    std::vector<FunctionRef> infected; // indicates which functions have a (non-trivial) solution
 
     int locals_depth_tracker = 0; // the way in which the unmapped are resolved must be w.r.t. non-decreasing locals depth, as otherwise there are non-allowed solutions
 
@@ -163,8 +174,8 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
         // (2) Telescope functions
         for (auto it = unmapped_telescope_indices.begin(); it != unmapped_telescope_indices.end(); ++it) {
             const int i = *it;
-            const auto &f = query->telescope().functions()[i];
-            auto f_solution = matcher.get_solution(f); // TODO: this assumes f is a base function, what if it isn't ?
+            const auto &f = telescope[i];
+            auto f_solution = matcher.get_solution(f);
             if (f_solution != nullptr) {
                 // If f has solution, the solution must not depend on any unmapped indeterminate
                 if (f_solution->depends_on(unmapped))
@@ -212,7 +223,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
         // (3) Thm parameters
         for (auto it = unmapped_thm_parameter_indices.begin(); it != unmapped_thm_parameter_indices.end(); ++it) {
             const int i = *it;
-            const auto &f = thm_parameters[i]; // TODO: what if the thm parameter f is a specialization ?
+            const auto &f = thm_parameters[i];
             auto argument = matcher.get_solution(f);
             if (argument != nullptr) {
                 // If the argument for f is determined, this argument may not depend on unmapped functions
@@ -232,7 +243,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
                 // TODO: can a similar thing happen with the local variables ?
                 int f_context_depth = h_context_depth; // by default, give it the maximum possible context depth
                 for (const int &j: unmapped_telescope_indices) {
-                    const auto &g = query->telescope().functions()[j];
+                    const auto &g = telescope[j];
                     const auto &g_solution = matcher.get_solution(g);
                     if (g_solution ? g_solution->depends_on({f}) : g->signature_depends_on({f})) {
                         f_context_depth = query->m_locals_depths[j];
@@ -272,6 +283,12 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     if (!unmapped.empty()) {
         CANARD_DEBUG("circular dependence detected");
         return nullptr;
+    }
+
+    // Convert the thm arguments that were specializations
+    for (auto &f: thm_arguments) {
+        if (!f->is_base())
+            f = query_to_sub_query.convert(f);
     }
 
     // Set solution for h as specialization of thm
@@ -463,4 +480,17 @@ bool Query::is_allowed_solution(const int context_depth, const FunctionRef &solu
             return false;
     }
     return true;
+}
+
+const FunctionRef &Query::goal(int *index) const {
+    // Return the last base function of the telescope, and give index
+    for (auto it = m_telescope.functions().rbegin(); it != m_telescope.functions().rend(); ++it) {
+        const auto &f = *it;
+        if (f->is_base()) {
+            if (index)
+                *index = (int) std::distance(m_telescope.functions().begin(), it.base()) - 1;
+            return f;
+        }
+    }
+    return FunctionRef::null();
 }

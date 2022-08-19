@@ -20,14 +20,14 @@ public:
     const std::shared_ptr<Query> &parent() const { return m_parent; }
     const Telescope &telescope() const { return m_telescope; }
     const std::vector<std::vector<FunctionRef>> &locals() const { return m_locals; }
-    const FunctionRef &goal() const { return m_telescope.empty() ? FunctionRef::null() : m_telescope.functions().back(); }
     const std::vector<int> &depths() const { return m_depths; }
     const std::vector<int> &locals_depths() const { return m_locals_depths; }
     const std::unordered_map<FunctionRef, FunctionRef> &solutions() const { return m_solutions; }
+    const FunctionRef &goal(int * = nullptr) const;
 
     int depth() const { return m_depth; };
 
-    bool is_solved() const { return m_telescope.empty(); }
+    bool is_solved() const { return goal() == nullptr; }
     bool injects_into(const std::shared_ptr<Query> &);
 
     std::vector<FunctionRef> final_solutions() const;

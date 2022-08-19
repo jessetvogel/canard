@@ -83,6 +83,7 @@ bool Matcher::has_solution(const FunctionRef &f) {
         // Otherwise, f is 'its own solution'
         return true;
     } else {
+        // TODO: what about parameters?
         // For specializations, if both the base and its arguments have solutions, so has f
         return has_solution(f.base()) && std::all_of(f->arguments().begin(), f->arguments().end(), [this](const FunctionRef &g) {
             return has_solution(g);
@@ -177,9 +178,9 @@ void Matcher::assert_matches(const FunctionRef &f, const FunctionRef &g) {
     if (!match) {
         Formatter formatter;
         CANARD_ASSERT(match, "failed to match "
-                << formatter.to_string_full(f) << " to "
-                << formatter.to_string_full(g) << " in "
-                << formatter.to_string(*this));
+                << formatter.format_definition(f) << " to "
+                << formatter.format_definition(g) << " in "
+                << formatter.format_matcher(*this));
     }
 }
 

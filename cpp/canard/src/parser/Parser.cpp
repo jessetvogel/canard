@@ -404,7 +404,11 @@ void Parser::parse_check() {
     Formatter formatter;
     formatter.show_namespaces(m_options.show_namespaces);
     auto f = parse_expression(m_current_namespace->context(), {});
-    auto str = formatter.to_string_full(f);
+    auto str = formatter.format_definition(f);
+    if (!f->is_base()) {
+        str += " : ";
+        str += formatter.format_expression(f.type());
+    }
 
     if (m_options.json)
         output(Message::create(SUCCESS, str));
@@ -443,40 +447,17 @@ void Parser::parse_search() {
     bool success = searcher.search(query);
     auto end_time = std::chrono::system_clock::now();
 
-    auto result = searcher.result();
-
-    Formatter formatter;
-    formatter.show_namespaces(m_options.show_namespaces);
-
-    if (m_options.json) {
-        if (success) {
-            std::vector<std::string> keys, values;
-            keys.reserve(telescope.functions().size());
-            values.reserve(result.size());
-            for (const auto &f: telescope.functions())
-                keys.push_back(f->name());
-            for (const auto &g: result)
-                values.push_back(formatter.to_string(g));
-            output(Message::create(SUCCESS, keys, values));
-        } else {
-            output(Message::create(SUCCESS, std::vector<std::string>()));
-        }
+    // Print results in appropriate format
+    if (success) {
+        output_search_results(telescope, searcher.result());
     } else {
-        if (!success) {
+        if (m_options.json)
+            output(Message::create(SUCCESS, std::vector<std::string>()));
+        else {
             output("🥺 no solutions found");
             return;
         }
 
-        std::stringstream ss;
-        ss << "🔎 ";
-        size_t n = result.size();
-        bool first = true;
-        for (int i = 0; i < n; ++i) {
-            if (!first) ss << ", ";
-            first = false;
-            ss << telescope.functions()[i]->name() << " = " << formatter.to_string(result[i]);
-        }
-        output(ss.str());
     }
 
     CANARD_LOG("Search took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms");
@@ -549,7 +530,7 @@ void Parser::parse_debug_search() {
     Formatter formatter;
     formatter.show_namespaces(m_options.show_namespaces);
     while (!searcher.query().is_solved()) {
-        output("current query:\n" + formatter.to_string(searcher.query()));
+        output("current query:\n" + formatter.format_query(searcher.query()));
 
         Context current_context(m_current_namespace->context());
         for (const auto &local_layer: searcher.query().locals()) {
@@ -566,7 +547,7 @@ void Parser::parse_debug_search() {
         consume(SEPARATOR, ";");
 
         if (!searcher.apply(thm)) {
-            output("failed to apply " + formatter.to_string_full(thm));
+            output("failed to apply " + formatter.format_definition(thm));
             continue;
         }
     }
@@ -574,32 +555,13 @@ void Parser::parse_debug_search() {
     if (!searcher.query().is_solved())
         return;
 
-    output("QUERY TREE:");
-    output(formatter.to_string_tree(searcher.query()));
+    // Print query tree
+    output("Query tree:");
+    output(formatter.format_query_tree(searcher.query()));
 
+    // Print results
     auto result = searcher.query().final_solutions();
-
-    if (m_options.json) {
-        std::vector<std::string> keys, values;
-        keys.reserve(telescope.functions().size());
-        values.reserve(result.size());
-        for (const auto &f: telescope.functions())
-            keys.push_back(f->name());
-        for (const auto &g: result)
-            values.push_back(formatter.to_string(g));
-        output(Message::create(SUCCESS, keys, values));
-    } else {
-        std::stringstream ss;
-        ss << "🔎 ";
-        size_t n = result.size();
-        bool first = true;
-        for (int i = 0; i < n; ++i) {
-            if (!first) ss << ", ";
-            first = false;
-            ss << telescope.functions()[i]->name() << " = " << formatter.to_string(result[i]);
-        }
-        output(ss.str());
-    }
+    output_search_results(telescope, result);
 }
 
 std::string Parser::parse_path() {
@@ -757,8 +719,7 @@ Telescope Parser::parse_parameters(Context &context) {
     if (!implicits.empty()) {
         Formatter formatter;
         formatter.show_namespaces(m_options.show_namespaces);
-        CANARD_LOG(formatter.to_string(matcher));
-        throw ParserException(m_current_token, "implicit parameter '" + formatter.to_string_full(implicits[0]) + "' cannot be inferred");
+        throw ParserException(m_current_token, "implicit parameter " + formatter.format_definition(implicits[0]) + " cannot be inferred");
     }
 
     return reordered;
@@ -835,8 +796,11 @@ FunctionRef Parser::parse_expression(Context &context, const Telescope &paramete
     // Parse structure fields
     if (found(SEPARATOR, "{")) {
         // Make sure f has a constructor
-        if (!f->constructor())
-            throw ParserException(m_current_token, "trying to create structure instance without constructor");
+        if (!f->constructor()) {
+            Formatter formatter;
+            formatter.show_namespaces(m_options.show_namespaces);
+            throw ParserException(m_current_token, formatter.format_definition(f) + " does not have a constructor");
+        }
         // Clone the constructor
         FunctionRef constructor = (f->constructor()->is_base()) ? f->constructor() : Matcher::dummy().clone(f->constructor());
         // Parse the fields
@@ -847,7 +811,7 @@ FunctionRef Parser::parse_expression(Context &context, const Telescope &paramete
         for (auto it = constructor->parameters().functions().begin() + (int) parameters.size();
              it != constructor->parameters().functions().end(); ++it) { // sorry for the ugly for-loop
             const auto &field_name = (*it)->name();
-            auto value = sub_context.get(field_name);
+            const auto &value = sub_context.get(field_name);
             if (value == nullptr)
                 throw ParserException(m_current_token, "missing field '" + field_name + "'");
             constructor_arguments.push_back(value.specialize({}, parameters.functions()));
@@ -918,7 +882,7 @@ FunctionRef Parser::parse_term(Context &context) {
             std::ostringstream ss;
             for (int i = 0; i < (int) candidates.size(); ++i) {
                 if (i == (int) candidates.size() - 1) ss << " or ";
-                ss << formatter.to_string(candidates[i]);
+                ss << formatter.format_expression(candidates[i]);
                 if (i < (int) candidates.size() - 2) ss << ", ";
             }
             throw ParserException(token, "ambiguous identifier '" + path + "', could be " + ss.str());
@@ -941,6 +905,36 @@ Namespace *Parser::parse_namespace() {
 
 void Parser::output(const std::string &message) {
     m_ostream << message << std::endl;
+}
+
+void Parser::output_search_results(const Telescope &telescope, const std::vector<FunctionRef> &result) {
+    Formatter formatter;
+    formatter.show_namespaces(m_options.show_namespaces);
+    const auto n = telescope.functions().size();
+    std::vector<std::string> keys, values;
+    keys.reserve(n);
+    values.reserve(n);
+    for (int i = 0; i < n; ++i) {
+        const auto &f = telescope.functions()[i];
+        if (!f->implicit()) {
+            keys.push_back(f->name());
+            values.push_back(formatter.format_expression(result[i]));
+        }
+    }
+    if (m_options.json) {
+        output(Message::create(SUCCESS, keys, values));
+    } else {
+        std::stringstream ss;
+        ss << "🔎 ";
+        const auto m = keys.size();
+        bool first = true;
+        for (int i = 0; i < m; ++i) {
+            if (!first) ss << ", ";
+            first = false;
+            ss << keys[i] << " = " << values[i];
+        }
+        output(ss.str());
+    }
 }
 
 void Parser::error(const std::string &message) {
@@ -966,9 +960,9 @@ std::string Parser::format_specialization_exception(SpecializationException &exc
     std::string message = exception.m_message;
     auto it_f = message.find("{f}");
     if (it_f != std::string::npos)
-        message = message.replace(it_f, 3, formatter.to_string_full(exception.m_map.at("f")));
+        message = message.replace(it_f, 3, formatter.format_definition(exception.m_map.at("f")));
     auto it_g = message.find("{g}");
     if (it_g != std::string::npos)
-        message = message.replace(it_g, 3, formatter.to_string_full(exception.m_map.at("g")));
+        message = message.replace(it_g, 3, formatter.format_definition(exception.m_map.at("g")));
     return message;
 }

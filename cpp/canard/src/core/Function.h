@@ -35,7 +35,6 @@ public:
     inline bool operator!=(const FunctionRef &other) const { return m_f != other.m_f; }
     inline Function *operator->() const { return m_f.get(); }
     FunctionRef &operator=(FunctionRef other);
-    inline std::shared_ptr<Function> get() const { return m_f; }
 
 protected:
 
@@ -51,6 +50,7 @@ public:
     inline const Telescope &parameters() const { return m_parameters; }
     const std::vector<FunctionRef> &arguments() const;
     inline bool is_base() const { return m_base == nullptr; }
+    bool is_constructor() const;
 
     const std::string &name() const { return m_name; };
     void set_name(const std::string &);
@@ -88,7 +88,7 @@ struct SpecializationException : public std::exception {
 
     const std::string m_message;
     const std::unordered_map<std::string, FunctionRef> m_map;
-    
+
     SpecializationException(std::string message, std::unordered_map<std::string, FunctionRef> map)
             : m_message(std::move(message)), m_map(std::move(map)) {};
 };

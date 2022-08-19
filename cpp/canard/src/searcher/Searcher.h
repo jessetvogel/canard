@@ -20,7 +20,7 @@ public:
     bool search(const std::shared_ptr<Query> &);
 //    void optimize(const std::shared_ptr<Query> &);
 
-    std::vector<FunctionRef> result() const { return m_result; }
+    const std::vector<FunctionRef> &result() const { return m_result; }
 
 private:
 

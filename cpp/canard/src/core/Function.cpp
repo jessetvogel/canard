@@ -74,6 +74,10 @@ void Function::set_space(void *space) {
     m_space = space;
 }
 
+bool Function::is_constructor() const {
+    return (m_type != nullptr) && (m_type.base()->constructor().operator->() == this);
+}
+
 bool Function::depends_on(const std::vector<FunctionRef> &list) {
     if (is_base()) {
         // A base function is said to 'depend' on the list, if it is contained in the list

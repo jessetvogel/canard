@@ -6,19 +6,19 @@
 
 #include "../core/Function.h"
 #include "../searcher/Query.h"
+#include <sstream>
 
 class Formatter {
 public:
 
     inline void show_namespaces(bool b) { m_flag_namespaces = b; }
 
-    std::string to_string(const FunctionRef &);
-    std::string to_string_full(const FunctionRef &);
-    std::string to_string(const Telescope &);
-    std::string to_string(const Query &);
-    std::string to_string(const Matcher &);
-
-    std::string to_string_tree(const Query &);
+    std::string format_expression(const FunctionRef &);
+    std::string format_definition(const FunctionRef &);
+    std::string format_telescope(const Telescope &);
+    std::string format_matcher(const Matcher &);
+    std::string format_query(const Query &);
+    std::string format_query_tree(const Query &);
 
 private:
 
@@ -26,6 +26,15 @@ private:
 
     bool m_flag_namespaces = false;
 
-    std::string format_expression(const FunctionRef &);
+    std::ostringstream ss;
+
+    void write_identifier(const FunctionRef &);
+    void write_expression(const FunctionRef &);
+    void write_definition(const FunctionRef &);
+    void write_telescope(const Telescope &);
+    void write_matcher(const Matcher &);
+    void write_query(const Query &);
+
+    void clear();
 
 };

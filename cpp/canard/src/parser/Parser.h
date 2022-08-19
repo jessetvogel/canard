@@ -81,6 +81,7 @@ private:
 
     // Output methods
     void output(const std::string &);
+    void output_search_results(const Telescope &, const std::vector<FunctionRef> &);
     void error(const std::string &);
     std::string format_specialization_exception(SpecializationException &) const;
 };
@@ -93,3 +94,4 @@ struct ParserException : public std::exception {
     explicit ParserException(Token token, std::string message) : m_token(std::move(token)),
                                                                  m_message(std::move(message)) {};
 };
+
