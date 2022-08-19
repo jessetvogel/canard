@@ -22,4 +22,5 @@ private:
 
     bool parse_file(const std::string &);
     void write_documentation(const std::string &);
+    void write_definitions(const std::string &);
 };

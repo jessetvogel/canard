@@ -4,6 +4,7 @@
 
 #include "Telescope.h"
 #include "Function.h"
+#include <algorithm>
 
 Telescope::Telescope(std::vector<FunctionRef> functions) {
     m_functions = std::move(functions);

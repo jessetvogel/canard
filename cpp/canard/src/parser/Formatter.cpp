@@ -4,6 +4,7 @@
 
 #include "Formatter.h"
 #include "../data/Namespace.h"
+#include <algorithm>
 
 const char *Formatter::INDENT = "  ";
 
@@ -95,7 +96,7 @@ void Formatter::write_expression(const FunctionRef &f) {
         return;
     }
 
-    ss << f.base()->name();
+    write_identifier(f.base());
     const auto &f_base_parameters = f.base()->parameters().functions();
     const auto m = f_base_parameters.size();
     for (int i = 0; i < (int) m; ++i) {
@@ -114,6 +115,9 @@ void Formatter::write_expression(const FunctionRef &f) {
 
 void Formatter::write_definition(const FunctionRef &f) {
     if (f->is_base()) {
+        if (f->constructor())
+            ss << "structure ";
+
         write_identifier(f);
         write_telescope(f->parameters());
 
@@ -205,5 +209,7 @@ void Formatter::write_query(const Query &query) {
 }
 
 void Formatter::clear() {
-    std::ostringstream().swap(ss);
+//    std::ostringstream().swap(ss);
+    ss.clear();
+    ss.str(std::string());
 }

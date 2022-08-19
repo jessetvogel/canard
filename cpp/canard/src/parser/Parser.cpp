@@ -8,6 +8,7 @@
 #include "../core/macros.h"
 #include "../searcher/DebugSearcher.h"
 #include <fstream>
+#include <algorithm>
 
 Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session, Options options)
         : m_ostream(ostream), m_scanner(istream),
@@ -249,6 +250,10 @@ void Parser::parse_close() {
     m_open_namespaces.erase(parse_namespace());
 }
 
+#ifndef PATH_MAX
+#define PATH_MAX (1024)
+#endif
+
 void Parser::parse_import() {
     /*
         import "PATH"
@@ -384,7 +389,6 @@ void Parser::parse_structure() {
 
     // Put to context
     m_current_namespace->context().put(structure);
-    m_current_namespace->context().put(constructor);
 
     // Store documentation
     if (has_doc) {

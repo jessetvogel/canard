@@ -13,7 +13,7 @@
 
 Application::Application(const std::vector<std::string> &arguments) {
     std::vector<std::string> files;
-    std::string path_documentation;
+    std::string path_documentation, path_definitions;
 
     // Parse arguments
     for (auto it = arguments.begin(); it != arguments.end(); ++it) {
@@ -48,6 +48,14 @@ Application::Application(const std::vector<std::string> &arguments) {
             path_documentation = *it;
             continue;
         }
+        if (arg == "--defs") {
+            if (++it == arguments.end()) {
+                CANARD_LOG("Path for definition file missing");
+                continue;
+            }
+            path_definitions = *it;
+            continue;
+        }
         files.push_back(arg);
     }
 
@@ -57,9 +65,12 @@ Application::Application(const std::vector<std::string> &arguments) {
             CANARD_LOG("Failed to parse '" << file << "'");
     }
 
-    // Write documentation if
+    // Write documentation
     if (m_options.documentation)
         write_documentation(path_documentation);
+    // Write documentation
+    if (!path_definitions.empty())
+        write_definitions(path_definitions);
 }
 
 void Application::run() {
@@ -125,6 +136,36 @@ void Application::write_documentation(const std::string &file) {
         if (!entry.second.empty())
             output << "\"" << entry.first << "\":\"" << Message::json_escape(entry.second) << "\",";
     }
+    output.seekp(-1, std::ios_base::cur);
+    output << "}" << std::endl;
+}
+
+void write_definitions_namespace(std::ofstream &stream, const Namespace &space) {
+    Formatter formatter;
+    formatter.show_namespaces(true);
+    for (const auto &entry: space.context().map()) {
+        const auto &f = entry.second;
+        auto str = formatter.format_definition(f);
+        if (!f->is_base()) {
+            str += " : ";
+            str += formatter.format_expression(f.type());
+        }
+        stream << "\"" << (space.full_name().empty() ? entry.first : space.full_name() + '.' + entry.first)
+               << "\":\"" << Message::json_escape(str) << "\",";
+    }
+    for (const auto &entry: space.children())
+        write_definitions_namespace(stream, *entry.second);
+}
+
+void Application::write_definitions(const std::string &file) {
+    std::ofstream output(file);
+    if (output.fail()) {
+        CANARD_LOG("Failed to write definitions '" << file << "'");
+        return;
+    }
+
+    output << "{";
+    write_definitions_namespace(output, m_session.get_global_namespace());
     output.seekp(-1, std::ios_base::cur);
     output << "}" << std::endl;
 }
