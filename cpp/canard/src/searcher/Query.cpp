@@ -23,8 +23,9 @@ Query::Query(Telescope telescope) :
         m_parent(nullptr),
         m_telescope(std::move(telescope)),
         m_depths(m_telescope.size(), 0),
-        m_depth(0),
-        m_locals_depths(m_telescope.size(), 0) {}
+        m_locals_depths(m_telescope.size(), 0),
+        m_depth(compute_depth()),
+        m_cost(compute_cost()) {}
 
 Query::Query(std::shared_ptr<Query> parent,
              Telescope telescope,
@@ -35,10 +36,11 @@ Query::Query(std::shared_ptr<Query> parent,
         : m_parent(std::move(parent)),
           m_telescope(std::move(telescope)),
           m_depths(std::move(depths)),
-          m_depth(max(m_depths)),
           m_locals(std::move(locals)),
           m_locals_depths(std::move(locals_depths)),
-          m_solutions(std::move(solutions)) {}
+          m_solutions(std::move(solutions)),
+          m_depth(compute_depth()),
+          m_cost(compute_cost()) {}
 
 std::shared_ptr<Query> Query::normalize(const std::shared_ptr<Query> &query) {
     // Get goal
@@ -96,10 +98,20 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     // Create the new sub_query, and keep track of the solutions (for telescope) and the arguments (for thm)
     // and the new telescope (for the sub_query)
     std::vector<FunctionRef> new_indeterminates;
+    auto max_indeterminates = telescope.size() - 1 + thm_parameters.size(); // maximum number of new indeterminates: prioritize speed over memory
+    new_indeterminates.reserve(max_indeterminates);
     std::unordered_map<FunctionRef, FunctionRef> new_solutions;
     std::vector<int> new_depths, new_locals_depths;
+    new_depths.reserve(max_indeterminates);
+    new_locals_depths.reserve(max_indeterminates);
     std::vector<FunctionRef> thm_arguments(thm_parameters.size());
     std::vector<std::vector<FunctionRef>> new_locals(query->m_locals.size());
+    int locals_size = 0;
+    for (int i = 0; i < query->m_locals.size(); ++i) {
+        int size = (int) query->m_locals[i].size();
+        new_locals[i].reserve(size);
+        locals_size += size;
+    }
 
     const int h_depth = query->m_depths[h_index];
     const int h_context_depth = query->m_locals_depths[h_index];
@@ -114,6 +126,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     //  - we keep track of context depth, it should be non-decreasing along the way
     //  - the order (1) local functions, (2) telescope functions, (3) thm parameters is important!
     std::vector<FunctionRef> unmapped;
+    unmapped.reserve(telescope.size() - 1 + thm_parameters.size() + locals_size);
     std::vector<std::vector<FunctionRef>> unmapped_locals = query->m_locals;
     std::vector<int> unmapped_telescope_indices;
     unmapped_telescope_indices.reserve(telescope.size() - 1);
@@ -140,6 +153,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     Matcher query_to_sub_query(mappable);
 
     std::vector<FunctionRef> infected; // indicates which functions have a (non-trivial) solution
+    infected.reserve(unmapped.size());
 
     int locals_depth_tracker = 0; // the way in which the unmapped are resolved must be w.r.t. non-decreasing locals depth, as otherwise there are non-allowed solutions
 
@@ -493,4 +507,18 @@ const FunctionRef &Query::goal(int *index) const {
         }
     }
     return FunctionRef::null();
+}
+
+int Query::compute_cost() const {
+    int cost = 0;
+    for (int i = 0; i < m_telescope.size(); ++i) {
+        cost += m_depths[i];
+        cost += m_locals_depths[i];
+        cost += 1;
+    }
+    return cost;
+}
+
+int Query::compute_depth() const {
+    return max(m_depths);
 }

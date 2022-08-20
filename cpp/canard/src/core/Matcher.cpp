@@ -244,20 +244,21 @@ Telescope Matcher::clone(const Telescope &parameters, const Telescope &telescope
     // Shortcut
     if (telescope.empty()) return {};
 
-    // Clone the telescope
-    Telescope cloned;
+    // Clone every function of the telescope, use sub_matcher for coherence
+    std::vector<FunctionRef> cloned;
+    cloned.reserve(telescope.size());
     auto sub_matcher = std::unique_ptr<Matcher>(new Matcher(this, telescope.functions()));
     for (const auto &f: telescope.functions()) {
         auto clone = sub_matcher->clone(parameters, f);
         sub_matcher->assert_matches(f, clone.specialize({}, parameters.functions()));
-        cloned.add(std::move(clone));
+        cloned.push_back(std::move(clone));
     }
 
     // Give sub_matcher to whoever is calling
     if (matcher)
         *matcher = std::move(sub_matcher);
 
-    return cloned;
+    return Telescope(std::move(cloned));
 }
 
 FunctionRef Matcher::clone(const FunctionRef &f) {

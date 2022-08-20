@@ -4,9 +4,10 @@ open set_theory.set
 namespace topology
 namespace top
     -- The type of topological spaces.
-    let Top : Type 
+    let Top : Type
     -- The underlying set of the topological space.
     let to_set (X : Top) : Set
+
     -- A topological space is empty if it has no points.
     let empty (X : Top) : Prop
     -- A topological space $X$ is connected if the only subsets of $X$ that are both open and closed are $\varnothing$ and $X$ itself.
@@ -19,6 +20,7 @@ namespace top
     let quasi_compact (X : Top) : Prop
     -- A topological space $X$ is Hausdorff if for every two points $x, y \in X$ there exists disjoint open subsets $U, V \subset X$ with $x \in U$ and $y \in V$.
     let hausdorff (X : Top) : Prop
+
 end top
 open topology.top
 

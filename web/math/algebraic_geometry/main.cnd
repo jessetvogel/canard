@@ -1,4 +1,4 @@
-import "../commutative_algebra/core.cnd"
+import "../commutative_algebra/main.cnd"
 import "scheme.cnd"
 import "sheaf.cnd"
 

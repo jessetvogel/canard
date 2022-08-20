@@ -10,6 +10,13 @@
 #include <queue>
 #include <mutex>
 
+class CompareQuery {
+public:
+    bool operator()(const std::shared_ptr<Query> &q1, const std::shared_ptr<Query> &q2) {
+        return q1->cost() > q2->cost();
+    }
+};
+
 class Searcher {
 
 public:
@@ -29,7 +36,7 @@ private:
 
     ThreadManager m_thread_manager;
     std::mutex m_mutex;
-    std::vector<std::queue<std::shared_ptr<Query>>> m_depth_queues;
+    std::priority_queue<std::shared_ptr<Query>, std::vector<std::shared_ptr<Query>>, CompareQuery> m_queue; // TODO: preferably also want FIFO as tie breaker
     std::vector<FunctionRef> m_all_theorems, m_generic_theorems;
     std::unordered_map<FunctionRef, std::vector<FunctionRef>> m_index;
     std::vector<FunctionRef> m_result;

@@ -132,8 +132,6 @@ let inf_points_not_cn {k : Ring} (h : field k) : not (scheme.connected (inf_poin
 -- infinite union of points to point
 let int_pts_to_pt {k : Ring} (h : field k) : Morphism (inf_points h) (Spec k)
 
-
-
 let open_complement {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Scheme
 let open_complement_inclusion {X Z : Scheme} {i : Morphism Z X} (h : closed_immersion i) : Morphism (open_complement h) X
 

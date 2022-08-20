@@ -1,4 +1,4 @@
-import "../algebraic_geometry/core.cnd"
+import "../algebraic_geometry/main.cnd"
 import "../linear_algebra/fan.cnd"
 import "../commutative_algebra/ring.cnd"
 import "../commutative_algebra/monoid.cnd"

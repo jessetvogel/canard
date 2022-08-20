@@ -1,5 +1,5 @@
-import "../commutative_algebra/core.cnd"
-import "../topology/core.cnd"
+import "../commutative_algebra/main.cnd"
+import "../topology/main.cnd"
 
 open commutative_algebra
 open commutative_algebra.ring

@@ -40,14 +40,11 @@ bool Searcher::search(const std::shared_ptr<Query> &query) {
     // Clear the vector of results
     m_result.clear();
 
-    // Create a queue of queries for each depth (of queries).
-    // The strategy is to first handle the low-depth queries, and then the higher-depth queries.
-    m_depth_queues.clear();
-    for (int depth = 0; depth < m_max_depth; ++depth)
-        m_depth_queues.emplace_back();
+    // Create a new priority queue
+    m_queue = {}; // clear
 
     // The initial query contains depth 0
-    m_depth_queues[0].push(query);
+    m_queue.push(query);
 
     // Create a pool of threads
     m_searching = true;
@@ -61,55 +58,56 @@ bool Searcher::search(const std::shared_ptr<Query> &query) {
 void Searcher::search_loop() {
     while (m_searching) {
         // Take the first query from the first (non-empty) queue, i.e. the one with the lowest depth
-        std::shared_ptr<Query> q = nullptr;
+        std::shared_ptr<Query> query = nullptr;
         m_mutex.lock();
-        for (auto &queue: m_depth_queues) {
-            if (!queue.empty()) {
-                q = queue.front();
-                queue.pop();
-                break;
-            }
+        if (!m_queue.empty()) {
+            query = m_queue.top();
+            m_queue.pop();
         }
         m_mutex.unlock();
 
         // If there is no query, we should wait for other threads to come with updates
         // Depending on the result of the update, we should continue or stop
-        if (q == nullptr) {
-            if (m_thread_manager.wait_for_update()) continue; else break;
+        if (query == nullptr) {
+            if (m_thread_manager.wait_for_update())
+                continue;
+            else
+                break;
         }
 
         // Normalize the query before reducing: convert parameters of telescope to local variables
-        q = Query::normalize(q);
+        query = Query::normalize(query);
 
 #ifdef DEBUG
         Formatter formatter;
-        CANARD_DEBUG("Current query [" << formatter.to_string(*q) << "]");
+        CANARD_DEBUG("Current query [" << formatter.to_string(*query) << "]");
 #endif
 
         // Check for redundancies
-        if (is_redundant(q, q->parent())) continue;
+        if (is_redundant(query, query->parent()))
+            continue;
 
         // Do some optimization TODO: this does not work correctly! TODO: watch out for multithreading!
-//        optimize(q);
+//        optimize(query);
 
         // Now we are going to look for reductions. Before pushing to the queue, we will store all reductions
         // in a list `reductions`. Then we will sort this list based on the number of telescope, which is
         // some form of optimization
         std::vector<std::shared_ptr<Query>> reductions;
 
-        // First list to search through is the list of local variables of q
-        for (const auto &local_layer: q->locals()) {
+        // First list to search through is the list of local variables of query
+        for (const auto &local_layer: query->locals()) {
             for (const auto &thm: local_layer) {
-                if (search_helper(q, thm, reductions))
+                if (search_helper(query, thm, reductions))
                     goto end; // TODO: can we get rid of `goto` ?
             }
         }
 
-        // If the type base is an indeterminate of q, there is nothing better to do then to try all theorems
-        const auto &h_type_base = q->goal().type().base();
-        if (q->telescope().contains(h_type_base)) {
+        // If the type base is an indeterminate of query, there is nothing better to do then to try all theorems
+        const auto &h_type_base = query->goal().type().base();
+        if (query->telescope().contains(h_type_base)) {
             for (auto &thm: m_all_theorems) {
-                if (search_helper(q, thm, reductions))
+                if (search_helper(query, thm, reductions))
                     goto end; // TODO: can we get rid of `goto` ?
             }
         } else {
@@ -117,13 +115,13 @@ void Searcher::search_loop() {
             auto it = m_index.find(h_type_base);
             if (it != m_index.end()) {
                 for (auto &thm: it->second) {
-                    if (search_helper(q, thm, reductions))
+                    if (search_helper(query, thm, reductions))
                         goto end;
                 }
             }
             // Also try the general theorems
             for (auto &thm: m_generic_theorems) {
-                if (search_helper(q, thm, reductions))
+                if (search_helper(query, thm, reductions))
                     goto end;
             }
         }
@@ -136,10 +134,8 @@ void Searcher::search_loop() {
 
         // Then add them to the queue
         m_mutex.lock();
-        for (auto &r: reductions) {
-            assert(r->depth() < m_max_depth);
-            m_depth_queues[r->depth()].push(std::move(r));
-        }
+        for (auto &r: reductions)
+            m_queue.push(std::move(r));
         m_mutex.unlock();
 
         // Notify the other threads for updates
@@ -152,8 +148,6 @@ void Searcher::search_loop() {
 
     // When we are out of the loop, this boolean makes the other threads terminate as well
     m_searching = false;
-
-//    CANARD_LOG("END THREAD");
 }
 
 bool Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, std::vector<std::shared_ptr<Query>> &reductions) {

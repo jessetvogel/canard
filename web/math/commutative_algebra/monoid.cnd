@@ -1,5 +1,5 @@
-import "../group_theory/core.cnd"
-import "../set_theory/core.cnd"
+import "../group_theory/main.cnd"
+import "../set_theory/main.cnd"
 import "ring.cnd"
 open group_theory.group
 open commutative_algebra.ring

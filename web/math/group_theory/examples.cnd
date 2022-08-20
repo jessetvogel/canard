@@ -1,4 +1,5 @@
-import "../set_theory/core.cnd"
+import "../set_theory/main.cnd"
+
 open set_theory.set
 open group_theory.group
 
