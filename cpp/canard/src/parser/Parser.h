@@ -8,6 +8,7 @@
 #include "Formatter.h"
 #include "../data/Session.h"
 #include "../data/Context.h"
+#include "../searcher/Searcher.h"
 #include <unordered_set>
 
 class Parser {
@@ -48,6 +49,9 @@ private:
     Token m_last_comment_token = {NONE, std::string(), 0, 0};
     Options m_options;
 
+    // Searcher
+    std::unique_ptr<Searcher> m_searcher;
+
     // Token methods
     void next_token();
     bool found(TokenType);
@@ -62,7 +66,7 @@ private:
     void parse_close();
     void parse_import();
     void parse_definition();
-    void parse_begin_namespace();
+    void parse_namespace();
     void parse_structure();
     void parse_check();
     void parse_search();
@@ -77,7 +81,8 @@ private:
     Telescope parse_fields(Context &context, const Telescope &);
     FunctionRef parse_expression(Context &, const Telescope &, Context * = nullptr, const std::string * = nullptr);
     FunctionRef parse_term(Context &);
-    Namespace *parse_namespace();
+    Namespace *parse_absolute_namespace();
+    std::unordered_set<Namespace*> parse_namespace_collection();
 
     // Output methods
     void output(const std::string &);

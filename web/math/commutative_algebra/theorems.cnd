@@ -1,6 +1,9 @@
 open commutative_algebra.ring
+open commutative_algebra.module
+open commutative_algebra.monoid
 
 namespace commutative_algebra
+namespace theorems
 
 namespace ring
 -- Every field is a domain, because if $xy = 0$ with $x \ne 0$, then $y = 0 \cdot x^{-1} = 0$.
@@ -50,13 +53,14 @@ end module
 
 namespace monoid
 -- Any finitely generated, integral and separated monoid is fs.
-let fs_of_fg_int_st {M : Monoid} (h1 : finitely_generated M) (h2 : integral M) (h3: saturated M) : fs M
+let fs_of_fg_int_st {M : Monoid} (h1 : monoid.finitely_generated M) (h2 : monoid.integral M) (h3: saturated M) : fs M
 -- Any fs monoid is finitely generated.
-let fg_of_fs {M : Monoid} (h : fs M) : finitely_generated M
+let fg_of_fs {M : Monoid} (h : fs M) : monoid.finitely_generated M
 -- Any fs monoid is finitely generated.
-let int_of_fs {M : Monoid} (h : fs M) : integral M
+let int_of_fs {M : Monoid} (h : fs M) : monoid.integral M
 -- Any fs monoid is finitely generated.
 let st_of_fs {M : Monoid} (h : fs M) : saturated M
 end monoid
 
+end theorems
 end commutative_algebra

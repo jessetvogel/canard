@@ -3,6 +3,7 @@ open algebraic_geometry.scheme
 open algebraic_geometry.scheme_map
 
 namespace algebraic_geometry
+namespace theorems
 
 -- Theorems on schemes
 let qc_of_af {X : Scheme} (h : scheme.affine X) : scheme.quasi_compact X
@@ -151,4 +152,5 @@ let left_qsp : stable_left scheme_map.quasi_separated
 let left_sp : stable_left scheme_map.separated
 let left_lft : stable_left scheme_map.locally_finite_type
 
+end theorems
 end algebraic_geometry

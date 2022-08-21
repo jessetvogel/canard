@@ -6,6 +6,7 @@ open algebraic_geometry.scheme_map
 open commutative_algebra.ring
 
 namespace algebraic_geometry
+namespace examples
 
 -- The empty scheme $\varnothing = \Spec(\{ 0 \})$.
 let empty_scheme := Spec zero_ring
@@ -54,7 +55,7 @@ let affine_line_to_base (X : Scheme) : Morphism (affine_line X) X
 let affine_line_to_base_ff (X : Scheme) : faithfully_flat (affine_line_to_base X)
 let affine_line_to_base_sm (X : Scheme) : smooth (affine_line_to_base X)
 let affine_line_to_base_fp (X : Scheme) : finitely_presented (affine_line_to_base X)
-let affine_line_rg {X : Scheme} (h : scheme.regular X) := src_rg_of_sm_trg_rg h (affine_line_to_base_sm X)
+let affine_line_rg {X : Scheme} (h : scheme.regular X) := theorems.src_rg_of_sm_trg_rg h (affine_line_to_base_sm X)
 
 -- The projective line over a given scheme $X$.
 let proj_line (X : Scheme) : Scheme
@@ -181,4 +182,5 @@ let line_double_origin {k : Ring} (h : field k) : Scheme
 -- The line with double origin is not separated.
 let line_double_origin_not_sp {k : Ring} (h : field k) : not (scheme.separated (line_double_origin h))
 
+end examples
 end algebraic_geometry

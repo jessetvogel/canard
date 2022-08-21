@@ -19,6 +19,6 @@ public:
     FunctionRef TYPE = nullptr;
     FunctionRef PROP = nullptr;
 
-    Namespace &get_global_namespace() { return *m_global_namespace; };
+    Namespace &global_namespace() { return *m_global_namespace; };
 
 };

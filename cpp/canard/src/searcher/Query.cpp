@@ -124,7 +124,7 @@ std::shared_ptr<Query> Query::reduce(const std::shared_ptr<Query> &query, const 
     //  - those functions become infected then as well
     //  - we first insert local functions (as rather have that something has a local function as solution than the other way around)
     //  - we keep track of context depth, it should be non-decreasing along the way
-    //  - the order (1) local functions, (2) telescope functions, (3) thm parameters is important!
+    //  - the fifo_order (1) local functions, (2) telescope functions, (3) thm parameters is important!
     std::vector<FunctionRef> unmapped;
     unmapped.reserve(telescope.size() - 1 + thm_parameters.size() + locals_size);
     std::vector<std::vector<FunctionRef>> unmapped_locals = query->m_locals;
@@ -512,10 +512,12 @@ const FunctionRef &Query::goal(int *index) const {
 int Query::compute_cost() const {
     int cost = 0;
     for (int i = 0; i < m_telescope.size(); ++i) {
+        cost += 1;
         cost += m_depths[i];
         cost += m_locals_depths[i];
-        cost += 1;
     }
+    cost += (int) (100 * max(m_depths));
+    cost += (int) (10 * m_locals.size()); // prevents e.g. unnecessarily nested `modus_tollens`
     return cost;
 }
 

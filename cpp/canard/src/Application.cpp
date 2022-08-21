@@ -165,7 +165,7 @@ void Application::write_definitions(const std::string &file) {
     }
 
     output << "{";
-    write_definitions_namespace(output, m_session.get_global_namespace());
+    write_definitions_namespace(output, m_session.global_namespace());
     output.seekp(-1, std::ios_base::cur);
     output << "}" << std::endl;
 }

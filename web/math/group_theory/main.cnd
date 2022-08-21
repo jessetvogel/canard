@@ -1,2 +1,3 @@
 import "group.cnd"
 import "examples.cnd"
+import "theorems.cnd"

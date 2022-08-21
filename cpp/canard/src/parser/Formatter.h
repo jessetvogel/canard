@@ -13,6 +13,7 @@ public:
 
     inline void show_namespaces(bool b) { m_flag_namespaces = b; }
 
+    std::string format_identifier(const FunctionRef &);
     std::string format_expression(const FunctionRef &);
     std::string format_definition(const FunctionRef &);
     std::string format_telescope(const Telescope &);

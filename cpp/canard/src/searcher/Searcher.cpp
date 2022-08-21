@@ -44,7 +44,8 @@ bool Searcher::search(const std::shared_ptr<Query> &query) {
     m_queue = {}; // clear
 
     // The initial query contains depth 0
-    m_queue.push(query);
+    fifo_counter = 0;
+    m_queue.push({query, fifo_counter++});
 
     // Create a pool of threads
     m_searching = true;
@@ -61,7 +62,7 @@ void Searcher::search_loop() {
         std::shared_ptr<Query> query = nullptr;
         m_mutex.lock();
         if (!m_queue.empty()) {
-            query = m_queue.top();
+            query = m_queue.top().query;
             m_queue.pop();
         }
         m_mutex.unlock();
@@ -135,7 +136,7 @@ void Searcher::search_loop() {
         // Then add them to the queue
         m_mutex.lock();
         for (auto &r: reductions)
-            m_queue.push(std::move(r));
+            m_queue.push({std::move(r), fifo_counter++});
         m_mutex.unlock();
 
         // Notify the other threads for updates

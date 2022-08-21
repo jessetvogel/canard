@@ -4,6 +4,7 @@ open set_theory.set
 open group_theory.group
 
 namespace group_theory
+namespace examples
 
 -- The trivial group
 let trivial_group : Group
@@ -14,4 +15,5 @@ let symmetric_group (S : Set) : Group
 -- The free group on a set $S$.
 let free_group (S : Set) : Group
 
+end examples
 end group_theory

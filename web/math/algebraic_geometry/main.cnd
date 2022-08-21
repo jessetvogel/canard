@@ -3,6 +3,7 @@ import "scheme.cnd"
 import "sheaf.cnd"
 
 open commutative_algebra
+open commutative_algebra.examples
 open commutative_algebra.ring
 open commutative_algebra.module
 open algebraic_geometry.scheme

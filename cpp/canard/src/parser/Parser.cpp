@@ -15,7 +15,7 @@ Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session, O
           m_lexer(m_scanner),
           m_session(session),
           m_options(options) {
-    m_current_namespace = &session.get_global_namespace();
+    m_current_namespace = &session.global_namespace();
     m_imported_files = std::unique_ptr<std::unordered_set<std::string>>(new std::unordered_set<std::string>());
 }
 
@@ -145,11 +145,6 @@ bool Parser::parse_statement() {
         return true;
     }
 
-    if (found(KEYWORD, "let")) {
-        parse_definition();
-        return true;
-    }
-
     if (found(KEYWORD, "check")) {
         parse_check();
         return true;
@@ -157,31 +152,6 @@ bool Parser::parse_statement() {
 
     if (found(KEYWORD, "search")) {
         parse_search();
-        return true;
-    }
-
-    if (found(KEYWORD, "import")) {
-        parse_import();
-        return true;
-    }
-
-    if (found(KEYWORD, "namespace")) {
-        parse_begin_namespace();
-        return true;
-    }
-
-    if (found(KEYWORD, "structure")) {
-        parse_structure();
-        return true;
-    }
-
-    if (found(KEYWORD, "open")) {
-        parse_open();
-        return true;
-    }
-
-    if (found(KEYWORD, "close")) {
-        parse_close();
         return true;
     }
 
@@ -206,6 +176,39 @@ bool Parser::parse_statement() {
 //        return true;
 //    }
 
+    // Every statement below this point invalidates the searcher
+    m_searcher = nullptr;
+
+    if (found(KEYWORD, "let")) {
+        parse_definition();
+        return true;
+    }
+
+    if (found(KEYWORD, "import")) {
+        parse_import();
+        return true;
+    }
+
+    if (found(KEYWORD, "namespace")) {
+        parse_namespace();
+        return true;
+    }
+
+    if (found(KEYWORD, "structure")) {
+        parse_structure();
+        return true;
+    }
+
+    if (found(KEYWORD, "open")) {
+        parse_open();
+        return true;
+    }
+
+    if (found(KEYWORD, "close")) {
+        parse_close();
+        return true;
+    }
+
     return false;
 }
 
@@ -222,15 +225,8 @@ void Parser::parse_open() {
 
     consume(KEYWORD, "open");
 
-    // `open *` opens all available namespaces
-    if (found(SEPARATOR, "*")) {
-        consume();
-        for (const auto &entry: m_session.get_global_namespace().children())
-            add_namespaces_with_children(m_open_namespaces, entry.second.get());
-        return;
-    }
-    // Otherwise, open by path
-    m_open_namespaces.insert(parse_namespace());
+    auto spaces = parse_namespace_collection();
+    m_open_namespaces.insert(spaces.begin(), spaces.end());
 }
 
 void Parser::parse_close() {
@@ -240,14 +236,10 @@ void Parser::parse_close() {
 
     consume(KEYWORD, "close");
 
-    // `close *` closes all namespaces
-    if (found(SEPARATOR, "*")) {
-        consume();
-        m_open_namespaces.clear();
-        return;
+    for (auto space: parse_namespace_collection()) {
+        if (m_open_namespaces.count(space))
+            m_open_namespaces.erase(space);
     }
-    // Otherwise, close by path
-    m_open_namespaces.erase(parse_namespace());
 }
 
 #ifndef PATH_MAX
@@ -312,22 +304,24 @@ void Parser::parse_definition() {
     consume(KEYWORD, "let");
 
     bool has_doc = (m_documentation != nullptr && m_last_comment_token.m_type == COMMENT);
+    std::string doc;
+    if (has_doc) doc = m_last_comment_token.m_data;
 
     for (auto &f: parse_functions(m_current_namespace->context(), {})) {
-        // Store namespace in metadata (for base functions)
-        if (f->is_base())
+        // Store namespace in metadata (if not yet has one)
+        if (!f->space())
             f->set_space(m_current_namespace);
 
         // Store documentation
         if (has_doc) {
             auto path = to_path(*m_current_namespace, f->name());
             trim(m_last_comment_token.m_data);
-            m_documentation->emplace(std::move(path), m_last_comment_token.m_data);
+            m_documentation->emplace(std::move(path), doc);
         }
     }
 }
 
-void Parser::parse_begin_namespace() {
+void Parser::parse_namespace() {
     /*
         namespace IDENTIFIER
             STATEMENT*
@@ -336,17 +330,19 @@ void Parser::parse_begin_namespace() {
 
     consume(KEYWORD, "namespace");
 
-    std::string identifier = consume(IDENTIFIER).m_data;
-
-    // If namespace already exists, use that one. Otherwise, create a new one
-    auto space = m_current_namespace->get_namespace(identifier);
-    m_current_namespace = (space != nullptr) ? space : m_current_namespace->create_subspace(identifier);
+    // Note: get_subspace creates a subspace if it does not yet exist
+    auto previous = m_current_namespace;
+    auto path = parse_path();
+    m_current_namespace = &(m_current_namespace->get_subspace(path));
 
     while (parse_statement());
 
     consume(KEYWORD, "end");
-    consume(IDENTIFIER, identifier);
-    m_current_namespace = m_current_namespace->parent();
+
+    if (parse_path() != path)
+        throw ParserException(m_current_token, "expected '" + path + "'");
+
+    m_current_namespace = previous;
 }
 
 void Parser::parse_structure() {
@@ -359,6 +355,8 @@ void Parser::parse_structure() {
     Token t_structure = consume(KEYWORD, "structure");
 
     bool has_doc = (m_documentation != nullptr && m_last_comment_token.m_type == COMMENT);
+    std::string doc;
+    if (has_doc) doc = m_last_comment_token.m_data;
 
     auto identifier = consume(IDENTIFIER).m_data;
 
@@ -394,7 +392,7 @@ void Parser::parse_structure() {
     if (has_doc) {
         auto path = to_path(*m_current_namespace, identifier);
         trim(m_last_comment_token.m_data);
-        m_documentation->emplace(std::move(path), m_last_comment_token.m_data);
+        m_documentation->emplace(std::move(path), std::move(doc));
     }
 }
 
@@ -431,16 +429,19 @@ void Parser::parse_search() {
     Context sub_context(m_current_namespace->context());
     Telescope telescope = parse_parameters(sub_context);
 
-    // Create searcher and specify the searching space
-    Searcher searcher(m_options.max_search_depth, m_options.max_search_threads);
-    std::unordered_set<Namespace *> added_namespaces;
-    for (auto space = m_current_namespace; space != nullptr; space = space->parent()) {
-        searcher.add_namespace(*space);
-        added_namespaces.insert(space);
-    }
-    for (auto &space: m_open_namespaces) {
-        if (added_namespaces.find(space) == added_namespaces.end())
-            searcher.add_namespace(*space);
+    // If no searcher ready, create one and specify the searching space
+    if (m_searcher == nullptr) {
+        m_searcher = std::unique_ptr<Searcher>(new Searcher(m_options.max_search_depth, m_options.max_search_threads));
+
+        std::unordered_set<Namespace *> added_namespaces;
+        for (auto space = m_current_namespace; space != nullptr; space = space->parent()) {
+            m_searcher->add_namespace(*space);
+            added_namespaces.insert(space);
+        }
+        for (auto &space: m_open_namespaces) {
+            if (added_namespaces.find(space) == added_namespaces.end())
+                m_searcher->add_namespace(*space);
+        }
     }
 
     // Make a query and do a search
@@ -448,12 +449,12 @@ void Parser::parse_search() {
     auto query = std::make_shared<Query>(telescope);
 
     auto start_time = std::chrono::system_clock::now();
-    bool success = searcher.search(query);
+    bool success = m_searcher->search(query);
     auto end_time = std::chrono::system_clock::now();
 
     // Print results in appropriate format
     if (success) {
-        output_search_results(telescope, searcher.result());
+        output_search_results(telescope, m_searcher->result());
     } else {
         if (m_options.json)
             output(Message::create(SUCCESS, std::vector<std::string>()));
@@ -474,7 +475,7 @@ void Parser::parse_inspect() {
 
     consume(KEYWORD, "inspect");
 
-    auto space = parse_namespace();
+    auto space = parse_absolute_namespace();
 
     // Construct list of identifiers
     Formatter formatter;
@@ -690,7 +691,7 @@ Telescope Parser::parse_parameters(Context &context) {
     if (implicits.empty())
         return parameters;
 
-    // Re-order implicit parameters so that every implicit parameter can be inferred from the first explicit parameter following it
+    // Re-fifo_order implicit parameters so that every implicit parameter can be inferred from the first explicit parameter following it
     // To do this, first make a copy of the parameters to match with
     Telescope copy = Matcher::dummy().clone({}, parameters);
 
@@ -886,7 +887,7 @@ FunctionRef Parser::parse_term(Context &context) {
             std::ostringstream ss;
             for (int i = 0; i < (int) candidates.size(); ++i) {
                 if (i == (int) candidates.size() - 1) ss << " or ";
-                ss << formatter.format_expression(candidates[i]);
+                ss << formatter.format_identifier(candidates[i]);
                 if (i < (int) candidates.size() - 2) ss << ", ";
             }
             throw ParserException(token, "ambiguous identifier '" + path + "', could be " + ss.str());
@@ -898,13 +899,51 @@ FunctionRef Parser::parse_term(Context &context) {
     return nullptr;
 }
 
-Namespace *Parser::parse_namespace() {
+Namespace *Parser::parse_absolute_namespace() {
     Token t_path = m_current_token;
     std::string path = parse_path();
-    auto space = m_session.get_global_namespace().get_namespace(path);
+    auto space = m_session.global_namespace().find_subspace(path);
     if (space == nullptr)
         throw ParserException(t_path, "no namespace '" + path + "'");
     return space;
+}
+
+std::unordered_set<Namespace *> Parser::parse_namespace_collection() {
+    std::ostringstream ss;
+    bool asterisk = false;
+    while (true) {
+        if (found(SEPARATOR, "*")) {
+            consume();
+            asterisk = true;
+            break;
+        }
+
+        if (found(IDENTIFIER))
+            ss << consume().m_data;
+
+        if (!found(SEPARATOR, "."))
+            break;
+
+        consume();
+
+        if (!found(SEPARATOR, "*"))
+            ss << ".";
+    }
+
+    const auto path = ss.str();
+    const auto space = m_session.global_namespace().find_subspace(path);
+    if (space == nullptr)
+        throw ParserException(m_current_token, "no namespace '" + path + "'");
+
+    // If an asterisk, return all children
+    if (asterisk) {
+        std::unordered_set<Namespace *> spaces;
+        space->get_all_subspaces(spaces);
+        return spaces;
+    }
+
+    // Otherwise, return a singleton
+    return {space};
 }
 
 void Parser::output(const std::string &message) {

@@ -8,6 +8,12 @@
 
 const char *Formatter::INDENT = "  ";
 
+std::string Formatter::format_identifier(const FunctionRef &f) {
+    clear();
+    write_identifier(f);
+    return ss.str();
+}
+
 std::string Formatter::format_expression(const FunctionRef &f) {
     clear();
     write_expression(f);

@@ -1,0 +1,243 @@
+open topology.space
+
+namespace topology
+namespace theorems
+
+let T000001 {X : Space} (h : compact X) : countably_compact X
+let T000002 {X : Space} (h : countably_compact X) : weakly_countably_compact X
+let T000003 {X : Space} (h : sequentially_compact X) : countably_compact X
+let T000004 {X : Space} (h : countably_compact X) : pseudocompact X
+let T000005 {X : Space} (h : sigma_locally_compact X) : sigma_compact X
+let T000006 {X : Space} (h : compact X) : locally_relatively_compact X
+let T000007 {X : Space} (h : locally_relatively_compact X) : weakly_locally_compact X
+let T000008 {X : Space} (h : sigma_locally_compact X) : weakly_locally_compact X
+let T000009 {X : Space} (h : compact X) : sigma_locally_compact X
+let T000010 {X : Space} (h1 : extremally_disconnected X) (h2 : metrizable X) : discrete X
+let T000011 {X : Space} (h : fully_normal X) : normal X
+let T000012 {X : Space} (h : fully_normal_hausdorff X) : paracompact X
+let T000013 {X : Space} (h : compact X) : paracompact X
+let T000014 {X : Space} (h : paracompact X) : metacompact X
+let T000015 {X : Space} (h : paracompact X) : countably_paracompact X
+let T000016 {X : Space} (h : metacompact X) : countably_metacompact X
+let T000017 {X : Space} (h : countably_compact X) : countably_paracompact X
+let T000018 {X : Space} (h : countably_paracompact X) : countably_metacompact X
+let T000019 {X : Space} (h1 : frechet X) (h2 : weakly_countably_compact X) : countably_compact X
+let T000020_a {X : Space} (h : metrizable X) : regular_hausdorff X
+let T000020_b {X : Space} (h : metrizable X) : sigma_locally_finite_base X
+let T000021 {X : Space} (h : separable X) : countable_chain_condition X
+let T000022 {X : Space} (h1 : countably_compact X) (h2 : first_countable X) : sequentially_compact X
+let T000023 {X : Space} (h1 : regular_hausdorff X) (h2 : sigma_locally_finite_base X) : metrizable X
+let T000024 {X : Space} (h1 : metacompact X) (h2 : separable X) : lindelof X
+let T000025_a {X : Space} (h : topological_manifold X) : locally_euclidean X
+let T000025_b {X : Space} (h : topological_manifold X) : hausdorff X
+let T000025_c {X : Space} (h : topological_manifold X) : second_countable X
+let T000026 {X : Space} (h1 : hausdorff X) (h2 : sigma_locally_compact X) : normal_hausdorff X
+let T000027 {X : Space} (h1 : hausdorff X) (h2 : weakly_locally_compact X) : tychonoff X
+let T000028 {X : Space} (h1 : hausdorff X) (h2 : countably_compact X) (h3 : first_countable X) : regular_hausdorff X
+let T000029 {X : Space} (h1 : regular X) (h2 : second_countable X) : completely_normal X
+let T000030 {X : Space} (h1 : regular X) (h2 : lindelof X) : fully_normal X
+let T000031 {X : Space} (h1 : locally_euclidean X) (h2 : hausdorff X) (h3 : second_countable X) : topological_manifold X
+let T000032 {X : Space} (h : urysohn X) : hausdorff X
+let T000033 {X : Space} (h : regular_hausdorff X) : urysohn X
+let T000035 {X : Space} (h : completely_regular X) : regular X
+let T000036 {X : Space} (h : completely_normal X) : normal X
+let T000037 {X : Space} (h1 : regular X) (h2 : normal X) : completely_regular X
+let T000038 {X : Space} (h : ultraconnected X) : path_connected X
+let T000039 {X : Space} (h : arc_connected X) : path_connected X
+let T000040 {X : Space} (h : path_connected X) : connected X
+let T000042_a {X : Space} (h : discrete X) : frechet X
+let T000042_b {X : Space} (h : discrete X) : scattered X
+let T000043 {X : Space} (h1 : frechet X) (h2 : scattered X) : totally_disconnected X
+let T000044 {X : Space} (h : discrete X) : extremally_disconnected X
+let T000045 {X : Space} (h : extremally_disconnected X) : totally_separated X
+let T000046 {X : Space} (h : totally_separated X) : totally_disconnected X
+let T000047 {X : Space} (h : totally_disconnected X) : totally_path_disconnected X
+let T000048 {X : Space} (h : totally_separated X) : completely_hausdorff X
+let T000049 {X : Space} (h : totally_disconnected X) : frechet X
+let T000050 {X : Space} (h1 : hausdorff X) (h2 : separable X) : smaller_or_same_as_the_power_set_of_the_continuum X
+let T000051 {X : Space} (h : hyperconnected X) : locally_connected X
+let T000052 {X : Space} (h1 : totally_disconnected X) (h2 : has_distinct_points X) : not (connected X)
+let T000053 {X : Space} (h1 : lindelof X) (h2 : weakly_locally_compact X) : sigma_locally_compact X
+let T000054 {X : Space} (h : zero_dimensional X) : regular X
+let T000055 {X : Space} (h1 : regular_hausdorff X) (h2 : lindelof X) : fully_normal_hausdorff X
+let T000056 {X : Space} (h : metrizable X) : fully_normal_hausdorff X
+let T000057 {X : Space} (h : metrizable X) : first_countable X
+let T000061_a {X : Space} (h1 : separable X) (h2 : metrizable X) : second_countable X
+let T000061_b {X : Space} (h1 : separable X) (h2 : metrizable X) : regular_hausdorff X
+let T000062 {X : Space} (h1 : lindelof X) (h2 : metrizable X) : second_countable X
+let T000063 {X : Space} (h : locally_arc_connected X) : locally_path_connected X
+let T000064 {X : Space} (h : locally_path_connected X) : locally_connected X
+let T000065 {X : Space} (h1 : weakly_locally_compact X) (h2 : metrizable X) : completely_metrizable X
+let T000066 {X : Space} (h : discrete X) : zero_dimensional X
+let T000067 {X : Space} (h : countable X) : smaller_than_the_continuum X
+let T000068 {X : Space} (h : smaller_than_the_continuum X) : smaller_or_same_as_the_power_set_of_the_continuum X
+let T000071 {X : Space} (h : hyperconnected X) : strongly_connected X
+let T000072 {X : Space} (h : ultraconnected X) : normal X
+let T000073 {X : Space} (h1 : kolmogorov X) (h2 : zero_dimensional X) : totally_separated X
+let T000074 {X : Space} (h : countable X) : sigma_compact X
+let T000075 {X : Space} (h1 : arc_connected X) (h2 : has_distinct_points X) : not (smaller_than_the_continuum X)
+let T000076 {X : Space} (h : strongly_connected X) : pseudocompact X
+let T000077 {X : Space} (h : completely_metrizable X) : metrizable X
+let T000078 {X : Space} (h : biconnected X) : connected X
+let T000079 {X : Space} (h : strongly_connected X) : connected X
+let T000080 {X : Space} (h1 : completely_hausdorff X) (h2 : has_distinct_points X) : not (strongly_connected X)
+let T000081 {X : Space} (h1 : connected X) (h2 : regular_hausdorff X) (h3 : has_distinct_points X) : not (countable X)
+let T000083 {X : Space} (h1 : locally_arc_connected X) (h2 : not (discrete X)) : not (smaller_than_the_continuum X)
+let T000084 {X : Space} (h : discrete X) : locally_arc_connected X
+let T000085 {X : Space} (h : discrete X) : completely_metrizable X
+let T000086 {X : Space} (h : completely_hausdorff X) : urysohn X
+let T000087 {X : Space} (h : ultraconnected X) : strongly_connected X
+let T000088 {X : Space} (h1 : path_connected X) (h2 : has_distinct_points X) : not (totally_path_disconnected X)
+let T000089 {X : Space} (h1 : locally_path_connected X) (h2 : not (discrete X)) : not (totally_path_disconnected X)
+let T000090 {X : Space} (h : second_countable X) : sigma_locally_finite_base X
+let T000091 {X : Space} (h1 : hyperconnected X) (h2 : not (ultraconnected X)) : not (normal X)
+let T000092 {X : Space} (h : has_dispersion_point X) : biconnected X
+let T000093 {X : Space} (h : countable X) : separable X
+let T000095 {X : Space} (h1 : connected X) (h2 : locally_path_connected X) : path_connected X
+let T000098_a {X : Space} (h : normal_hausdorff X) : frechet X
+let T000098_b {X : Space} (h : normal_hausdorff X) : normal X
+let T000099 {X : Space} (h1 : frechet X) (h2 : normal X) : normal_hausdorff X
+let T000100_a {X : Space} (h : completely_normal_hausdorff X) : frechet X
+let T000100_b {X : Space} (h : completely_normal_hausdorff X) : completely_normal X
+let T000101 {X : Space} (h1 : frechet X) (h2 : completely_normal X) : completely_normal_hausdorff X
+let T000104_a {X : Space} (h : fully_normal_hausdorff X) : frechet X
+let T000104_b {X : Space} (h : fully_normal_hausdorff X) : fully_normal X
+let T000105 {X : Space} (h1 : frechet X) (h2 : fully_normal X) : fully_normal_hausdorff X
+let T000106 {X : Space} (h1 : lindelof X) (h2 : countably_compact X) : compact X
+let T000107 {X : Space} (h1 : countably_compact X) (h2 : metacompact X) : compact X
+let T000108 {X : Space} (h1 : totally_disconnected X) (h2 : locally_connected X) : discrete X
+let T000109 {X : Space} (h1 : ultraconnected X) (h2 : has_distinct_points X) : not (frechet X)
+let T000110 {X : Space} (h1 : normal X) (h2 : pseudocompact X) : weakly_countably_compact X
+let T000112 {X : Space} (h : completely_normal_hausdorff X) : normal_hausdorff X
+let T000113 {X : Space} (h : normal_hausdorff X) : tychonoff X
+let T000114 {X : Space} (h : tychonoff X) : completely_hausdorff X
+let T000115 {X : Space} (h : tychonoff X) : regular_hausdorff X
+let T000118 {X : Space} (h : hausdorff X) : frechet X
+let T000119 {X : Space} (h : frechet X) : kolmogorov X
+let T000121 {X : Space} (h : compact X) : sigma_compact X
+let T000122 {X : Space} (h : sigma_compact X) : lindelof X
+let T000123 {X : Space} (h1 : lindelof X) (h2 : countably_paracompact X) : paracompact X
+let T000124 {X : Space} (h1 : lindelof X) (h2 : countably_metacompact X) : metacompact X
+let T000126 {X : Space} (h : cozero_complemented X) : tychonoff X
+let T000128 {X : Space} (h : lindelof X) : weakly_lindelof X
+let T000129 {X : Space} (h : separable X) : weakly_lindelof X
+let T000130 {X : Space} (h : sigma_locally_finite_base X) : first_countable X
+let T000132 {X : Space} (h1 : metrizable X) (h2 : cech_complete X) : completely_metrizable X
+let T000133 {X : Space} (h : completely_metrizable X) : cech_complete X
+let T000134 {X : Space} (h : baire X) : not (meager X)
+let T000135 {X : Space} (h : completely_metrizable X) : baire X
+let T000136 {X : Space} (h1 : weakly_locally_compact X) (h2 : hausdorff X) : baire X
+let T000138 {X : Space} (h : continuum_sized X) : not (smaller_than_the_continuum X)
+let T000139 {X : Space} (h : continuum_sized X) : smaller_or_same_as_the_power_set_of_the_continuum X
+let T000140 {X : Space} (h : menger X) : lindelof X
+let T000141 {X : Space} (h : sigma_compact X) : menger X
+let T000142 {X : Space} (h1 : countable_chain_condition X) (h2 : tychonoff X) : cozero_complemented X
+let T000146 {X : Space} (h : regular_hausdorff X) : regular X
+let T000148 {X : Space} (h1 : regular X) (h2 : kolmogorov X) : regular_hausdorff X
+let T000149 {X : Space} (h : tychonoff X) : completely_regular X
+let T000151 {X : Space} (h1 : completely_regular X) (h2 : kolmogorov X) : tychonoff X
+let T000152_a {X : Space} (h : perfectly_normal_hausdorff X) : frechet X
+let T000152_b {X : Space} (h : perfectly_normal_hausdorff X) : perfectly_normal X
+let T000153 {X : Space} (h1 : frechet X) (h2 : perfectly_normal X) : perfectly_normal_hausdorff X
+let T000154 {X : Space} (h : perfectly_normal_hausdorff X) : completely_normal_hausdorff X
+let T000155 {X : Space} (h : regular X) : semiregular X
+let T000156 {X : Space} (h : perfectly_normal X) : completely_normal X
+let T000160 {X : Space} (h : rothberger X) : menger X
+let T000161 {X : Space} (h : strategic_menger X) : menger X
+let T000162 {X : Space} (h : markov_menger X) : 2_markov_menger X
+let T000163 {X : Space} (h : sigma_compact X) : sigma_relatively_compact X
+let T000164 {X : Space} (h1 : regular X) (h2 : sigma_relatively_compact X) : sigma_compact X
+let T000165 {X : Space} (h : markov_menger X) : sigma_relatively_compact X
+let T000166 {X : Space} (h : sigma_relatively_compact X) : markov_menger X
+let T000167 {X : Space} (h1 : second_countable X) (h2 : strategic_menger X) : markov_menger X
+let T000168 {X : Space} (h : 2_markov_menger X) : strategic_menger X
+let T000169 {X : Space} (h : scattered X) : kolmogorov X
+let T000170 {X : Space} (h1 : hausdorff X) (h2 : paracompact X) : fully_normal_hausdorff X
+let T000171_a {X : Space} (h : fully_normal_hausdorff X) : hausdorff X
+let T000171_b {X : Space} (h : fully_normal_hausdorff X) : paracompact X
+let T000173 {X : Space} (h : hausdorff X) : sober X
+let T000174 {X : Space} (h : sober X) : kolmogorov X
+let T000176_a {X : Space} (h : spectral_space X) : sober X
+let T000176_b {X : Space} (h : spectral_space X) : compact X
+let T000177 {X : Space} (h : metrizable X) : proximal X
+let T000178 {X : Space} (h : corson_compact X) : proximal X
+let T000179 {X : Space} (h1 : proximal X) (h2 : compact X) : corson_compact X
+let T000180 {X : Space} (h : perfectly_normal_hausdorff X) : cozero_complemented X
+let T000181 {X : Space} (h : metrizable X) : locally_metrizable X
+let T000183 {X : Space} (h : first_countable X) : frechet_urysohn X
+let T000184 {X : Space} (h : frechet_urysohn X) : sequential X
+let T000185 {X : Space} (h : sequential X) : countably_tight X
+let T000186 {X : Space} (h : locally_countable X) : countably_tight X
+let T000187 {X : Space} (h : finite X) : countable X
+let T000188 {X : Space} (h1 : discrete X) (h2 : compact X) : finite X
+let T000189 {X : Space} (h : finite X) : second_countable X
+let T000193 {X : Space} (h : hausdorff X) : locally_hausdorff X
+let T000195 {X : Space} (h : locally_hausdorff X) : frechet X
+let T000196 {X : Space} (h1 : weakly_locally_compact X) (h2 : hausdorff X) : cech_complete X
+let T000197 {X : Space} (h1 : finite X) (h2 : frechet X) : discrete X
+let T000198 {X : Space} (h : finite X) : compact X
+let T000202 {X : Space} (h1 : locally_metrizable X) (h2 : hausdorff X) (h3 : paracompact X) : metrizable X
+let T000204 {X : Space} (h : discrete X) : homogenous X
+let T000209 {X : Space} (h1 : scattered X) (h2 : homogenous X) : discrete X
+let T000212 {X : Space} (h1 : countable X) (h2 : first_countable X) : second_countable X
+let T000213 {X : Space} (h : collectionwise_normal X) : normal X
+let T000214 {X : Space} (h : fully_normal_hausdorff X) : collectionwise_normal X
+let T000215 {X : Space} (h : corson_compact X) : frechet_urysohn X
+let T000218 {X : Space} (h : discrete X) : alexandrov X
+let T000219 {X : Space} (h1 : metrizable X) (h2 : compact X) : eberlein_compact X
+let T000220 {X : Space} (h : eberlein_compact X) : corson_compact X
+let T000223 {X : Space} (h1 : sequential X) (h2 : countably_compact X) : sequentially_compact X
+let T000224 {X : Space} (h1 : weakly_locally_compact X) (h2 : hausdorff X) : locally_relatively_compact X
+let T000226 {X : Space} (h : us X) : frechet X
+let T000227 {X : Space} (h : kc X) : us X
+let T000228 {X : Space} (h : hausdorff X) : kc X
+let T000232 {X : Space} (h1 : anti_hausdorff X) (h2 : has_distinct_points X) : not (hausdorff X)
+let T000234 {X : Space} (h : strongly_kc X) : kc X
+let T000235 {X : Space} (h1 : sequential X) (h2 : us X) : strongly_kc X
+let T000236 {X : Space} (h1 : weakly_locally_compact X) (h2 : lindelof X) : hemicompact X
+let T000237 {X : Space} (h : hemicompact X) : sigma_compact X
+let T000238 {X : Space} (h : countable X) : locally_countable X
+let T000239 {X : Space} (h1 : compact X) (h2 : connected X) (h3 : locally_connected X) (h4 : metrizable X) : arc_connected X
+let T000240 {X : Space} (h1 : hausdorff X) (h2 : path_connected X) : arc_connected X
+let T000245 {X : Space} (h : locally_compact X) : weakly_locally_compact X
+let T000246 {X : Space} (h1 : hausdorff X) (h2 : weakly_locally_compact X) : locally_compact X
+let T000247 {X : Space} (h1 : discrete X) (h2 : indiscrete X) : not (has_distinct_points X)
+let T000248 {X : Space} (h : not (has_distinct_points X)) : discrete X
+let T000249 {X : Space} (h : not (has_distinct_points X)) : indiscrete X
+let T000250 {X : Space} (h : not (finite X)) : has_distinct_points X
+let T000251 {X : Space} (h : indiscrete X) : compact X
+let T000252 {X : Space} (h : indiscrete X) : perfectly_normal X
+let T000253 {X : Space} (h1 : has_distinct_points X) (h2 : kolmogorov X) : not (indiscrete X)
+let T000254 {X : Space} (h : hereditarily_lindelof X) : lindelof X
+let T000255 {X : Space} (h1 : lindelof X) (h2 : g_delta_space X) : hereditarily_lindelof X
+let T000256 {X : Space} (h : perfectly_normal X) : g_delta_space X
+let T000257 {X : Space} (h1 : normal X) (h2 : g_delta_space X) : perfectly_normal X
+let T000258 {X : Space} (h1 : regular X) (h2 : hereditarily_lindelof X) : perfectly_normal X
+let T000259 {X : Space} (h : countable X) : hereditarily_lindelof X
+let T000260 {X : Space} (h : second_countable X) : hereditarily_lindelof X
+let T000261 {X : Space} (h1 : countable X) (h2 : frechet X) : g_delta_space X
+let T000262 {X : Space} (h1 : has_distinct_points X) (h2 : hausdorff X) : not (hyperconnected X)
+let T000263 {X : Space} (h1 : second_countable X) (h2 : scattered X) : countable X
+let T000264 {X : Space} (h : metrizable X) : pseudometrizable X
+let T000265 {X : Space} (h1 : pseudometrizable X) (h2 : kolmogorov X) : metrizable X
+let T000266 {X : Space} (h : finite X) : alexandrov X
+let T000267 {X : Space} (h1 : alexandrov X) (h2 : frechet X) : discrete X
+let T000268 {X : Space} (h : pseudometrizable X) : perfectly_normal X
+let T000269 {X : Space} (h1 : weakly_locally_compact X) (h2 : hausdorff X) (h3 : totally_disconnected X) : zero_dimensional X
+let T000270 {X : Space} (h : second_countable X) : first_countable X
+let T000271 {X : Space} (h : second_countable X) : separable X
+let T000272 {X : Space} (h : second_countable X) : lindelof X
+let T000273 {X : Space} (h : lots X) : completely_normal_hausdorff X
+let T000274 {X : Space} (h : discrete X) : lots X
+let T000275 {X : Space} (h1 : lots X) (h2 : connected X) (h3 : separable X) : second_countable X
+let T000276 {X : Space} (h : hereditarily_lindelof X) : countable_chain_condition X
+let T000277 {X : Space} (h1 : lots X) (h2 : countable_chain_condition X) : hereditarily_lindelof X
+let T000278 {X : Space} (h1 : lots X) (h2 : countable_chain_condition X) : first_countable X
+let T000279 {X : Space} (h1 : hemicompact X) (h2 : first_countable X) : weakly_locally_compact X
+let T000280 {X : Space} (h1 : countable X) (h2 : frechet X) : totally_path_disconnected X
+let T000281 {X : Space} (h : hausdorff X) : preregular X
+let T000282 {X : Space} (h : regular X) : preregular X
+let T000283 {X : Space} (h1 : preregular X) (h2 : kolmogorov X) : hausdorff X
+
+end theorems
+end topology

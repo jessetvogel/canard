@@ -1,6 +1,7 @@
 import "../group_theory/main.cnd"
 import "../set_theory/main.cnd"
 import "ring.cnd"
+import "module.cnd"
 open group_theory.group
 open commutative_algebra.ring
 open set_theory

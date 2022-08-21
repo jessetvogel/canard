@@ -5,6 +5,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include "Context.h"
 
@@ -23,8 +24,10 @@ public:
     const Context &context() const { return m_context; }
     const std::unordered_map<std::string, std::unique_ptr<Namespace>> &children() const { return m_children; }
 
-    Namespace *create_subspace(const std::string &);
-    Namespace *get_namespace(const std::string &);
+    void get_all_subspaces(std::unordered_set<Namespace *> &set);
+
+    Namespace &get_subspace(const std::string &);
+    Namespace *find_subspace(const std::string &);
 
     const FunctionRef &get_function(const std::string &);
 
@@ -35,5 +38,7 @@ private:
     Namespace *const m_parent = nullptr;
     std::unordered_map<std::string, std::unique_ptr<Namespace>> m_children;
     Context m_context;
+
+    Namespace *create_subspace(const std::string &);
 
 };

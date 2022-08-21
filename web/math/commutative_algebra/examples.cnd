@@ -3,8 +3,10 @@ open commutative_algebra
 open commutative_algebra.ring
 open commutative_algebra.module
 open commutative_algebra.monoid
+open commutative_algebra.theorems.ring
 
 namespace commutative_algebra
+namespace examples
 
 -- The ring of integers $\ZZ$.
 let ZZ : Ring
@@ -142,4 +144,5 @@ let polynomial_ring_dm {R : Ring} (h : domain R) : domain (polynomial_ring R)
 let polynomial_ring_rd {R : Ring} (h : ring.reduced R) : ring.reduced (polynomial_ring R)
 let polynomial_ring_not_lc (R : Ring) : not (ring.local (polynomial_ring R))
 
+end examples
 end commutative_algebra

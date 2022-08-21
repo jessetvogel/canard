@@ -10,22 +10,29 @@
 #include <queue>
 #include <mutex>
 
+struct QueryEntry {
+    std::shared_ptr<Query> query;
+    int fifo_order;
+};
+
 class CompareQuery {
 public:
-    bool operator()(const std::shared_ptr<Query> &q1, const std::shared_ptr<Query> &q2) {
-        return q1->cost() > q2->cost();
+    bool operator()(const QueryEntry &entry_1, const QueryEntry &entry_2) {
+        const int cost1 = entry_1.query->cost();
+        const int cost2 = entry_2.query->cost();
+        if (cost1 == cost2)
+            return entry_1.fifo_order > entry_2.fifo_order;
+        return cost1 > cost2;
     }
 };
 
 class Searcher {
-
 public:
 
     explicit Searcher(int max_depth, int max_threads = 1);
 
     void add_namespace(Namespace &);
     bool search(const std::shared_ptr<Query> &);
-//    void optimize(const std::shared_ptr<Query> &);
 
     const std::vector<FunctionRef> &result() const { return m_result; }
 
@@ -33,10 +40,11 @@ private:
 
     const int m_max_depth;
     bool m_searching = false;
+    int fifo_counter = 0;
 
     ThreadManager m_thread_manager;
     std::mutex m_mutex;
-    std::priority_queue<std::shared_ptr<Query>, std::vector<std::shared_ptr<Query>>, CompareQuery> m_queue; // TODO: preferably also want FIFO as tie breaker
+    std::priority_queue<QueryEntry, std::vector<QueryEntry>, CompareQuery> m_queue;
     std::vector<FunctionRef> m_all_theorems, m_generic_theorems;
     std::unordered_map<FunctionRef, std::vector<FunctionRef>> m_index;
     std::vector<FunctionRef> m_result;
