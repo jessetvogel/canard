@@ -1,7 +1,6 @@
 open topology.space
 
-namespace topology
-namespace theorems
+namespace topology.space.theorems
 
 let T000001 {X : Space} (h : compact X) : countably_compact X
 let T000002 {X : Space} (h : countably_compact X) : weakly_countably_compact X
@@ -239,5 +238,29 @@ let T000281 {X : Space} (h : hausdorff X) : preregular X
 let T000282 {X : Space} (h : regular X) : preregular X
 let T000283 {X : Space} (h1 : preregular X) (h2 : kolmogorov X) : hausdorff X
 
-end theorems
-end topology
+-- There are some redundant theorems:
+-- 🔎 T000009 = λ {X : Space} (h : compact X) := T000053 (T000122 (T000121 h)) (T000007 (T000006 h))
+-- 🔎 T000012 = λ {X : Space} (h : fully_normal_hausdorff X) := T000171_b h
+-- 🔎 T000013 = λ {X : Space} (h : compact X) := T000123 (T000122 (T000121 h)) (T000017 (T000001 h))
+-- 🔎 T000022 = λ {X : Space} (h1 : countably_compact X) (h2 : first_countable X) := T000223 (T000184 (T000183 h2)) h1
+-- 🔎 T000029 = λ {X : Space} (h1 : regular X) (h2 : second_countable X) := T000156 (T000258 h1 (T000260 h2))
+-- 🔎 T000042_a = λ {X : Space} (h : discrete X) := T000100_a (T000273 (T000274 h))
+-- 🔎 T000055 = λ {X : Space} (h1 : regular_hausdorff X) (h2 : lindelof X) := T000105 (T000118 (T000032 (T000033 h1))) (T000030 (T000146 h1) h2)
+-- 🔎 T000057 = λ {X : Space} (h : metrizable X) := T000130 (T000020_b h)
+-- 🔎 T000061_b = λ {X : Space} (h1 : separable X) (h2 : metrizable X) := T000020_a h2
+-- 🔎 T000065 = λ {X : Space} (h1 : weakly_locally_compact X) (h2 : metrizable X) := T000132 h2 (T000196 h1 (T000171_a (T000056 h2)))
+-- 🔎 T000100_a = λ {X : Space} (h : completely_normal_hausdorff X) := T000098_a (T000112 h)
+-- 🔎 T000104_a = λ {X : Space} (h : fully_normal_hausdorff X) := T000118 (T000171_a h)
+-- 🔎 T000106 = λ {X : Space} (h1 : lindelof X) (h2 : countably_compact X) := T000107 h2 (T000124 h1 (T000018 (T000017 h2)))
+-- 🔎 T000112 = λ {X : Space} (h : completely_normal_hausdorff X) := T000099 (T000100_a h) (T000036 (T000100_b h))
+-- 🔎 T000118 = λ {X : Space} (h : hausdorff X) := T000195 (T000193 h)
+-- 🔎 T000121 = λ {X : Space} (h : compact X) := T000005 (T000009 h)
+-- 🔎 T000122 = λ {X : Space} (h : sigma_compact X) := T000140 (T000141 h)
+-- 🔎 T000152_a = λ {X : Space} (h : perfectly_normal_hausdorff X) := T000100_a (T000154 h)
+-- 🔎 T000154 = λ {X : Space} (h : perfectly_normal_hausdorff X) := T000101 (T000152_a h) (T000156 (T000152_b h))
+-- 🔎 T000171_b = λ {X : Space} (h : fully_normal_hausdorff X) := T000012 h
+-- 🔎 T000197 = λ {X : Space} (h1 : finite X) (h2 : frechet X) := T000267 (T000266 h1) h2
+-- 🔎 T000270 = λ {X : Space} (h : second_countable X) := T000130 (T000090 h)
+-- 🔎 T000272 = λ {X : Space} (h : second_countable X) := T000254 (T000260 h)
+
+end topology.space.theorems

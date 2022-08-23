@@ -9,7 +9,7 @@ const std::vector<std::string> &Lexer::keywords() {
     static const std::vector<std::string> KEYWORDS(
             {
                     "let", "check", "search", "import", "namespace", "end", "open", "close", "structure",
-                    "exit", "inspect", "docs", "debug_search"
+                    "exit", "inspect", "docs", "debug_search", "prove"
             });
     return KEYWORDS;
 }

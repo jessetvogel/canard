@@ -155,6 +155,11 @@ bool Parser::parse_statement() {
         return true;
     }
 
+    if (found(KEYWORD, "prove")) {
+        parse_prove();
+        return true;
+    }
+
     if (found(KEYWORD, "exit")) {
         consume();
         m_running = false;
@@ -429,27 +434,12 @@ void Parser::parse_search() {
     Context sub_context(m_current_namespace->context());
     Telescope telescope = parse_parameters(sub_context);
 
-    // If no searcher ready, create one and specify the searching space
-    if (m_searcher == nullptr) {
-        m_searcher = std::unique_ptr<Searcher>(new Searcher(m_options.max_search_depth, m_options.max_search_threads));
+    // Setup searcher
+    setup_searcher();
 
-        std::unordered_set<Namespace *> added_namespaces;
-        for (auto space = m_current_namespace; space != nullptr; space = space->parent()) {
-            m_searcher->add_namespace(*space);
-            added_namespaces.insert(space);
-        }
-        for (auto &space: m_open_namespaces) {
-            if (added_namespaces.find(space) == added_namespaces.end())
-                m_searcher->add_namespace(*space);
-        }
-    }
-
-    // Make a query and do a search
-    // Store the results in a list
-    auto query = std::make_shared<Query>(telescope);
-
+    // Do a search, and store the results in a list
     auto start_time = std::chrono::system_clock::now();
-    bool success = m_searcher->search(query);
+    bool success = m_searcher->search(telescope);
     auto end_time = std::chrono::system_clock::now();
 
     // Print results in appropriate format
@@ -460,11 +450,51 @@ void Parser::parse_search() {
             output(Message::create(SUCCESS, std::vector<std::string>()));
         else {
             output("🥺 no solutions found");
-            return;
         }
 
     }
 
+    // Clear searcher already (destructors take quite some time..)
+    m_searcher->clear();
+
+    CANARD_LOG("Search took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms");
+}
+
+void Parser::parse_prove() {
+    /*
+        prove EXPRESSION
+     */
+
+    Token t_prove = consume(KEYWORD, "prove");
+
+    auto f = parse_expression(m_current_namespace->context(), {});
+
+    if (!f->is_base())
+        throw ParserException(t_prove, "prove expects a base function");
+
+    // Setup searcher
+    setup_searcher();
+
+    // Do a search, and store the results in a list
+    auto start_time = std::chrono::system_clock::now();
+    bool success = m_searcher->prove(f);
+    auto end_time = std::chrono::system_clock::now();
+
+    // Print results in appropriate format
+    if (success) {
+        output_search_results(Telescope({f}), m_searcher->result());
+    } else {
+        if (m_options.json)
+            output(Message::create(SUCCESS, std::vector<std::string>()));
+        else {
+            output("🥺 no solutions found");
+        }
+
+    }
+
+    // Clear searcher already (destructors take quite some time..)
+    m_searcher->clear();
+    
     CANARD_LOG("Search took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms");
 }
 
@@ -944,6 +974,24 @@ std::unordered_set<Namespace *> Parser::parse_namespace_collection() {
 
     // Otherwise, return a singleton
     return {space};
+}
+
+void Parser::setup_searcher() {
+    // If already a searcher, nothing to do
+    if (m_searcher != nullptr)
+        return;
+    // Create searcher
+    m_searcher = std::unique_ptr<Searcher>(new Searcher(m_options.max_search_depth, m_options.max_search_threads));
+    // Add current and open namespaces
+    std::unordered_set<Namespace *> added_namespaces;
+    for (auto space = m_current_namespace; space != nullptr; space = space->parent()) {
+        m_searcher->add_namespace(*space);
+        added_namespaces.insert(space);
+    }
+    for (auto &space: m_open_namespaces) {
+        if (added_namespaces.find(space) == added_namespaces.end())
+            m_searcher->add_namespace(*space);
+    }
 }
 
 void Parser::output(const std::string &message) {

@@ -39,7 +39,11 @@ private:
 
 template<typename F, typename T, class... Args>
 void ThreadManager::start(F function, T t, Args &&... args) {
+    // Reset everything
     m_threads.clear();
+    m_update_value = false;
+    m_update_permanent = false;
+    m_waiting_threads = 0;
 
     // Only start threads when using more than one threads
     if (m_max_threads > 1) {

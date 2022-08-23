@@ -1,5 +1,5 @@
-namespace category_theory
+namespace category_theory.category
 
 
 
-end category_theory
+end category_theory.category

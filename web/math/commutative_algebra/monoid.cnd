@@ -1,72 +1,41 @@
-import "../group_theory/main.cnd"
-import "../set_theory/main.cnd"
 import "ring.cnd"
 import "module.cnd"
-open group_theory.group
+import "../group_theory/group.cnd"
+import "../set_theory/set.cnd"
+
 open commutative_algebra.ring
+open group_theory.group
 open set_theory
 open set_theory.set
-open set_theory.set_map
 
-namespace commutative_algebra
+namespace commutative_algebra.monoid
 
-namespace monoid
-    -- The type of commutative monoids.
-    let Monoid : Type
-    -- The underlying set of a monoid.
-    let set_of_monoid (M : Monoid) : Set
-    let set_of_monoid_is_functor : functor set_of_monoid
-    -- A monoid $M$ is finitely generated if there exists a finite set of elements $m_1, m_2, \ldots, m_n \in M$ such that any $m \in M$ is the sum of various $m_i$.
-    let finitely_generated (M : Monoid) : Prop
-    -- A monoid $M$ is finitely presented if there exists a surjection $\NN^n \to M$ whose kernel is finitely generated.
-    let finitely_presented (M : Monoid) : Prop
-    -- A monoid $M$ is integral if the map to its groupification $M \to M^\textup{gp}$ is injective.
-    let integral (M : Monoid) : Prop
-    -- A monoid $M$ is saturated if for all $x \in M^\textup{gp}$ with $x^n \in M$ for some $n \ge 1$, we have $x \in M$.
-    let saturated (M : Monoid) : Prop
-    -- A monoid $M$ is sharp if $0 \in M$ is its only unit.
-    let sharp (M : Monoid) : Prop
-    -- A monoid $M$ is fine if it is finitely generated and integral.
-    let fine (M : Monoid) : Prop
-    -- A monoid $M$ is fs if it is fine and saturated.
-    let fs (M : Monoid) : Prop
-    -- A monoid $M$ is dull if it is a group.
-    let dull (M : Monoid) : Prop
+-- The type of commutative monoids.
+let Monoid : Type
+-- The underlying set of a monoid.
+let set_of_monoid (M : Monoid) : Set
+let set_of_monoid_is_functor : functor set_of_monoid
+-- A monoid $M$ is finitely generated if there exists a finite set of elements $m_1, m_2, \ldots, m_n \in M$ such that any $m \in M$ is the sum of various $m_i$.
+let finitely_generated (M : Monoid) : Prop
+-- A monoid $M$ is finitely presented if there exists a surjection $\NN^n \to M$ whose kernel is finitely generated.
+let finitely_presented (M : Monoid) : Prop
+-- A monoid $M$ is integral if the map to its groupification $M \to M^\textup{gp}$ is injective.
+let integral (M : Monoid) : Prop
+-- A monoid $M$ is saturated if for all $x \in M^\textup{gp}$ with $x^n \in M$ for some $n \ge 1$, we have $x \in M$.
+let saturated (M : Monoid) : Prop
+-- A monoid $M$ is sharp if $0 \in M$ is its only unit.
+let sharp (M : Monoid) : Prop
+-- A monoid $M$ is fine if it is finitely generated and integral.
+let fine (M : Monoid) : Prop
+-- A monoid $M$ is fs if it is fine and saturated.
+let fs (M : Monoid) : Prop
+-- A monoid $M$ is dull if it is a group.
+let dull (M : Monoid) : Prop
 
-    -- Any finitely presented monoid is finitely generated.
-    let fg_of_fp {M : Monoid} (h : finitely_presented M) : finitely_generated M
-    -- Any finitely generated monoid is finitely presented.
-    let fp_of_fg {M : Monoid} (h : finitely_generated M) : finitely_presented M
-end monoid
-
-open commutative_algebra.monoid
-
-namespace monoid_map
-    -- A morphism of monoids is integral if [...]
-    let integral {M N : Monoid} (f : Morphism M N) : Prop
-    -- A morphism of monoids is local if [...]
-    let local {M N : Monoid} (f : Morphism M N) : Prop
-    -- A morphism of monoids is exact if [...]
-    let exact {M N : Monoid} (f : Morphism M N) : Prop
-    -- A morphism of monoids is smooth if [...]
-    let smooth {M N : Monoid} (f : Morphism M N) : Prop
-    -- A morphism of monoids is etale if [...]
-    let etale {M N : Monoid} (f : Morphism M N) : Prop
-    -- A morphism of monoids is injective if the underlying map of sets is injective.
-    let injective {M N : Monoid} (f : Morphism M N) := set_map.injective (fmap set_of_monoid_is_functor f)
-    -- A morphism of monoids is surjective if the underlying map of sets is surjective.
-    let surjective {M N : Monoid} (f : Morphism M N) := set_map.surjective (fmap set_of_monoid_is_functor f)
-
-
-    -- A submonoid $N$ of an integral monoid $M$ is integral.
-    let int_sub_of_int {M N : Monoid} {i : Morphism N M} (hi: injective i) (hM : monoid.integral M) : monoid.integral N
-    -- Dull monoids are integral.
-    let int_of_dull {M : Monoid} (h : dull M) : monoid.integral M
-    -- The source of an integral morphism of monoids is integral.
-    let int_src_of_int {M N : Monoid} {f : Morphism M N} (h : integral f) : monoid.integral M
-    -- The target of an integral morphism of monoids is integral.
-    let int_trg_of_int {M N : Monoid} {f : Morphism M N} (h : integral f) : monoid.integral N
-end monoid_map
+-- Any finitely presented monoid is finitely generated.
+let fg_of_fp {M : Monoid} (h : finitely_presented M) : finitely_generated M
+-- Any finitely generated monoid is finitely presented.
+let fp_of_fg {M : Monoid} (h : finitely_generated M) : finitely_presented M
 
 -- The groupification of a monoid $M$ is \[ M^\textup{gp} = \{ xy^{-1} : x, y \in M \} / \sim{} , \] where $x_1y_1^{-1} = x_2y_2^{-1}$ if and only if $zx_1y_2 = zx_2y_1$ for some $z \in M$.
 let groupification (M : Monoid) : Group
@@ -79,7 +48,32 @@ let monoid_ring_to_base (R : Ring) (M : Monoid) : Morphism R (monoid_ring R M)
 -- Any abelian group can be regarded as a commutative monoid.
 let monoid_of_group {G : Group} (h : abelian G) : Monoid
 
--- If a morphism of monoids is smooth and integral then the map on monoid rings is flat
-let fl_mon_ring_of_sm_int (R : Ring) {M N : Monoid} {f : Morphism M N} (h1 : monoid_map.smooth f) (h2 : monoid_map.integral f) : ring_map.flat (fmap (monoid_ring_functor R) f)
+namespace map
 
-end commutative_algebra
+-- A morphism of monoids is integral if [...]
+let integral {M N : Monoid} (f : Morphism M N) : Prop
+-- A morphism of monoids is local if [...]
+let local {M N : Monoid} (f : Morphism M N) : Prop
+-- A morphism of monoids is exact if [...]
+let exact {M N : Monoid} (f : Morphism M N) : Prop
+-- A morphism of monoids is smooth if [...]
+let smooth {M N : Monoid} (f : Morphism M N) : Prop
+-- A morphism of monoids is etale if [...]
+let etale {M N : Monoid} (f : Morphism M N) : Prop
+-- A morphism of monoids is injective if the underlying map of sets is injective.
+let injective {M N : Monoid} (f : Morphism M N) := set.map.injective (fmap set_of_monoid_is_functor f)
+-- A morphism of monoids is surjective if the underlying map of sets is surjective.
+let surjective {M N : Monoid} (f : Morphism M N) := set.map.surjective (fmap set_of_monoid_is_functor f)
+
+-- A submonoid $N$ of an integral monoid $M$ is integral.
+let int_sub_of_int {M N : Monoid} {i : Morphism N M} (hi: injective i) (hM : monoid.integral M) : monoid.integral N
+-- Dull monoids are integral.
+let int_of_dull {M : Monoid} (h : dull M) : monoid.integral M
+-- The source of an integral morphism of monoids is integral.
+let int_src_of_int {M N : Monoid} {f : Morphism M N} (h : integral f) : monoid.integral M
+-- The target of an integral morphism of monoids is integral.
+let int_trg_of_int {M N : Monoid} {f : Morphism M N} (h : integral f) : monoid.integral N
+
+end map
+
+end commutative_algebra.monoid

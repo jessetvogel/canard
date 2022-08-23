@@ -36,24 +36,29 @@ void Searcher::add_namespace(Namespace &space) {
     }
 }
 
-bool Searcher::search(const std::shared_ptr<Query> &query) {
-    // Clear the vector of results
-    m_result.clear();
-
-    // Create a new priority queue
-    m_queue = {}; // clear
+bool Searcher::search(const Telescope &telescope) {
+    // Clear searcher
+    clear();
 
     // The initial query contains depth 0
-    fifo_counter = 0;
-    m_queue.push({query, fifo_counter++});
+    m_queue.push({std::make_shared<Query>(telescope), fifo_counter++});
 
     // Create a pool of threads
     m_searching = true;
     m_thread_manager.start(&Searcher::search_loop, this);
-
+    
     // Wait for all threads to end, and return
     m_thread_manager.join_all();
     return !m_result.empty();
+}
+
+bool Searcher::prove(const FunctionRef &f) {
+    CANARD_ASSERT(f->is_base(), "prove only works on base functions");
+    // Call `search` after marking f as excluded
+    m_excluded_thm = f;
+    bool success = search(Telescope({f}));
+    m_excluded_thm = nullptr;
+    return success;
 }
 
 void Searcher::search_loop() {
@@ -152,6 +157,10 @@ void Searcher::search_loop() {
 }
 
 bool Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, std::vector<std::shared_ptr<Query>> &reductions) {
+    // If thm is excluded, return false
+    if (thm == m_excluded_thm)
+        return false;
+
     // Try reducing query using thm
     auto sub_query = Query::reduce(query, thm);
     if (sub_query == nullptr)
@@ -183,6 +192,12 @@ bool Searcher::is_redundant(const std::shared_ptr<Query> &q, const std::shared_p
     if (p == nullptr) return false;
     if (p->injects_into(q)) return true;
     return is_redundant(q, p->parent());
+}
+
+void Searcher::clear() {
+    m_queue = {};
+    m_result.clear();
+    fifo_counter = 0;
 }
 
 //void Searcher::optimize(const std::shared_ptr<Query> &q) {

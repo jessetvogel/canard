@@ -70,6 +70,7 @@ private:
     void parse_structure();
     void parse_check();
     void parse_search();
+    void parse_prove();
     void parse_inspect();
     void parse_docs();
     void parse_debug_search();
@@ -83,6 +84,9 @@ private:
     FunctionRef parse_term(Context &);
     Namespace *parse_absolute_namespace();
     std::unordered_set<Namespace*> parse_namespace_collection();
+
+    // Util
+    void setup_searcher();
 
     // Output methods
     void output(const std::string &);

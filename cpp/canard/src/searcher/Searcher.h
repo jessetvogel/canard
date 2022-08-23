@@ -32,7 +32,9 @@ public:
     explicit Searcher(int max_depth, int max_threads = 1);
 
     void add_namespace(Namespace &);
-    bool search(const std::shared_ptr<Query> &);
+    bool search(const Telescope &);
+    bool prove(const FunctionRef &);
+    void clear();
 
     const std::vector<FunctionRef> &result() const { return m_result; }
 
@@ -48,6 +50,7 @@ private:
     std::vector<FunctionRef> m_all_theorems, m_generic_theorems;
     std::unordered_map<FunctionRef, std::vector<FunctionRef>> m_index;
     std::vector<FunctionRef> m_result;
+    FunctionRef m_excluded_thm;
 
     void search_loop();
     bool search_helper(std::shared_ptr<Query> &, const FunctionRef &, std::vector<std::shared_ptr<Query>> &);

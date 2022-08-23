@@ -1,17 +1,23 @@
 import "scheme.cnd"
+import "../commutative_algebra/ring.cnd"
+import "../commutative_algebra/module.cnd"
 
 open algebraic_geometry.scheme
+open commutative_algebra.ring
+open commutative_algebra.module
 
-namespace algebraic_geometry
+namespace algebraic_geometry.sheaf
 
 -- The type of sheaves on a scheme $X$.
 let Sheaf (X : Scheme) : Type
-namespace sheaf
-    let quasi_coherent {X : Scheme} (F : Sheaf X) : Prop
-    let coherent {X : Scheme} (F : Sheaf X) : Prop
-    let free {X : Scheme} (F : Sheaf X) : Prop
-    let locally_free {X : Scheme} (F : Sheaf X) : Prop
-    let flasque {X : Scheme} (F : Sheaf X) : Prop
-end sheaf
 
-end algebraic_geometry
+let quasi_coherent {X : Scheme} (F : Sheaf X) : Prop
+let coherent {X : Scheme} (F : Sheaf X) : Prop
+let free {X : Scheme} (F : Sheaf X) : Prop
+let locally_free {X : Scheme} (F : Sheaf X) : Prop
+let flasque {X : Scheme} (F : Sheaf X) : Prop
+
+-- Tilde construction
+let sheaf_of_module {R : Ring} (M : Module R) : Sheaf (Spec R)
+
+end algebraic_geometry.sheaf

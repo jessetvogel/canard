@@ -1,17 +1,12 @@
-namespace set_theory
-
-namespace set
+namespace set_theory.set
     -- The type of sets.
     let Set : Type
-end set
 
-open set_theory.set
-
-namespace set_map
+namespace map
     -- A map $f : A \to B$ of sets is injective if $f(x) = f(y)$ implies $x = y$ for all $x, y \in A$.
     let injective {A B : Set} (f : Morphism A B) : Prop
     -- A map $f : A \to B$ of sets is surjective if for all $y \in B$ there exists an $x \in A$ such that $y = f(x)$.
     let surjective {A B : Set} (f : Morphism A B) : Prop
-end set_map
+end map
 
-end set_theory
+end set_theory.set

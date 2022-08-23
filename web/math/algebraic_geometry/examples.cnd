@@ -1,12 +1,16 @@
+import "scheme.cnd"
+import "spec.cnd"
+import "toric.cnd"
+
 open algebraic_geometry
 open commutative_algebra
 
 open algebraic_geometry.scheme
-open algebraic_geometry.scheme_map
+open algebraic_geometry.scheme.map
 open commutative_algebra.ring
+open commutative_algebra.ring.examples
 
-namespace algebraic_geometry
-namespace examples
+namespace algebraic_geometry.scheme.examples
 
 -- The empty scheme $\varnothing = \Spec(\{ 0 \})$.
 let empty_scheme := Spec zero_ring
@@ -18,7 +22,6 @@ let empty_not_irr : not (irreducible empty_scheme)
 let empty_not_int : not (integral empty_scheme)
 -- The empty scheme is not connected.
 let empty_cn : not (connected empty_scheme)
-
 
 -- The scheme $\Spec(R)$ is non-empty whenever $R$ is not the zero ring.
 let spec_not_empty {R : Ring} (h : not (trivial R)) : not (empty (Spec R))
@@ -74,8 +77,8 @@ let thick_qsp {X : Scheme} (h : scheme.quasi_separated X) : scheme.quasi_separat
 
 -- (thick X) \to X
 let thick_to_base (X : Scheme) : Morphism (thick X) X
-let thick_to_base_fn (X : Scheme) : scheme_map.finite (thick_to_base X)
-let thick_to_base_fp (X : Scheme) : scheme_map.finitely_presented (thick_to_base X)
+let thick_to_base_fn (X : Scheme) : scheme.map.finite (thick_to_base X)
+let thick_to_base_fp (X : Scheme) : scheme.map.finitely_presented (thick_to_base X)
 let thick_to_base_not_ci (X : Scheme) : not (closed_immersion (thick_to_base X)) -- only if X is non-empty
 let thick_to_base_fl (X : Scheme) : flat (thick_to_base X)
 let thick_to_base_sj (X : Scheme) : surjective (thick_to_base X)
@@ -91,10 +94,10 @@ let ec_rg {k : Ring} (h : field k) : scheme.regular (ec h)
 -- Elliptic curve --> P1 by x coordinate
 let ec_to_P1 {k : Ring} (h : field k) : Morphism (ec h) (proj_line (Spec k))
 let ec_to_P1_not_et {k : Ring} (h : field k) : not (etale (ec_to_P1 h))
-let ec_to_P1_fn {k : Ring} (h : field k) : scheme_map.finite (ec_to_P1 h)
-let ec_to_P1_fl {k : Ring} (h : field k) : scheme_map.flat (ec_to_P1 h)
-let ec_to_P1_sj {k : Ring} (h : field k) : scheme_map.surjective (ec_to_P1 h)
-let ec_to_P1_fp {k : Ring} (h : field k) : scheme_map.finitely_presented (ec_to_P1 h)
+let ec_to_P1_fn {k : Ring} (h : field k) : scheme.map.finite (ec_to_P1 h)
+let ec_to_P1_fl {k : Ring} (h : field k) : scheme.map.flat (ec_to_P1 h)
+let ec_to_P1_sj {k : Ring} (h : field k) : scheme.map.surjective (ec_to_P1 h)
+let ec_to_P1_fp {k : Ring} (h : field k) : scheme.map.finitely_presented (ec_to_P1 h)
 
 -- Integral closure of $\ZZ$ in $\bar{\QQ}$.
 let Spec_ZZ_bar := Spec ZZ_bar
@@ -107,12 +110,12 @@ let ZZ_bar_nm : scheme.normal Spec_ZZ_bar
 let Spec_CC_to_Spec_RR := mSpec RR_to_CC
 let Spec_CC_to_Spec_RR_not_ci : not (closed_immersion Spec_CC_to_Spec_RR)
 let Spec_CC_to_Spec_RR_et : etale Spec_CC_to_Spec_RR
-let Spec_CC_to_Spec_RR_fn : scheme_map.finite Spec_CC_to_Spec_RR
-let Spec_CC_to_Spec_RR_fl : scheme_map.flat Spec_CC_to_Spec_RR
-let Spec_CC_to_Spec_RR_not_imm : not (scheme_map.immersion Spec_CC_to_Spec_RR)
-let Spec_CC_to_Spec_RR_fp : scheme_map.finitely_presented Spec_CC_to_Spec_RR
-let Spec_CC_to_Spec_RR_af : scheme_map.finitely_presented Spec_CC_to_Spec_RR
-let Spec_CC_to_Spec_RR_sj : scheme_map.surjective Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_fn : scheme.map.finite Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_fl : scheme.map.flat Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_not_imm : not (scheme.map.immersion Spec_CC_to_Spec_RR)
+let Spec_CC_to_Spec_RR_fp : scheme.map.finitely_presented Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_af : scheme.map.finitely_presented Spec_CC_to_Spec_RR
+let Spec_CC_to_Spec_RR_sj : scheme.map.surjective Spec_CC_to_Spec_RR
 
 -- Spec QQ \sqcup Spec QQ = Spec (QQ x QQ)
 let two_pts {k : Ring} (h : field k) : Scheme
@@ -143,8 +146,8 @@ let Spec_QQ_sqrt2 := Spec QQ_sqrt2
 let Spec_QQ_sqrt2_to_Spec_QQ := mSpec QQ_to_QQ_sqrt2
 let Spec_QQ_sqrt2_to_Spec_QQ_not_zrc : not (zariski_cover Spec_QQ_sqrt2_to_Spec_QQ)
 let Spec_QQ_sqrt2_to_Spec_QQ_etc : etale_cover Spec_QQ_sqrt2_to_Spec_QQ
-let Spec_QQ_sqrt2_to_Spec_QQ_fn : scheme_map.finite Spec_QQ_sqrt2_to_Spec_QQ
-let Spec_QQ_sqrt2_to_Spec_QQ_not_ci : not (scheme_map.closed_immersion Spec_QQ_sqrt2_to_Spec_QQ)
+let Spec_QQ_sqrt2_to_Spec_QQ_fn : scheme.map.finite Spec_QQ_sqrt2_to_Spec_QQ
+let Spec_QQ_sqrt2_to_Spec_QQ_not_ci : not (scheme.map.closed_immersion Spec_QQ_sqrt2_to_Spec_QQ)
 
 -- Plane minus origin
 let plane_no_origin {k : Ring} (h : field k) : Scheme
@@ -162,8 +165,8 @@ let plane_no_origin_to_Spec_k_not_ff {k : Ring} (h : field k) : not (finite_fibe
 let plane_no_origin_to_Spec_k_fp {k : Ring} (h : field k) : finitely_presented (plane_no_origin_to_Spec_k h)
 let plane_no_origin_to_Spec_k_not_pr {k : Ring} (h : field k) : not (proper (plane_no_origin_to_Spec_k h))
 let plane_no_origin_to_Spec_k_sm {k : Ring} (h : field k) : smooth (plane_no_origin_to_Spec_k h)
-let plane_no_origin_to_Spec_k_sp {k : Ring} (h : field k) : scheme_map.separated (plane_no_origin_to_Spec_k h)
-let plane_no_origin_to_Spec_k_not_ur {k : Ring} (h : field k) : not (scheme_map.unramified (plane_no_origin_to_Spec_k h))
+let plane_no_origin_to_Spec_k_sp {k : Ring} (h : field k) : scheme.map.separated (plane_no_origin_to_Spec_k h)
+let plane_no_origin_to_Spec_k_not_ur {k : Ring} (h : field k) : not (scheme.map.unramified (plane_no_origin_to_Spec_k h))
 -- let plane_no_origin_to_Spec_k_not_ci {k : Ring} (h : field k) : not (closed_immersion (plane_no_origin_to_Spec_k h))
 
 -- The disjoint union $X \sqcup Y$ of two schemes $X$ and $Y$.
@@ -182,5 +185,4 @@ let line_double_origin {k : Ring} (h : field k) : Scheme
 -- The line with double origin is not separated.
 let line_double_origin_not_sp {k : Ring} (h : field k) : not (scheme.separated (line_double_origin h))
 
-end examples
-end algebraic_geometry
+end algebraic_geometry.scheme.examples

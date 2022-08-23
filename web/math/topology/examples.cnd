@@ -1,7 +1,6 @@
 open topology.space
 
-namespace topology
-namespace examples
+namespace topology.space.examples
 
 let S000001 : Space
 let S000001_P000078 : finite S000001
@@ -1641,5 +1640,4 @@ let S001103_P000050 : zero_dimensional S001103
 let S001103_P000044 : not (biconnected S001103)
 let S001103_P000051 : not (scattered S001103)
 
-end examples
-end topology
+end topology.space.examples

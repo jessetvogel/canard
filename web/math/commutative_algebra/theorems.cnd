@@ -2,10 +2,8 @@ open commutative_algebra.ring
 open commutative_algebra.module
 open commutative_algebra.monoid
 
-namespace commutative_algebra
-namespace theorems
+namespace commutative_algebra.ring.theorems
 
-namespace ring
 -- Every field is a domain, because if $xy = 0$ with $x \ne 0$, then $y = 0 \cdot x^{-1} = 0$.
 let domain_of_field {R : Ring} (h : field R) : domain R
 -- Every field is noetherian, because the only (maximal) ideal is $(0)$.
@@ -18,9 +16,11 @@ let local_of_field {R : Ring} (h : field R) : local R
 let not_trivial_of_dm {R : Ring} (h : domain R) : not (trivial R)
 -- Every finite domain is a field.
 let field_of_fn_dm {R : Ring} (h1 : domain R) (h2 : finite R) : field R
-end ring
 
-namespace module
+end commutative_algebra.ring.theorems
+
+namespace commutative_algebra.module.theorems
+
 -- Any free module is projective.
 let proj_of_free_module {R : Ring} {M : Module R} (h : free M) : projective M
 -- Any projective module is flat.
@@ -49,9 +49,11 @@ let exc_of_field {R : Ring} (h : field R) : excellent R
 let exc_of_nt_cmpl_lc {R : Ring} (h1 : ring.noetherian R) (h2 : complete R) (h3 : local R) : excellent R
 -- Every field is Jacobson.
 let jcb_of_field {R : Ring} (h : field R) : jacobson R
-end module
 
-namespace monoid
+end commutative_algebra.module.theorems
+
+namespace commutative_algebra.monoid.theorems
+
 -- Any finitely generated, integral and separated monoid is fs.
 let fs_of_fg_int_st {M : Monoid} (h1 : monoid.finitely_generated M) (h2 : monoid.integral M) (h3: saturated M) : fs M
 -- Any fs monoid is finitely generated.
@@ -60,7 +62,8 @@ let fg_of_fs {M : Monoid} (h : fs M) : monoid.finitely_generated M
 let int_of_fs {M : Monoid} (h : fs M) : monoid.integral M
 -- Any fs monoid is finitely generated.
 let st_of_fs {M : Monoid} (h : fs M) : saturated M
-end monoid
+-- If a morphism of monoids is smooth and integral then the map on monoid rings is flat
+let fl_mon_ring_of_sm_int (R : Ring) {M N : Monoid} {f : Morphism M N} (h1 : monoid.map.smooth f) (h2 : monoid.map.integral f) : ring.map.flat (fmap (monoid_ring_functor R) f)
 
-end theorems
-end commutative_algebra
+end commutative_algebra.monoid.theorems
+

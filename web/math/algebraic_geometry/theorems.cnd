@@ -1,11 +1,10 @@
-open commutative_algebra
+import "scheme.cnd"
+
 open algebraic_geometry.scheme
-open algebraic_geometry.scheme_map
+open algebraic_geometry.scheme.map
 
-namespace algebraic_geometry
-namespace theorems
+namespace algebraic_geometry.scheme.theorems
 
--- Theorems on schemes
 let qc_of_af {X : Scheme} (h : scheme.affine X) : scheme.quasi_compact X
 let lnt_of_rg {X : Scheme} (h : scheme.regular X) : locally_noetherian X
 let nt_of_lnt_qc {X : Scheme} (h1 : locally_noetherian X) (h2 : scheme.quasi_compact X) : noetherian X
@@ -24,7 +23,10 @@ let cn_of_irr {X : Scheme} (h : irreducible X) : connected X
 let lnt_of_cm {X : Scheme} (h : cohen_macaulay X) : locally_noetherian X
 let nm_of_rg {X : Scheme} (h : scheme.regular X) : normal X
 
--- Theorems on scheme morphisms
+end algebraic_geometry.scheme.theorems
+
+namespace algebraic_geometry.scheme.map.theorems
+
 let sm_of_fsm_lfp {X Y : Scheme} {f : Morphism X Y} (h1 : formally_smooth f) (h2 : locally_finitely_presented f) : smooth f
 let fsm_of_sm {X Y : Scheme} {f : Morphism X Y} (h : smooth f) : formally_smooth f
 let lfp_of_sm {X Y : Scheme} {f : Morphism X Y} (h : smooth f) : locally_finitely_presented f
@@ -37,62 +39,62 @@ let lft_of_ur {X Y : Scheme} {f : Morphism X Y} (h : unramified f) : locally_fin
 let fsm_of_fet {X Y : Scheme} {f : Morphism X Y} (h : formally_etale f) : formally_smooth f
 let fur_of_fet {X Y : Scheme} {f : Morphism X Y} (h : formally_etale f) : formally_unramified f
 let fet_of_fsm_fur {X Y : Scheme} {f : Morphism X Y} (h1 : formally_smooth f) (h2 : formally_unramified f) : formally_etale f
-let fp_of_lfp_qsp_qc {X Y : Scheme} {f : Morphism X Y} (h1 : locally_finitely_presented f) (h2 : scheme_map.quasi_separated f) (h3 : scheme_map.quasi_compact f) : finitely_presented f
+let fp_of_lfp_qsp_qc {X Y : Scheme} {f : Morphism X Y} (h1 : locally_finitely_presented f) (h2 : map.quasi_separated f) (h3 : map.quasi_compact f) : finitely_presented f
 let lfp_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : locally_finitely_presented f
-let qsp_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : scheme_map.quasi_separated f
-let qc_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : scheme_map.quasi_compact f
+let qsp_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : map.quasi_separated f
+let qc_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : map.quasi_compact f
 let lft_of_lfp {X Y : Scheme} {f : Morphism X Y} (h : locally_finitely_presented f) : locally_finite_type f
 let ft_of_fp {X Y : Scheme} {f : Morphism X Y} (h : finitely_presented f) : finite_type f
-let ft_of_lft_qc {X Y : Scheme} {f : Morphism X Y} (h1 : locally_finite_type f) (h2 : scheme_map.quasi_compact f) : finite_type f
+let ft_of_lft_qc {X Y : Scheme} {f : Morphism X Y} (h1 : locally_finite_type f) (h2 : map.quasi_compact f) : finite_type f
 let lft_of_ft {X Y : Scheme} {f : Morphism X Y} (h : finite_type f) : locally_finite_type f
-let qc_of_ft {X Y : Scheme} {f : Morphism X Y} (h : finite_type f) : scheme_map.quasi_compact f
-let qc_of_af_morph {X Y : Scheme} {f : Morphism X Y} (h : scheme_map.affine f) : scheme_map.quasi_compact f
-let af_of_fn {X Y : Scheme} {f : Morphism X Y} (h : finite f) : scheme_map.affine f
+let qc_of_ft {X Y : Scheme} {f : Morphism X Y} (h : finite_type f) : map.quasi_compact f
+let qc_of_af_morph {X Y : Scheme} {f : Morphism X Y} (h : map.affine f) : map.quasi_compact f
+let af_of_fn {X Y : Scheme} {f : Morphism X Y} (h : finite f) : map.affine f
 let pr_of_fn {X Y : Scheme} {f : Morphism X Y} (h : finite f) : proper f
-let fn_of_af_pr {X Y : Scheme} {f : Morphism X Y} (h1 : scheme_map.affine f) (h2 : proper f): finite f
+let fn_of_af_pr {X Y : Scheme} {f : Morphism X Y} (h1 : map.affine f) (h2 : proper f): finite f
 let op_of_fl_lfp {X Y : Scheme} {f : Morphism X Y} (h1 : flat f) (h2 : locally_finitely_presented f) : open_morphism f
-let pr_of_ft_uc_sp {X Y : Scheme} {f : Morphism X Y} (h1 : finite_type f) (h2: universally_closed f) (h3 : scheme_map.separated f) : proper f
+let pr_of_ft_uc_sp {X Y : Scheme} {f : Morphism X Y} (h1 : finite_type f) (h2: universally_closed f) (h3 : map.separated f) : proper f
 let ft_of_pr {X Y : Scheme} {f : Morphism X Y} (h : proper f) : finite_type f
 let uc_of_pr {X Y : Scheme} {f : Morphism X Y} (h : proper f) : universally_closed f
-let sp_of_pr {X Y : Scheme} {f : Morphism X Y} (h : proper f) : scheme_map.separated f
+let sp_of_pr {X Y : Scheme} {f : Morphism X Y} (h : proper f) : map.separated f
 let lfp_of_lft_lnt {X Y : Scheme} {f : Morphism X Y} (h1 : locally_finite_type f) (h2 : locally_noetherian Y) : locally_finitely_presented f
-let qc_of_uc {X Y : Scheme} {f : Morphism X Y} (h : universally_closed f) : scheme_map.quasi_compact f
+let qc_of_uc {X Y : Scheme} {f : Morphism X Y} (h : universally_closed f) : map.quasi_compact f
 let pr_of_ci {X Y : Scheme} {f : Morphism X Y} (h : closed_immersion f) : proper f
-let qsp_of_lft_lnt {X Y : Scheme} {f : Morphism X Y} (h1 : locally_finite_type f) (h2 : locally_noetherian Y) : scheme_map.quasi_separated f
+let qsp_of_lft_lnt {X Y : Scheme} {f : Morphism X Y} (h1 : locally_finite_type f) (h2 : locally_noetherian Y) : map.quasi_separated f
 let ft_of_ci {X Y : Scheme} {f : Morphism X Y} (h : closed_immersion f) : finite_type f
-let qc_of_im_lnt {X Y : Scheme} {f : Morphism X Y} (h1 : immersion f) (h2 : locally_noetherian Y) : scheme_map.quasi_compact f
-let qc_of_src_nt {X Y : Scheme} (f : Morphism X Y) (h : noetherian X) : scheme_map.quasi_compact f
-let qsp_of_sp_morph {X Y : Scheme} {f : Morphism X Y} (h : scheme_map.separated f) : scheme_map.quasi_separated f
-let qc_of_qfn {X Y : Scheme} {f : Morphism X Y} (h : quasi_finite f) : scheme_map.quasi_compact f
+let qc_of_im_lnt {X Y : Scheme} {f : Morphism X Y} (h1 : immersion f) (h2 : locally_noetherian Y) : map.quasi_compact f
+let qc_of_src_nt {X Y : Scheme} (f : Morphism X Y) (h : noetherian X) : map.quasi_compact f
+let qsp_of_sp_morph {X Y : Scheme} {f : Morphism X Y} (h : map.separated f) : map.quasi_separated f
+let qc_of_qfn {X Y : Scheme} {f : Morphism X Y} (h : quasi_finite f) : map.quasi_compact f
 let ff_of_qf {X Y : Scheme} {f : Morphism X Y} (h : quasi_finite f) : finite_fibers f
-let qfn_of_qc_ff {X Y : Scheme} {f : Morphism X Y} (h1 : scheme_map.quasi_compact f) (h2 : finite_fibers f) : quasi_finite f
+let qfn_of_qc_ff {X Y : Scheme} {f : Morphism X Y} (h1 : map.quasi_compact f) (h2 : finite_fibers f) : quasi_finite f
 let et_of_oi {X Y : Scheme} {f : Morphism X Y} (h : open_immersion f) : etale f
-let sp_of_oi {X Y : Scheme} {f : Morphism X Y} (h : open_immersion f) : scheme_map.separated f
+let sp_of_oi {X Y : Scheme} {f : Morphism X Y} (h : open_immersion f) : map.separated f
 let ffl_of_fl_sj {X Y : Scheme} {f : Morphism X Y} (h1 : flat f) (h2 : surjective f) : faithfully_flat f
 let fl_of_ffl {X Y : Scheme} {f : Morphism X Y} (h : faithfully_flat f) : flat f
 let sj_of_ffl {X Y : Scheme} {f : Morphism X Y} (h : faithfully_flat f) : surjective f
-let sp_of_af_morph {X Y : Scheme} {f : Morphism X Y} (h : scheme_map.affine f) : scheme_map.separated f
+let sp_of_af_morph {X Y : Scheme} {f : Morphism X Y} (h : map.affine f) : map.separated f
 let qfn_of_fn {X Y : Scheme} {f : Morphism X Y} (h : finite f) : quasi_finite f
 let fl_of_sm {X Y : Scheme} {f : Morphism X Y} (h : smooth f) : flat f
 let ur_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := ur_of_fur_lft (fur_of_fet (fet_of_et h)) (lft_of_lfp (lfp_of_et h))
 let sm_of_et {X Y : Scheme} {f : Morphism X Y} (h : etale f) := sm_of_fsm_lfp (fsm_of_fet (fet_of_et h)) (lfp_of_et h)
 let qf_of_oi {X Y : Scheme} {f : Morphism X Y} (h : open_immersion f) : quasi_finite f
-let fn_of_pr_qf {X Y : Scheme} {f : Morphism X Y} (h1 : proper f) (h2 : quasi_finite f) : scheme_map.finite f
-let op_of_fl_lft {X Y : Scheme} {f : Morphism X Y} (h1 : scheme_map.flat f) (h2 : locally_finite_type f) : open_morphism f
-let syn_of_fl_lci {X Y : Scheme} {f : Morphism X Y} (h1 : scheme_map.flat f) (h2 : lci f) : syntomic f
-let fl_of_syn {X Y : Scheme} {f : Morphism X Y} (h : syntomic f) : scheme_map.flat f
+let fn_of_pr_qf {X Y : Scheme} {f : Morphism X Y} (h1 : proper f) (h2 : quasi_finite f) : map.finite f
+let op_of_fl_lft {X Y : Scheme} {f : Morphism X Y} (h1 : map.flat f) (h2 : locally_finite_type f) : open_morphism f
+let syn_of_fl_lci {X Y : Scheme} {f : Morphism X Y} (h1 : map.flat f) (h2 : lci f) : syntomic f
+let fl_of_syn {X Y : Scheme} {f : Morphism X Y} (h : syntomic f) : map.flat f
 let lci_of_syn {X Y : Scheme} {f : Morphism X Y} (h : syntomic f) : lci f
 
-let src_af_of_af_trg_af {X Y : Scheme} {f : Morphism X Y} (h1: scheme.affine Y) (h2 : scheme_map.affine f) : scheme.affine X
-let af_of_src_af_trg_af {X Y : Scheme} (f : Morphism X Y) (h1 : scheme.affine X) (h2: scheme.affine Y) : scheme_map.affine f
-let src_qc_of_qc_trg_qc {X Y : Scheme} {f : Morphism X Y} (h1 : scheme.quasi_compact Y) (h2 : scheme_map.quasi_compact f) : scheme.quasi_compact X
+let src_af_of_af_trg_af {X Y : Scheme} {f : Morphism X Y} (h1: scheme.affine Y) (h2 : map.affine f) : scheme.affine X
+let af_of_src_af_trg_af {X Y : Scheme} (f : Morphism X Y) (h1 : scheme.affine X) (h2: scheme.affine Y) : map.affine f
+let src_qc_of_qc_trg_qc {X Y : Scheme} {f : Morphism X Y} (h1 : scheme.quasi_compact Y) (h2 : map.quasi_compact f) : scheme.quasi_compact X
 let src_rg_of_sm_trg_rg {X Y : Scheme} {f : Morphism X Y} (h1 : scheme.regular Y) (h2 : smooth f) : scheme.regular X
 let src_jc_of_lft_trg_jc {X Y : Scheme} {f : Morphism X Y} (h1 : jacobson Y) (h2 : locally_finite_type f) : jacobson X
-let sp_of_src_af {X Y : Scheme} (f : Morphism X Y) (h : scheme.affine X) : scheme_map.separated f
+let sp_of_src_af {X Y : Scheme} (f : Morphism X Y) (h : scheme.affine X) : map.separated f
 let trg_sp_of_uc_sj_src_sp {X Y : Scheme} {f : Morphism X Y} (h1 : scheme.separated X) (h2 : universally_closed f) (h3 : surjective f) : scheme.separated Y
 let trg_qsp_of_uc_sj_src_qsp {X Y : Scheme} {f : Morphism X Y} (h1 : scheme.quasi_separated X) (h2 : universally_closed f) (h3 : surjective f) : scheme.quasi_separated Y
-let comp_qsep_left_univcl_surj_imp_right_qsep {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h1 : universally_closed f) (h2 : surjective f) (h3 : scheme_map.quasi_separated (comp g f)) : scheme_map.quasi_separated g
-let comp_sep_left_univcl_surj_imp_right_qsep {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h1 : universally_closed f) (h2 : surjective f) (h3 : scheme_map.quasi_separated (comp g f)) : scheme_map.quasi_separated g
+let comp_qsep_left_univcl_surj_imp_right_qsep {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h1 : universally_closed f) (h2 : surjective f) (h3 : map.quasi_separated (comp g f)) : map.quasi_separated g
+let comp_sep_left_univcl_surj_imp_right_qsep {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (h1 : universally_closed f) (h2 : surjective f) (h3 : map.quasi_separated (comp g f)) : map.quasi_separated g
 
 let etc_of_zrc {X Y : Scheme} {f : Morphism X Y} (h : zariski_cover f) : etale_cover f
 let smc_of_etc {X Y : Scheme} {f : Morphism X Y} (h : etale_cover f) : smooth_cover f
@@ -123,7 +125,7 @@ let id_fn (X : Scheme) : finite (id X)
 -- The identity morphism $\id_X$ is flat for all schemes $X$.
 let id_fl (X : Scheme) : flat (id X)
 -- The identity morphism $\id_X$ is affine for all schemes $X$.
-let id_af (X : Scheme) : scheme_map.affine (id X)
+let id_af (X : Scheme) : map.affine (id X)
 -- The identity morphism $\id_X$ is étale for all schemes $X$.
 let id_et (X : Scheme) : etale (id X)
 -- The identity morphism $\id_X$ is surjective for all schemes $X$.
@@ -137,20 +139,20 @@ let id_fp (X : Scheme) : finitely_presented (id X)
 let property_comp {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} {P {T S : Scheme} (phi : Morphism T S) : Prop} (h1 : P f) (h2 : P g) (h3 : stable_composition P) : P (comp g f)
 let stable_comp_uc : stable_composition universally_closed
 let stable_comp_pr : stable_composition proper
-let stable_comp_qsp : stable_composition scheme_map.quasi_separated
-let stable_comp_sp : stable_composition scheme_map.separated
+let stable_comp_qsp : stable_composition map.quasi_separated
+let stable_comp_sp : stable_composition map.separated
 let stable_comp_lft : stable_composition locally_finite_type
-let stable_comp_qc : stable_composition scheme_map.quasi_compact
+let stable_comp_qc : stable_composition map.quasi_compact
 let stable_comp_lfp : stable_composition locally_finitely_presented
 let stable_comp_fp : stable_composition finitely_presented
 let stable_comp_flat : stable_composition flat
 -- let stable_comp_iso : stable_composition isomorphism
 
 let property_left {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} {P {T S : Scheme} (phi : Morphism T S) : Prop} (h1 : P g) (h2 : P (comp g f)) (h3 : stable_left P) : P f
-let left_qc : stable_left scheme_map.quasi_compact
-let left_qsp : stable_left scheme_map.quasi_separated
-let left_sp : stable_left scheme_map.separated
-let left_lft : stable_left scheme_map.locally_finite_type
+let left_qc : stable_left map.quasi_compact
+let left_qsp : stable_left map.quasi_separated
+let left_sp : stable_left map.separated
+let left_lft : stable_left map.locally_finite_type
 
-end theorems
-end algebraic_geometry
+end algebraic_geometry.scheme.map.theorems
+

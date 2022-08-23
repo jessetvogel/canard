@@ -13,6 +13,7 @@ bool ThreadManager::wait_for_update() {
 
     // If number of waiting threads now equals total number of threads, this means all threads are waiting,
     // so we send 'false' to all of them
+    CANARD_ASSERT(m_waiting_threads <= m_max_threads, "???");
     if (m_waiting_threads == m_max_threads) {
         send_update(false);
         return false;

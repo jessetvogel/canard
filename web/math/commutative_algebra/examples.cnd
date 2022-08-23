@@ -1,12 +1,10 @@
 open commutative_algebra
-
 open commutative_algebra.ring
 open commutative_algebra.module
 open commutative_algebra.monoid
-open commutative_algebra.theorems.ring
+open commutative_algebra.ring.theorems
 
-namespace commutative_algebra
-namespace examples
+namespace commutative_algebra.ring.examples
 
 -- The ring of integers $\ZZ$.
 let ZZ : Ring
@@ -35,11 +33,11 @@ let zero_not_lc : not (local zero_ring)
 let zero_fn : finite zero_ring
 
 -- The ring $\ZZ$ is not trivial.
-let ZZ_not_trivial : not (trivial ZZ)
+let ZZ_not_triv : not (trivial ZZ)
 -- The ring $\ZZ$ is a domain.
-let ZZ_is_dm : domain ZZ
+let ZZ_dm : domain ZZ
 -- The ring $\ZZ$ is a PID.
-let ZZ_is_pid : pid ZZ
+let ZZ_pid : pid ZZ
 -- The ring $\ZZ$ is not a field. For example, $2 \in \ZZ$ is not invertible.
 let ZZ_not_field : not (field ZZ)
 -- The ring $\ZZ$ is noetherian.
@@ -52,18 +50,18 @@ let ZZ_not_art : not (ring.artin ZZ)
 let ZZ_not_lc : not (local ZZ)
 
 -- The ring $\QQ$ is a field.
-let QQ_is_field : field QQ
+let QQ_field : field QQ
 -- The ring $\QQ$ is not trivial.
-let QQ_not_trivial := not_trivial_of_dm (domain_of_field QQ_is_field)
+let QQ_not_triv := not_trivial_of_dm (domain_of_field QQ_field)
 -- The ring $\RR$ is a field.
-let RR_is_field : field RR
+let RR_field : field RR
 -- The ring $\CC$ is a field.
-let CC_is_field : field CC
+let CC_field : field CC
 
 -- The ring $\RR$ is not trivial.
-let RR_not_trivial : not (trivial RR)
+let RR_not_triv : not (trivial RR)
 -- The ring $\CC$ is not trivial.
-let CC_not_trivial : not (trivial CC)
+let CC_not_triv : not (trivial CC)
 
 -- The inclusion of rings $\ZZ \to \QQ$.
 let ZZ_to_QQ : Morphism ZZ QQ
@@ -79,11 +77,11 @@ let QQ_to_CC := comp RR_to_CC QQ_to_RR
 -- The field $\FF_2$ consisting of 2 elements.
 let FF2 : Ring
 -- The ring $\FF_2$ is not trivial.
-let FF2_not_trivial : not (trivial FF2)
+let FF2_not_triv : not (trivial FF2)
 -- The ring $\FF_2$ is a field.
-let FF2_is_field : field FF2
+let FF2_field : field FF2
 -- The ring $\FF_2$ is finite.
-let FF2_is_finite : finite FF2
+let FF2_finite : finite FF2
 -- The quotient map $\ZZ \to \FF_2$.
 let ZZ_to_FF2 : Morphism ZZ FF2
 
@@ -131,11 +129,6 @@ let cusp_ring_not_art {k : Ring} (h : field k) : not (ring.artin (cusp_ring h))
 -- The ring $k[x, y] / (x^2 - y^3)$ not local. For example, both $(x, y)$ and $(x - 1, y - 1)$ are maximal ideals.
 let cusp_ring_not_lc  {k : Ring} (h : field k) : not (local (cusp_ring h))
 
--- The natural numbers $\NN$.
-let NN : Monoid
--- The natural numbers $\NN$ are a fs monoid
-let NN_is_fs : fs NN
-
 -- Polynomial ring $R[x]$ over a given ring $R$.
 let polynomial_ring (R : Ring) : Ring
 let polynomial_ring_ufd {R : Ring} (h : ufd R) : ufd (polynomial_ring R)
@@ -144,5 +137,13 @@ let polynomial_ring_dm {R : Ring} (h : domain R) : domain (polynomial_ring R)
 let polynomial_ring_rd {R : Ring} (h : ring.reduced R) : ring.reduced (polynomial_ring R)
 let polynomial_ring_not_lc (R : Ring) : not (ring.local (polynomial_ring R))
 
-end examples
-end commutative_algebra
+end commutative_algebra.ring.examples
+
+namespace commutative_algebra.monoid.examples
+
+-- The natural numbers $\NN$.
+let NN : Monoid
+-- The natural numbers $\NN$ are a fs monoid
+let NN_fs : fs NN
+
+end commutative_algebra.monoid.examples
