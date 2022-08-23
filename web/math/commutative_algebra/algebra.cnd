@@ -1,0 +1,18 @@
+import "ring.cnd"
+
+open commutative_algebra.ring
+
+namespace commutative_algebra.algebra
+
+structure Algebra (k : Ring) := {
+    ring : Ring,
+    map : Morphism k ring
+}
+
+-- The type of algebras over a given ring $R$.
+-- let Algebra (R : Ring) : Type -- Although actually, can we define an Algebra as a `Morphism R _` ?
+-- let algebra_of_ring_morphism {R S : Ring} (f : Morphism R S) : Algebra R
+-- let algebra_self (R : Ring) := algebra_of_ring_morphism (id R)
+-- let module_of_algebra {R : Ring} (A : Algebra R) : Module R
+
+end commutative_algebra.algebra

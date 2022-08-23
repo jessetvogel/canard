@@ -1,0 +1,9 @@
+namespace linear_algebra
+
+namespace vector_space
+
+let VectorSpace {k : Ring} (h : field k) : Type
+
+end vector_space
+
+end linear_algebra
