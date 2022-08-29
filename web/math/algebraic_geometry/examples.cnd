@@ -71,7 +71,7 @@ let thick (X : Scheme) : Scheme
 let thick_af {X : Scheme} (h : scheme.affine X) : scheme.affine (thick X)
 let thick_cn {X : Scheme} (h : scheme.connected X) : scheme.connected (thick X)
 let thick_lnt {X : Scheme} (h : scheme.locally_noetherian X) : scheme.locally_noetherian (thick X)
-let thick_not_rd (X : Scheme) : not (scheme.reduced (thick X)) -- only if X is non-empty ..
+let thick_not_rd {X : Scheme} (h : not (scheme.empty X)) : not (scheme.reduced (thick X)) -- only if X is non-empty ..
 let thick_sp {X : Scheme} (h : scheme.separated X) : scheme.separated (thick X)
 let thick_qsp {X : Scheme} (h : scheme.quasi_separated X) : scheme.quasi_separated (thick X)
 

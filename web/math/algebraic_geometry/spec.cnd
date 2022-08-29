@@ -12,6 +12,6 @@ let Spec_contravariant : contravariant Spec
 let mSpec {A B : Ring} (f : Morphism A B) := contramap Spec_contravariant f
 
 -- The spectrum of the integers.
-let Spec_ZZ := Spec examples.ZZ -- Even though this is a single step, this is the simplest scheme, so we want to consider it as a first case
+let [200%] Spec_ZZ := Spec examples.ZZ -- Even though this is a single step, this is the simplest scheme, so we want to consider it as a first case
 
 end algebraic_geometry.scheme

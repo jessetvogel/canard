@@ -44,8 +44,12 @@ search (h : not (scheme.map.open_immersion (mSpec QQ_to_QQ_sqrt2)));
 search (P (T_ S_ : Type) (F_ (t_ : T_) : S_) (h_ : functor F_) (X_ Y_ : T_) (f_ : Morphism X_ Y_) : Morphism (F_ X_) (F_ Y_));
 
 search (h : not (zariski_local scheme.connected));
+    -- [🦆 LOG] Search took 7256 ms (using 581588 queries)
+    -- [🦆 LOG] Search took 8618 ms (using 578852 queries)
 search {R : Ring} (A : Algebra R);
 
 search (X : Space) (h1 : compact X) (h2 : space.connected X) (h3 : hausdorff X) (h4 : not (metrizable X));
 search (X : Space) (h4 : not (metrizable X)) (h3 : hausdorff X) (h2 : space.connected X) (h1 : compact X);
 search (X : Space) (h1 : first_countable X) (h2 : separable X) (h3 : not (second_countable X));
+
+search (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z : Scheme);

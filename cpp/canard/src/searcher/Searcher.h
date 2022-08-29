@@ -7,53 +7,56 @@
 #include "Query.h"
 #include "ThreadManager.h"
 #include "../data/Namespace.h"
+#include "Index.h"
 #include <queue>
 #include <mutex>
+#include <set>
 
 struct QueryEntry {
-    std::shared_ptr<Query> query;
-    int fifo_order;
-};
 
-class CompareQuery {
-public:
-    bool operator()(const QueryEntry &entry_1, const QueryEntry &entry_2) {
-        const int cost1 = entry_1.query->cost();
-        const int cost2 = entry_2.query->cost();
-        if (cost1 == cost2)
-            return entry_1.fifo_order > entry_2.fifo_order;
-        return cost1 > cost2;
+    std::shared_ptr<Query> query;
+    std::vector<int> order;
+
+    bool operator<(const QueryEntry &other) const {
+        if (query->complexity() != other.query->complexity())
+            return query->complexity() > other.query->complexity();
+        return order > other.order; // compare lexicographically
     }
 };
 
 class Searcher {
 public:
 
-    explicit Searcher(int max_depth, int max_threads = 1);
+    Searcher(const std::unordered_set<Namespace *> &, int max_depth, int max_threads = 1);
 
-    void add_namespace(Namespace &);
     bool search(const Telescope &);
     bool prove(const FunctionRef &);
     void clear();
 
+    Index &index() { return m_index; }
     const std::vector<FunctionRef> &result() const { return m_result; }
+
+    int counter() const { return m_counter; }
 
 private:
 
     const int m_max_depth;
-    bool m_searching = false;
-    int fifo_counter = 0;
+    std::atomic<bool> m_searching;
+    int m_counter = 0;
 
     ThreadManager m_thread_manager;
     std::mutex m_mutex;
-    std::priority_queue<QueryEntry, std::vector<QueryEntry>, CompareQuery> m_queue;
-    std::vector<FunctionRef> m_all_theorems, m_generic_theorems;
-    std::unordered_map<FunctionRef, std::vector<FunctionRef>> m_index;
+    std::priority_queue<QueryEntry, std::vector<QueryEntry>> m_queue;
     std::vector<FunctionRef> m_result;
-    FunctionRef m_excluded_thm;
+    FunctionRef m_excluded_thm; // used for `prove()`
+    Index m_index;
 
     void search_loop();
     bool search_helper(std::shared_ptr<Query> &, const FunctionRef &, std::vector<std::shared_ptr<Query>> &);
-    bool is_redundant(const std::shared_ptr<Query> &, const std::shared_ptr<Query> &);
+    bool check_reasonable(const std::shared_ptr<Query> &q, const std::shared_ptr<Query> &p);
+    bool check_checkpoints(const std::shared_ptr<Query> &);
+
+    bool injects_into(const Query &, const Query &) const;
+    bool injects_into_helper(Matcher *, std::vector<FunctionRef>, std::vector<FunctionRef>) const;
 
 };

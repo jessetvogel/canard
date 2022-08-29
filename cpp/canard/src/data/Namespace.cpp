@@ -83,3 +83,14 @@ void Namespace::get_all_subspaces(std::unordered_set<Namespace *> &set) {
     for (auto &entry: m_children)
         entry.second->get_all_subspaces(set);
 }
+
+void Namespace::set_preference(const FunctionRef &f, int x) {
+    m_preferences[f] = x;
+}
+
+int Namespace::get_preference(const FunctionRef &f) {
+    auto it = m_preferences.find(f);
+    if (it == m_preferences.end())
+        return DEFAULT_PREFERENCE;
+    return it->second;
+}

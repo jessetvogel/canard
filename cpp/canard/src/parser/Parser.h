@@ -83,7 +83,8 @@ private:
     FunctionRef parse_expression(Context &, const Telescope &, Context * = nullptr, const std::string * = nullptr);
     FunctionRef parse_term(Context &);
     Namespace *parse_absolute_namespace();
-    std::unordered_set<Namespace*> parse_namespace_collection();
+    std::unordered_set<Namespace *> parse_namespace_collection();
+    int parse_preference();
 
     // Util
     void setup_searcher();

@@ -9,6 +9,8 @@
 #include <string>
 #include "Context.h"
 
+#define DEFAULT_PREFERENCE (100)
+
 class Session;
 
 class Namespace {
@@ -31,6 +33,9 @@ public:
 
     const FunctionRef &get_function(const std::string &);
 
+    void set_preference(const FunctionRef &, int);
+    int get_preference(const FunctionRef &);
+
 private:
 
     const std::string m_name;
@@ -38,6 +43,7 @@ private:
     Namespace *const m_parent = nullptr;
     std::unordered_map<std::string, std::unique_ptr<Namespace>> m_children;
     Context m_context;
+    std::unordered_map<FunctionRef, int> m_preferences;
 
     Namespace *create_subspace(const std::string &);
 

@@ -16,7 +16,6 @@ bool Context::put(const std::string &identifier, const FunctionRef &f) {
     if (m_map.find(identifier) != m_map.end())
         return false;
     m_map.emplace(identifier, f);
-    m_functions.push_back(f);
     return true;
 }
 

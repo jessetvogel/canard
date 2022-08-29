@@ -7,46 +7,23 @@
 #include "../parser/Formatter.h"
 #include <algorithm>
 
-Searcher::Searcher(const int max_depth, const int max_threads) : m_max_depth(max_depth),
-                                                                 m_thread_manager(max_threads) {}
-
-void Searcher::add_namespace(Namespace &space) {
-    // Make a list of lists of all functions that can be used during the search
-    // We do this in advance so that we don't constantly create new arraylists
-    const auto &theorems = space.context().functions();
-    m_all_theorems.insert(m_all_theorems.end(), theorems.begin(), theorems.end());
-
-    for (auto &thm: theorems) {
-        const auto &thm_type_base = thm.type().base();
-
-        // If thm.type().base() is a parameter of the theorem, then store in the 'general' category
-        if (thm->parameters().contains(thm_type_base)) {
-            m_generic_theorems.push_back(thm);
-            continue;
-        }
-
-        auto it = m_index.find(thm_type_base);
-        if (it != m_index.end()) {
-            it->second.push_back(thm);
-            continue;
-        }
-
-        // Alternatively, create a new entry in the index
-        m_index.emplace(thm_type_base, std::vector<FunctionRef>({thm}));
-    }
-}
+Searcher::Searcher(const std::unordered_set<Namespace *> &spaces,
+                   const int max_depth,
+                   const int max_threads) : m_max_depth(max_depth),
+                                            m_index(spaces),
+                                            m_thread_manager(max_threads),
+                                            m_searching(false) {}
 
 bool Searcher::search(const Telescope &telescope) {
     // Clear searcher
     clear();
-
-    // The initial query contains depth 0
-    m_queue.push({std::make_shared<Query>(telescope), fifo_counter++});
-
+    // Place initial query
+    m_queue.push({std::make_shared<Query>(telescope), {}});
+    // Reset counter
+    m_counter = 1;
     // Create a pool of threads
     m_searching = true;
     m_thread_manager.start(&Searcher::search_loop, this);
-    
     // Wait for all threads to end, and return
     m_thread_manager.join_all();
     return !m_result.empty();
@@ -65,9 +42,13 @@ void Searcher::search_loop() {
     while (m_searching) {
         // Take the first query from the first (non-empty) queue, i.e. the one with the lowest depth
         std::shared_ptr<Query> query = nullptr;
+        std::vector<int> order;
         m_mutex.lock();
         if (!m_queue.empty()) {
-            query = m_queue.top().query;
+            auto &entry = m_queue.top();
+            query = entry.query;
+            order.reserve(entry.order.size() + 1); // already reserve for an extra entry
+            order.insert(order.end(), entry.order.begin(), entry.order.end());
             m_queue.pop();
         }
         m_mutex.unlock();
@@ -81,20 +62,15 @@ void Searcher::search_loop() {
                 break;
         }
 
-        // Normalize the query before reducing: convert parameters of telescope to local variables
+        // Normalize the query before reducing: sort_and_convert parameters of telescope to local variables
         query = Query::normalize(query);
 
-#ifdef DEBUG
-        Formatter formatter;
-        CANARD_DEBUG("Current query [" << formatter.to_string(*query) << "]");
-#endif
-
         // Check for redundancies
-        if (is_redundant(query, query->parent()))
+        if (!check_reasonable(query, query->parent()))
             continue;
-
-        // Do some optimization TODO: this does not work correctly! TODO: watch out for multithreading!
-//        optimize(query);
+        // Check for checkpoints
+        if (!check_checkpoints(query))
+            continue;
 
         // Now we are going to look for reductions. Before pushing to the queue, we will store all reductions
         // in a list `reductions`. Then we will sort this list based on the number of telescope, which is
@@ -112,36 +88,36 @@ void Searcher::search_loop() {
         // If the type base is an indeterminate of query, there is nothing better to do then to try all theorems
         const auto &h_type_base = query->goal().type().base();
         if (query->telescope().contains(h_type_base)) {
-            for (auto &thm: m_all_theorems) {
+            for (auto &thm: m_index.all_theorems()) {
                 if (search_helper(query, thm, reductions))
                     goto end; // TODO: can we get rid of `goto` ?
             }
         } else {
             // If the type base is known to the index, try the corresponding list of theorems
-            auto it = m_index.find(h_type_base);
-            if (it != m_index.end()) {
-                for (auto &thm: it->second) {
+            auto theorems = m_index.theorems(h_type_base);
+            if (theorems != nullptr) {
+                for (auto &thm: *theorems) {
                     if (search_helper(query, thm, reductions))
                         goto end;
                 }
             }
             // Also try the general theorems
-            for (auto &thm: m_generic_theorems) {
-                if (search_helper(query, thm, reductions))
+            for (auto &thm: m_index.generic_theorems()) {
+                if (search_helper(query, thm, reductions)) {
+                    m_searching = false;
                     goto end;
+                }
             }
         }
 
-        // Now sort the list of reductions based on the number of telescope
-        std::sort(reductions.begin(), reductions.end(),
-                  [](const std::shared_ptr<Query> &q1, const std::shared_ptr<Query> &q2) {
-                      return q1->telescope().size() < q2->telescope().size();
-                  });
-
-        // Then add them to the queue
+        // Then add them to the queue with increasing order
         m_mutex.lock();
-        for (auto &r: reductions)
-            m_queue.push({std::move(r), fifo_counter++});
+        order.push_back(0);
+        for (auto &r: reductions) {
+            m_queue.push({std::move(r), order});
+            ++order.back();
+            ++m_counter;
+        }
         m_mutex.unlock();
 
         // Notify the other threads for updates
@@ -151,12 +127,15 @@ void Searcher::search_loop() {
 
     // Send a permanent update
     m_thread_manager.send_permanent_update(true);
-
     // When we are out of the loop, this boolean makes the other threads terminate as well
     m_searching = false;
 }
 
 bool Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, std::vector<std::shared_ptr<Query>> &reductions) {
+    // Shortcut: if not searching anymore, just return false and be done with it
+    if (!m_searching)
+        return false;
+
     // If thm is excluded, return false
     if (thm == m_excluded_thm)
         return false;
@@ -166,15 +145,11 @@ bool Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &t
     if (sub_query == nullptr)
         return false;
 
-#ifdef DEBUG
-    Formatter formatter;
-    CANARD_DEBUG("Reduced query [" << formatter.to_string(*sub_query) << "]");
-#endif
-
     // If the sub_query is completely is_solved (i.e. no more telescope) we are done!
     if (sub_query->is_solved()) {
         m_mutex.lock();
-        m_result = sub_query->final_solutions();
+        if (m_searching)
+            m_result = sub_query->final_solutions();
         m_mutex.unlock();
         return true;
     }
@@ -188,44 +163,143 @@ bool Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &t
     return false;
 }
 
-bool Searcher::is_redundant(const std::shared_ptr<Query> &q, const std::shared_ptr<Query> &p) {
-    if (p == nullptr) return false;
-    if (p->injects_into(q)) return true;
-    return is_redundant(q, p->parent());
-}
-
 void Searcher::clear() {
     m_queue = {};
     m_result.clear();
-    fifo_counter = 0;
+    m_counter = 0;
 }
 
-//void Searcher::optimize(const std::shared_ptr<Query> &q) {
-//    // If sub_query injects into the parent p, then we can safely delete all other branches coming from that parent p
-//    // since any solution of the parent will yield a solution for q
-//    // TODO: reverse order of iterating, and whenever we have a match, break the for-loop ?
-//    // TODO: this 'optimization' is not quite valid: if some parent gets 'strictly solved' by some query which was very slow (i.e. high depth), it should not be allowed to remove another query which already is_solved the query much more / earlier, just because it is a child of that parent..
-//    for (auto p = q->parent(); p != nullptr; p = nullptr) { //p = p->parent()) {
-//        if (!q->injects_into(p))
-//            continue;
-//
-//        for (auto &queue: m_depth_queues) {
-//            std::queue<std::shared_ptr<Query>> new_queue;
-//            while (!queue.empty()) {
-//                auto r = queue.front();
-//                queue.pop();
-//                bool should_remove = r->has_parent(p);
-//
-////                if (should_remove) // && r->injects_into(p)) // exception: if r is also a strict solution, don't remove r
-////                    should_remove = false;
-//
-//                if (!should_remove)
-//                    new_queue.push(std::move(r));
-//                CANARD_DEBUG("Removed [" << r->to_string() << "] because its parent [" << p->to_string()
-//                                         << "] was strictly is_solved by [" << q->to_string() << "]");
-//            }
-//            // Replace the old queue with the new queue (this works as queue is given by reference)
-//            queue = std::move(new_queue);
-//        }
-//    }
-//}
+bool Searcher::check_reasonable(const std::shared_ptr<Query> &q, const std::shared_ptr<Query> &p) {
+    // A query q is stupid with respect to a parent p if p (or one of its parents) injects into q.
+    // This means that q is strictly more difficult to solve than p.
+    if (p == nullptr) return true;
+//    if (p->checkpoint()) return true; // TODO: only need to check up to the nearest checkpoint !
+    if (injects_into(*p, *q)) return false;
+    return check_reasonable(q, p->parent());
+}
+
+bool Searcher::check_checkpoints(const std::shared_ptr<Query> &query) {
+    // Find the nearest parent with a checkpoint
+    int distance_to_checkpoint = 0;
+    for (const Query *p = query->parent().get(); p != nullptr; p = p->parent().get()) {
+        ++distance_to_checkpoint;
+        auto checkpoint = p->checkpoint();
+        if (checkpoint) {
+            // Make sure that the checkpoint is also one of the parents of query
+            distance_to_checkpoint = 1;
+            const Query *q = query->parent().get();
+            while (q != p && q != checkpoint) {
+                ++distance_to_checkpoint;
+                q = q->parent().get();
+            }
+            if (q == p) // (i.e. checkpoint not found)
+                return false;
+            break;
+        }
+    }
+
+    // When query injects into one of its parents, set the checkpoint of that parent to the query.
+    // We want the oldest parent which is still younger or equal to the last checkpoint (to eliminate as many queries as possible)
+    Query *parents[distance_to_checkpoint];
+    Query *p = query.get();
+    for (int i = 0; i < distance_to_checkpoint; ++i)
+        parents[i] = (p = p->parent().get());
+    for (int i = distance_to_checkpoint - 1; i >= 0; --i) {
+        Query &parent = *parents[i];
+        if (!parent.checkpoint() && injects_into(*query, parent) && parent.set_checkpoint(*query)) // TODO: multithreading can cause problems
+            break;
+    }
+
+    return true;
+}
+
+bool Searcher::injects_into(const Query &p, const Query &q) const {
+    // TODO: optimize this method ! Maybe its fine if its not 100% accurate
+    // Goal is to map (injectively) all my indeterminates to other.telescope, but all other.locals to my locals
+    // That is, we are checking if this query searches for less with more information.
+
+    // Probably start at the end, work way towards the beginning
+    // Method should be recursive
+    // Can we just use Matchers ?
+
+    // 1. let f = telescope[-1]
+    // 2. for each g in other.telescope:
+    //   2.1. Create sub_matcher with f -> g. If fail, continue with next g
+    //   2.2. If succeeded, see what telescope are mapped, and update the lists of which to map and which are still allowed from other
+    //   2.3. Continue recursively to the next (not yet mapped (also not induced mapped)) indeterminate (from the end, remember)
+
+    // At any point, we need:
+    // - current matcher (possibly null)
+    // - telescope yet to be mapped
+    // - allowed other.telescope to map to
+
+//        System.out.println("Does [" + this + "] inject into [" + other + "] ? ");
+
+    // Shortcut: if this is 'bigger' than other, it won't work
+    if (p.telescope().size() > q.telescope().size())
+        return false;
+
+    return injects_into_helper(nullptr, p.telescope().functions(), q.telescope().functions());
+
+    // TODO: actually, we would probably also need to check for the local variables..
+}
+
+bool Searcher::injects_into_helper(Matcher *matcher, std::vector<FunctionRef> unmapped, std::vector<FunctionRef> allowed) const {
+    // Shortcut: if not searching anymore, just return false and be done with it
+    if (!m_searching)
+        return false;
+
+    // Base case
+    const size_t n = unmapped.size();
+    if (n == 0)
+        return true;
+
+    // Starting at the back, try to map some unmapped Function to some allowed Function
+    auto &f = unmapped.back();
+
+    // If f is contained in allowed as well, we will assume that should be the assignment!
+    // TODO: note: this is not efficient, filter out all duplicates in the beginning!
+    auto it_f = std::find(allowed.begin(), allowed.end(), f);
+    if (it_f != allowed.end()) {
+        allowed.erase(it_f);
+        unmapped.pop_back();
+        return injects_into_helper(matcher, std::move(unmapped), std::move(allowed));
+    }
+
+    // Again starting at the back, find some allowed Function g to match our f
+    const size_t m = allowed.size();
+    for (int j = (int) m - 1; j >= 0; j--) {
+        auto &g = allowed[j];
+        bool valid_candidate = true;
+
+        Matcher sub_matcher = (matcher == nullptr) ? Matcher(unmapped) : Matcher(matcher, unmapped);
+        if (!sub_matcher.matches(f, g))
+            continue;
+
+        // Create new unmapped and allowed lists, by removing those which are mapped and to which they are mapped
+        std::vector<FunctionRef> new_unmapped, new_allowed = allowed;
+        for (auto &h: unmapped) {
+            const auto &k = sub_matcher.get_solution(h);
+            if (k == nullptr) {
+                if (h == f)
+                    return false; // TODO: it may happen that g -> f, so that matches returns true, but k == nullptr.
+
+                // Add those which are not yet mapped
+                new_unmapped.push_back(h);
+            } else {
+                // If h -> k, remove k from allowed lists
+                // If list does not contain k, there was some invalid mapping anyway, so we continue
+                auto it_k = std::find(new_allowed.begin(), new_allowed.end(), k);
+                if (it_k == new_allowed.end()) {
+                    valid_candidate = false;
+                    break;
+                }
+                new_allowed.erase(it_k);
+            }
+        }
+        // Now simply recursively find a match for the next unmapped
+        if (valid_candidate && injects_into_helper(&sub_matcher, std::move(new_unmapped), std::move(new_allowed)))
+            return true;
+    }
+    return false;
+}

@@ -197,7 +197,7 @@ FunctionRef Matcher::convert(const FunctionRef &f) {
     Telescope converted_parameters = clone({}, f->parameters(), &matcher);
     Matcher &sub_matcher = converted_parameters.empty() ? *this : *matcher;
 
-    // Otherwise, when f is a specialization, we convert each argument of f
+    // Otherwise, when f is a specialization, we sort_and_convert each argument of f
     bool changes = false;
     std::vector<FunctionRef> converted_arguments;
     for (auto &argument: f->arguments()) {
@@ -217,7 +217,7 @@ FunctionRef Matcher::convert(const FunctionRef &f) {
     // If no actual changes were made to the arguments or the base, we can simply return the original f
     if (!changes) return f;
 
-    // Now we must convert the type of f, this requires another sub_matcher!
+    // Now we must sort_and_convert the type of f, this requires another sub_matcher!
     // Because the type is determined by the arguments provided to the base Function,
     // since we replace those now, the type should be re-determined
     auto &f_base_parameters = converted_f_base->parameters();

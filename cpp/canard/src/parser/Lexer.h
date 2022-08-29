@@ -6,6 +6,7 @@
 
 #include <utility>
 #include <vector>
+#include <unordered_set>
 #include <sstream>
 #include <queue>
 #include "Scanner.h"
@@ -41,8 +42,8 @@ public:
     Token get_token();
 
 private:
-    static const std::vector<std::string> &keywords();
-    static const std::vector<std::string> &separators();
+    static const std::unordered_set<std::string> &keywords();
+    static const std::unordered_set<std::string> &separators();
 
     static bool is_keyword(const std::string &);
     static bool is_separator(const std::string &);

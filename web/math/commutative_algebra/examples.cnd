@@ -7,7 +7,7 @@ open commutative_algebra.ring.theorems
 namespace commutative_algebra.ring.examples
 
 -- The ring of integers $\ZZ$.
-let ZZ : Ring
+let [200%] ZZ : Ring
 -- The ring of rational numbers $\QQ$.
 let QQ : Ring
 -- The ring of real numbers $\RR$.

@@ -273,7 +273,7 @@ void Parser::parse_import() {
     path = absolute_path;
 
     // If file was already opened once, skip it
-    if (m_imported_files->find(path) != m_imported_files->end())
+    if (m_imported_files->count(path))
         return;
 
     // Add the absolute path to list of imported files
@@ -312,10 +312,16 @@ void Parser::parse_definition() {
     std::string doc;
     if (has_doc) doc = m_last_comment_token.m_data;
 
+    // Optionally parse preference
+    int preference = (found(SEPARATOR, "[")) ? parse_preference() : DEFAULT_PREFERENCE;
     for (auto &f: parse_functions(m_current_namespace->context(), {})) {
         // Store namespace in metadata (if not yet has one)
         if (!f->space())
             f->set_space(m_current_namespace);
+
+        // Store preference
+        if (preference != DEFAULT_PREFERENCE)
+            m_current_namespace->set_preference(f, preference);
 
         // Store documentation
         if (has_doc) {
@@ -433,31 +439,46 @@ void Parser::parse_search() {
     // Parse telescope
     Context sub_context(m_current_namespace->context());
     Telescope telescope = parse_parameters(sub_context);
+    std::vector<Telescope> groups = telescope.split(); // split for speed
 
     // Setup searcher
     setup_searcher();
 
-    // Do a search, and store the results in a list
+    // Do a search, and store the results in an unordered_map by name
+    std::unordered_map<std::string, FunctionRef> results;
+    bool success = true;
+    int query_counter = 0;
     auto start_time = std::chrono::system_clock::now();
-    bool success = m_searcher->search(telescope);
+    for (auto it = groups.begin(); success && it != groups.end(); ++it) {
+        if (success &= m_searcher->search(*it)) {
+            const auto &result = m_searcher->result();
+            query_counter += m_searcher->counter();
+            for (int i = 0; i < it->size(); ++i)
+                results[it->functions()[i]->name()] = result[i];
+        }
+    }
     auto end_time = std::chrono::system_clock::now();
 
     // Print results in appropriate format
     if (success) {
-        output_search_results(telescope, m_searcher->result());
+        std::vector<FunctionRef> solutions;
+        solutions.reserve(telescope.size());
+        for (const auto &f: telescope.functions())
+            solutions.push_back(results[f->name()]);
+        output_search_results(telescope, solutions);
     } else {
         if (m_options.json)
             output(Message::create(SUCCESS, std::vector<std::string>()));
         else {
             output("🥺 no solutions found");
         }
-
     }
+
+    CANARD_LOG("Search took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
+                              << " ms (using " << query_counter << " queries)");
 
     // Clear searcher already (destructors take quite some time..)
     m_searcher->clear();
-
-    CANARD_LOG("Search took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms");
 }
 
 void Parser::parse_prove() {
@@ -489,12 +510,11 @@ void Parser::parse_prove() {
         else {
             output("🥺 no solutions found");
         }
-
     }
 
     // Clear searcher already (destructors take quite some time..)
     m_searcher->clear();
-    
+
     CANARD_LOG("Search took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms");
 }
 
@@ -721,7 +741,7 @@ Telescope Parser::parse_parameters(Context &context) {
     if (implicits.empty())
         return parameters;
 
-    // Re-fifo_order implicit parameters so that every implicit parameter can be inferred from the first explicit parameter following it
+    // Re-order implicit parameters so that every implicit parameter can be inferred from the first explicit parameter following it
     // To do this, first make a copy of the parameters to match with
     Telescope copy = Matcher::dummy().clone({}, parameters);
 
@@ -976,22 +996,28 @@ std::unordered_set<Namespace *> Parser::parse_namespace_collection() {
     return {space};
 }
 
+int Parser::parse_preference() {
+    /*
+        [ NUMBER % ]
+     */
+
+    consume(SEPARATOR, "[");
+    const int percentage = std::stoi(consume(NUMBER).m_data);
+    consume(SEPARATOR, "%");
+    consume(SEPARATOR, "]");
+    return percentage;
+}
+
 void Parser::setup_searcher() {
     // If already a searcher, nothing to do
     if (m_searcher != nullptr)
         return;
+    // Create set of namespaces whose theorems to use
+    std::unordered_set<Namespace *> spaces = m_open_namespaces;
+    for (auto space = m_current_namespace; space != nullptr; space = space->parent())
+        spaces.insert(space);
     // Create searcher
-    m_searcher = std::unique_ptr<Searcher>(new Searcher(m_options.max_search_depth, m_options.max_search_threads));
-    // Add current and open namespaces
-    std::unordered_set<Namespace *> added_namespaces;
-    for (auto space = m_current_namespace; space != nullptr; space = space->parent()) {
-        m_searcher->add_namespace(*space);
-        added_namespaces.insert(space);
-    }
-    for (auto &space: m_open_namespaces) {
-        if (added_namespaces.find(space) == added_namespaces.end())
-            m_searcher->add_namespace(*space);
-    }
+    m_searcher = std::unique_ptr<Searcher>(new Searcher(spaces, m_options.max_search_depth, m_options.max_search_threads));
 }
 
 void Parser::output(const std::string &message) {

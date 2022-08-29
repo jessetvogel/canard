@@ -5,8 +5,8 @@
 #include <algorithm>
 #include "Lexer.h"
 
-const std::vector<std::string> &Lexer::keywords() {
-    static const std::vector<std::string> KEYWORDS(
+const std::unordered_set<std::string> &Lexer::keywords() {
+    static const std::unordered_set<std::string> KEYWORDS(
             {
                     "let", "check", "search", "import", "namespace", "end", "open", "close", "structure",
                     "exit", "inspect", "docs", "debug_search", "prove"
@@ -14,10 +14,10 @@ const std::vector<std::string> &Lexer::keywords() {
     return KEYWORDS;
 }
 
-const std::vector<std::string> &Lexer::separators() {
-    static const std::vector<std::string> SEPARATORS(
+const std::unordered_set<std::string> &Lexer::separators() {
+    static const std::unordered_set<std::string> SEPARATORS(
             {
-                    ":", "(", ")", "{", "}", "_", ";", ".", ":=", "--", "*", "\\", "λ", "->", ","
+                    ":", "(", ")", "{", "}", "[", "]", "_", ";", ".", ":=", "--", "*", "\\", "λ", "->", ",", "%"
             });
     return SEPARATORS;
 }
@@ -46,11 +46,11 @@ const char *Lexer::to_string(const TokenType &type) {
 }
 
 bool Lexer::is_keyword(const std::string &str) {
-    return std::find(keywords().begin(), keywords().end(), str) != keywords().end();
+    return keywords().count(str);
 }
 
 bool Lexer::is_separator(const std::string &str) {
-    return std::find(separators().begin(), separators().end(), str) != separators().end();
+    return separators().count(str);
 }
 
 bool Lexer::is_number(const std::string &str) {
@@ -68,12 +68,12 @@ bool Lexer::is_word(const std::string &str) {
 }
 
 bool Lexer::is_string(const std::string &str) {
-    const size_t n = str.length();
+    const size_t n = str.size();
     return (n >= 2 && str[0] == '"' && str[n - 1] == '"');
 }
 
 bool Lexer::is_newline(const std::string &str) {
-    const size_t n = str.length();
+    const size_t n = str.size();
     return (n == 1 && str[0] == '\n') || (n == 2 && str[0] == '\r' && str[1] == '\n');
 }
 

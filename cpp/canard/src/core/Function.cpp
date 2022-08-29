@@ -78,30 +78,26 @@ bool Function::is_constructor() const {
     return (m_type != nullptr) && (m_type.base()->constructor().operator->() == this);
 }
 
-bool Function::depends_on(const std::vector<FunctionRef> &list) {
-    if (is_base()) {
+bool FunctionRef::depends_on(const std::vector<FunctionRef> &list) const {
+    if (m_f->is_base()) {
         // A base function is said to 'depend' on the list, if it is contained in the list
-        for (const auto &ptr: list) {
-            if (ptr.operator->() == this)
-                return true;
-        }
-        return false;
+        return std::find(list.begin(), list.end(), *this) != list.end();
     } else {
         // A specialization is said to 'depend' on the list, if one of its arguments or the base depends on the list
-        for (auto &g: m_arguments) {
-            if (g->depends_on(list))
+        for (const auto &g: m_f->arguments()) {
+            if (g.depends_on(list))
                 return true;
         }
-        return m_base->depends_on(list);
+        return base().depends_on(list);
     }
 }
 
-bool Function::signature_depends_on(const std::vector<FunctionRef> &list) {
-    if (m_type == nullptr ? depends_on(list) : m_type->depends_on(list))
+bool FunctionRef::signature_depends_on(const std::vector<FunctionRef> &list) const {
+    // Signature depends on list if the type or one of the parameters depends on the list
+    if (type().depends_on(list))
         return true;
-
-    for (const auto &g: m_parameters.functions()) {
-        if (g->signature_depends_on(list))
+    for (const auto &g: m_f->parameters().functions()) {
+        if (g.signature_depends_on(list))
             return true;
     }
     return false;
@@ -152,7 +148,7 @@ FunctionRef FunctionRef::specialize(const Telescope &parameters, std::vector<Fun
         arguments.push_back(clone);
     }
 
-    // If this is a specialization itself, we convert the arguments to arguments for the base, and then return a specialization of the base.
+    // If this is a specialization itself, we sort_and_convert the arguments to arguments for the base, and then return a specialization of the base.
     // This must be done recursively, as specializing the base requires a different Matcher.
     // Note that base must be converted as well!
     if (!m_f->is_base())

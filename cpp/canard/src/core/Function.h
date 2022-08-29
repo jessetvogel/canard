@@ -29,6 +29,9 @@ public:
 
     bool equivalent(const FunctionRef &) const;
 
+    bool depends_on(const std::vector<FunctionRef> &) const;
+    bool signature_depends_on(const std::vector<FunctionRef> &) const;
+
     inline explicit operator bool() const { return m_f != nullptr; }
     inline bool operator==(std::nullptr_t) const { return m_f == nullptr; }
     inline bool operator!=(std::nullptr_t) const { return m_f != nullptr; }
@@ -61,9 +64,6 @@ public:
     void set_constructor(const FunctionRef &);
     inline void *space() const { return m_space; }
     void set_space(void *);
-
-    bool depends_on(const std::vector<FunctionRef> &);
-    bool signature_depends_on(const std::vector<FunctionRef> &);
 
 protected:
 

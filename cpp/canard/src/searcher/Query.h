@@ -25,12 +25,14 @@ public:
     const std::unordered_map<FunctionRef, FunctionRef> &solutions() const { return m_solutions; }
     const FunctionRef &goal(int * = nullptr) const;
     int depth() const { return m_depth; };
-    int cost() const { return m_cost; };
+    int complexity() const { return m_complexity; };
 
     bool is_solved() const { return goal() == nullptr; }
     std::vector<FunctionRef> final_solutions() const;
 
-    bool injects_into(const std::shared_ptr<Query> &);
+    const Query *checkpoint() const { return m_checkpoint; }
+    int distance_to_checkpoint() const;
+    bool set_checkpoint(const Query &);
 
 private:
 
@@ -48,12 +50,13 @@ private:
     const std::vector<int> m_locals_depths;
     const std::unordered_map<FunctionRef, FunctionRef> m_solutions;
     const int m_depth;
-    const int m_cost;
+    const int m_complexity;
 
-    bool injects_into_helper(Matcher *, std::vector<FunctionRef>, std::vector<FunctionRef>);
+    const Query *m_checkpoint = nullptr;
+
     bool is_allowed_solution(int, const FunctionRef &);
 
     int compute_depth() const;
-    int compute_cost() const;
+    int compute_complexity() const;
 
 };

@@ -29,6 +29,8 @@ public:
 
     Telescope operator+(const Telescope &other) const;
 
+    std::vector<Telescope> split() const;
+
 private:
 
     std::vector<FunctionRef> m_functions;

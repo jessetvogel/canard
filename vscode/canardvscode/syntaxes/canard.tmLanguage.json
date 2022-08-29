@@ -60,7 +60,7 @@
 		}]
 	}, {
 		"name": "keyword.other.canard",
-		"match": "\\b(let|def|namespace|end|open|close|import|check|search)\\b"
+		"match": "\\b(let|def|namespace|end|open|close|import|check|search|prove)\\b"
 	}, {
 		"name": "entity.name.function.canard"
 	}, {

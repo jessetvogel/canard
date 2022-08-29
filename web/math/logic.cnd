@@ -1,4 +1,4 @@
 -- Negation.
 let not (P : Prop) : Prop
 -- Whenever there is an implication $P \implies Q$ and $Q$ is false, then $P$ is also false.
-let modus_tollens {P Q : Prop} (i (p : P) : Q) (nq : not Q) : not P
+let [50%] modus_tollens {P Q : Prop} (i (p : P) : Q) (nq : not Q) : not P

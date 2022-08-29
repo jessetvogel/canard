@@ -39,6 +39,8 @@ namespace space
     let rothberger (X : Space) : Prop
     let alexandrov (X : Space) : Prop
     let meager (X : Space) : Prop
+    let sober (X : Space) : Prop
+    let cosmic (X : Space) : Prop
 
     let completely_hausdorff (X : Space) : Prop
     let completely_regular (X : Space) : Prop
@@ -82,22 +84,20 @@ namespace space
     let scattered (X : Space) : Prop
     let sigma_locally_finite_base (X : Space) : Prop
     let completely_metrizable (X : Space) : Prop
-    
-    let countable (X : Space) : Prop
+    let countable (X : Space) : Prop -- set_theory
     let smaller_than_the_continuum (X : Space) : Prop
     let smaller_or_same_as_the_power_set_of_the_continuum (X : Space) : Prop
-    let strongly_connected (X : Space) : Prop
+    let strongly_connected (X : Space) : Prop -- ?
     let cozero_complemented (X : Space) : Prop
     let weakly_lindelof (X : Space) : Prop
     let cech_complete (X : Space) : Prop
     let continuum_sized (X : Space) : Prop
     let perfectly_normal_hausdorff (X : Space) : Prop
-    let strategic_menger (X : Space) : Prop
-    let markov_menger (X : Space) : Prop
     let sigma_relatively_compact (X : Space) : Prop
-    let 2_markov_menger (X : Space) : Prop
-    let sober (X : Space) : Prop
-    let cosmic (X : Space) : Prop
+    let markov_menger (X : Space) : Prop -- ?
+    let 2_markov_menger (X : Space) : Prop -- ?
+    let strategic_menger (X : Space) : Prop -- ?
+    
     let spectral_space (X : Space) : Prop
     let proximal (X : Space) : Prop
     let corson_compact (X : Space) : Prop
