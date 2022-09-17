@@ -1,6 +1,9 @@
 # Binaries
 bin
 
+# Java
+java
+
 # macOS
 .DS_Store
 

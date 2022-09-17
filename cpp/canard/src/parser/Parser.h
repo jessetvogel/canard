@@ -71,7 +71,7 @@ private:
     void parse_check();
     void parse_search();
     void parse_prove();
-    void parse_inspect();
+//    void parse_inspect();
     void parse_docs();
     void parse_debug_search();
 

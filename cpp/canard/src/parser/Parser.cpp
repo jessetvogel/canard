@@ -129,10 +129,10 @@ bool Parser::parse() {
         error(prefix + e.m_message);
         return false;
     }
-    catch (std::exception &e) {
-        error("Exception: " + std::string(e.what()));
-        return false;
-    }
+//    catch (std::exception &e) {
+//        error("Exception: " + std::string(e.what()));
+//        return false;
+//    }
 }
 
 bool Parser::parse_statement() {
@@ -166,10 +166,10 @@ bool Parser::parse_statement() {
         return true;
     }
 
-    if (found(KEYWORD, "inspect")) {
-        parse_inspect();
-        return true;
-    }
+//    if (found(KEYWORD, "inspect")) {
+//        parse_inspect();
+//        return true;
+//    }
 
     if (found(KEYWORD, "docs")) {
         parse_docs();
@@ -452,10 +452,10 @@ void Parser::parse_search() {
     for (auto it = groups.begin(); success && it != groups.end(); ++it) {
         if (success &= m_searcher->search(*it)) {
             const auto &result = m_searcher->result();
-            query_counter += m_searcher->counter();
             for (int i = 0; i < it->size(); ++i)
                 results[it->functions()[i]->name()] = result[i];
         }
+        query_counter += m_searcher->counter();
     }
     auto end_time = std::chrono::system_clock::now();
 
@@ -518,29 +518,29 @@ void Parser::parse_prove() {
     CANARD_LOG("Search took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms");
 }
 
-void Parser::parse_inspect() {
-    /*
-        inspect NAMESPACE
-    */
-
-    consume(KEYWORD, "inspect");
-
-    auto space = parse_absolute_namespace();
-
-    // Construct list of identifiers
-    Formatter formatter;
-    formatter.show_namespaces(m_options.show_namespaces);
-    std::vector<std::string> identifiers;
-    for (auto &entry: space->context().map())
-        identifiers.push_back(entry.first);
-
-    // Output
-    if (m_options.json)
-        output(Message::create(SUCCESS, identifiers));
-    else
-        for (auto &identifier: identifiers)
-            output(identifier);
-}
+//void Parser::parse_inspect() {
+//    /*
+//        inspect NAMESPACE
+//    */
+//
+//    consume(KEYWORD, "inspect");
+//
+//    auto space = parse_absolute_namespace();
+//
+//    // Construct list of identifiers
+//    Formatter formatter;
+//    formatter.show_namespaces(m_options.show_namespaces);
+//    std::vector<std::string> identifiers;
+//    for (auto &entry: space->context().map())
+//        identifiers.push_back(entry.first);
+//
+//    // Output
+//    if (m_options.json)
+//        output(Message::create(SUCCESS, identifiers));
+//    else
+//        for (auto &identifier: identifiers)
+//            output(identifier);
+//}
 
 void Parser::parse_docs() {
     /*
@@ -665,7 +665,7 @@ std::vector<FunctionRef> Parser::parse_functions(Context &context, const Telesco
         if (type.type() != m_session.TYPE && type.type() != m_session.PROP)
             throw ParserException(t_colon, "expected a Type or Prop");
         if (!type->parameters().empty())
-            throw ParserException(t_colon, "type of function cannot have parameters_full");
+            throw ParserException(t_colon, "type of function may not have parameters");
         // Create the functions
         std::vector<FunctionRef> output;
         for (const auto &identifier: identifiers) {
@@ -788,8 +788,16 @@ Telescope Parser::parse_fields(Context &context, const Telescope &parameters) {
     consume(SEPARATOR, "{");
 
     Telescope fields;
+    Context field_context(context);
     while (true) {
-        fields.add(parse_functions(context, parameters));
+        Context sub_context(field_context);
+        for (const auto &f: parse_functions(sub_context, parameters)) {
+            // In field_context, f->name() refers to the specialization,
+            field_context.put(f->name(), f.specialize({}, parameters.functions()));
+            // .. but in context, f->name() refers to the function with parameters
+            context.put(f->name(), f);
+            fields.add(f);
+        }
         if (found(SEPARATOR, ",")) {
             consume();
             continue;
@@ -879,7 +887,11 @@ FunctionRef Parser::parse_expression(Context &context, const Telescope &paramete
             }
         }
         // Specialize the constructor
-        f = constructor.specialize(parameters, constructor_arguments);
+        try {
+            f = constructor.specialize(parameters, constructor_arguments);
+        } catch (SpecializationException &e) {
+            throw ParserException(m_current_token, format_specialization_exception(e));
+        }
     }
     // Set name of f and store in context
     if (store_context && identifier) {

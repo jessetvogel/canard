@@ -118,8 +118,8 @@ FunctionRef FunctionRef::specialize(const Telescope &parameters, std::vector<Fun
     // Create a matcher that matches the (first n) parameters to the (n) arguments given
     Matcher matcher(f_parameter_functions);
     for (int i = 0; i < n; ++i) {
-        const FunctionRef &parameter = f_parameter_functions[i];
-        const FunctionRef &argument = arguments[i];
+        const auto &parameter = f_parameter_functions[i];
+        const auto &argument = arguments[i];
         if (argument == nullptr) // `nullptr` indicates an implicit argument
             continue;
         if (!matcher.matches(parameter, argument))

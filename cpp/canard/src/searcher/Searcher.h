@@ -40,6 +40,12 @@ public:
 
 private:
 
+    enum SearchResult {
+        SEARCH_CONTINUE, // continue searching
+        SEARCH_STOP, // stop searching for this query
+        SEARCH_DONE // stop searching at all
+    };
+
     const int m_max_depth;
     std::atomic<bool> m_searching;
     int m_counter = 0;
@@ -52,7 +58,7 @@ private:
     Index m_index;
 
     void search_loop();
-    bool search_helper(std::shared_ptr<Query> &, const FunctionRef &, std::vector<std::shared_ptr<Query>> &);
+    SearchResult search_helper(std::shared_ptr<Query> &, const FunctionRef &, std::vector<std::shared_ptr<Query>> &);
     bool check_reasonable(const std::shared_ptr<Query> &q, const std::shared_ptr<Query> &p);
     bool check_checkpoints(const std::shared_ptr<Query> &);
 

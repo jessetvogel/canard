@@ -102,7 +102,7 @@ bool Matcher::is_indeterminate(const FunctionRef &f) {
 }
 
 bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
-    // TODO: at some point, implement that two proofs of the same proposition should match
+    // TODO: at some point, implement that two proofs of the same proposition should match. But if one of them is an indeterminate, the solution must be stored still!
 
     // If f equals g, there is obviously a match, and nothing more to do
     if (f == g) return true;
@@ -110,7 +110,7 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
     // Number of parameters should agree
     const auto &f_parameters = f->parameters(), &g_parameters = g->parameters();
     const size_t n = f_parameters.size();
-    if (n != g_parameters.size())
+    if (g_parameters.size() != n)
         return false;
 
     // Parameters themselves should match
@@ -173,11 +173,9 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
 }
 
 void Matcher::assert_matches(const FunctionRef &f, const FunctionRef &g) {
-    bool match = matches(f, g);
-
-    if (!match) {
+    if (!matches(f, g)) {
         Formatter formatter;
-        CANARD_ASSERT(match, "failed to match "
+        CANARD_ASSERT(false, "failed to match "
                 << formatter.format_definition(f) << " to "
                 << formatter.format_definition(g) << " in "
                 << formatter.format_matcher(*this));

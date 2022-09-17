@@ -1,0 +1,167 @@
+import "../set_theory/set.cnd"
+open set_theory.set
+
+namespace topology
+namespace space
+    -- The type of topological spaces.
+    let Space : Type
+    -- The underlying set of the topological space.
+    let to_set (X : Space) : Set
+
+    -- A topological space is empty if it has no points.
+    let empty (X : Space) : Prop
+    -- A topological space $X$ is discrete if every subset of $X$ is open.
+    let discrete (X : Space) : Prop
+    -- A topological space $X$ is indiscrete if the only open subsets of $X$ are $\varnothing$ and $X$ itself.
+    let indiscrete (X : Space) : Prop
+    let compact (X : Space) : Prop
+    let locally_compact (X : Space) : Prop
+    let connected (X : Space) : Prop
+    let path_connected (X : Space) : Prop
+    let arc_connected (X : Space) : Prop
+    let hyperconnected (X : Space) : Prop -- same as 'irreducible' in algebraic geometry
+    let ultraconnected (X : Space) : Prop
+    let biconnected (X : Space) : Prop
+    let metrizable (X : Space) : Prop
+    let baire (X : Space) : Prop
+    let menger (X : Space) : Prop
+    let normal (X : Space) : Prop
+    let regular (X : Space) : Prop
+    let preregular (X : Space) : Prop
+    let semiregular (X : Space) : Prop
+    let lindelof (X : Space) : Prop
+    let pseudocompact (X : Space) : Prop
+    let separable (X : Space) : Prop
+    let first_countable (X : Space) : Prop
+    let second_countable (X : Space) : Prop
+    let paracompact (X : Space) : Prop
+    let metacompact (X : Space) : Prop
+    let hemicompact (X : Space) : Prop
+    let rothberger (X : Space) : Prop
+    let alexandrov (X : Space) : Prop
+    let meager (X : Space) : Prop
+    let sober (X : Space) : Prop
+    let cosmic (X : Space) : Prop
+    -- A topological space $X$ is finite if its underlying set is finite.
+    let finite (X : Space) := set.finite (to_set X)
+
+    let completely_hausdorff (X : Space) : Prop
+    let completely_regular (X : Space) : Prop
+    let completely_normal (X : Space) : Prop
+
+    let locally_connected (X : Space) : Prop
+    let locally_path_connected (X : Space) : Prop
+    let locally_arc_connected (X : Space) : Prop
+
+    let totally_path_disconnected (X : Space) : Prop
+    let totally_disconnected (X : Space) : Prop
+    let totally_separated (X : Space) : Prop
+
+    let anti_hausdorff (X : Space) : Prop -- mwah..
+
+    let kolmogorov (X : Space) : Prop -- T0
+    let frechet (X : Space) : Prop -- T1
+    let hausdorff (X : Space) : Prop -- T2
+    let urysohn (X : Space) : Prop -- T2.5
+    let regular_hausdorff (X : Space) : Prop -- T3
+    let tychonoff (X : Space) : Prop -- T3.5
+    let normal_hausdorff (X : Space) : Prop -- T4
+    let completely_normal_hausdorff (X : Space) : Prop -- T5
+    
+    let perfectly_normal (X : Space) : Prop
+    let sigma_compact (X : Space) : Prop
+    let countably_compact (X : Space) : Prop
+    let sequentially_compact (X : Space) : Prop
+    let weakly_countably_compact (X : Space) : Prop
+    let weakly_locally_compact (X : Space) : Prop
+    let locally_relatively_compact (X : Space) : Prop
+    let sigma_locally_compact (X : Space) : Prop
+    let countable_chain_condition (X : Space) : Prop
+    let countably_paracompact (X : Space) : Prop
+    let countably_metacompact (X : Space) : Prop
+    let fully_normal (X : Space) : Prop
+    let fully_normal_hausdorff (X : Space) : Prop
+    let has_dispersion_point (X : Space) : Prop
+    let extremally_disconnected (X : Space) : Prop
+    let zero_dimensional (X : Space) : Prop
+    let scattered (X : Space) : Prop
+    let sigma_locally_finite_base (X : Space) : Prop
+    let completely_metrizable (X : Space) : Prop
+    let countable (X : Space) : Prop -- set_theory
+    let smaller_than_the_continuum (X : Space) : Prop
+    let smaller_or_same_as_the_power_set_of_the_continuum (X : Space) : Prop
+    let strongly_connected (X : Space) : Prop -- ?
+    let cozero_complemented (X : Space) : Prop
+    let weakly_lindelof (X : Space) : Prop
+    let cech_complete (X : Space) : Prop
+    let continuum_sized (X : Space) : Prop
+    let perfectly_normal_hausdorff (X : Space) : Prop
+    let sigma_relatively_compact (X : Space) : Prop
+    let markov_menger (X : Space) : Prop -- ?
+    let 2_markov_menger (X : Space) : Prop -- ?
+    let strategic_menger (X : Space) : Prop -- ?
+    
+    let spectral_space (X : Space) : Prop
+    let proximal (X : Space) : Prop
+    let corson_compact (X : Space) : Prop
+    let sequential (X : Space) : Prop
+    let frechet_urysohn (X : Space) : Prop
+    let countably_tight (X : Space) : Prop
+    let locally_metrizable (X : Space) : Prop
+    let almost_cech_complete (X : Space) : Prop
+    let locally_hausdorff (X : Space) : Prop
+    let ascoli (X : Space) : Prop
+    let homogenous (X : Space) : Prop
+    let groupable_topology (X : Space) : Prop
+    let collectionwise_normal (X : Space) : Prop
+    let fixed_point_property (X : Space) : Prop
+    let eberlein_compact (X : Space) : Prop
+    let moving_off_property (X : Space) : Prop
+    let locally_countable (X : Space) : Prop
+    let q_space (X : Space) : Prop
+    let i_tactic_banach_mazur (X : Space) : Prop
+    let ii_tactic_banach_mazur (X : Space) : Prop
+    let homotopy_dense (X : Space) : Prop
+    let k_omega (X : Space) : Prop
+    let us (X : Space) : Prop
+    let kc (X : Space) : Prop
+    let strongly_kc (X : Space) : Prop
+    let k_analytic (X : Space) : Prop
+    let angelic (X : Space) : Prop
+    let strictly_angelic (X : Space) : Prop
+    let pointwise_countable_type (X : Space) : Prop
+    let locally_cech_complete (X : Space) : Prop
+    let countable_type (X : Space) : Prop
+    let has_a_compact_resolution (X : Space) : Prop
+    let semimetrizable (X : Space) : Prop
+    let submetrizable (X : Space) : Prop
+    let kmathbbr_space (X : Space) : Prop
+    let aleph_0 (X : Space) : Prop
+    let weakly_k_analytic (X : Space) : Prop
+    let pseudocomplete (X : Space) : Prop
+    let m_space (X : Space) : Prop
+    let pseudo_polish (X : Space) : Prop
+    let z_compact (X : Space) : Prop
+    let r_space (X : Space) : Prop
+    let pseudometrizable (X : Space) : Prop
+    let s_space (X : Space) : Prop
+    let locally_euclidean (X : Space) : Prop
+    let topological_manifold (X : Space) : Prop
+    let has_distinct_points (X : Space) : Prop
+    let k_lindelof (X : Space) : Prop
+    let hereditarily_lindelof (X : Space) : Prop
+    let g_delta_space (X : Space) : Prop
+    let lots (X : Space) : Prop
+
+end space
+
+open topology.space
+
+namespace map
+
+let open_map closed_map proper compact_map quasi_compact_map dense galois_cover {X Y : Space} (f : Morphism X Y) : Prop
+let homeomorphism {X Y : Space} (f : Morphism X Y) := isomorphism f
+
+end map
+
+end topology

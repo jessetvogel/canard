@@ -11,6 +11,18 @@
 #include <thread>
 #include <chrono>
 
+const char *Application::HELP_PAGE = "Usage:\n"
+                                     "  canard [<options>] [<source files>]\n"
+                                     "\n"
+                                     "Options:\n"
+                                     "  --help               Show help page.\n"
+                                     "  --threads <number>   Specify the amount of threads used for searching, by default 1.\n"
+                                     "  --depth <number>     Specify the maximum search depth, by default 5.\n"
+                                     "  --namespaces         Specify identifiers are printed with namespace.\n"
+                                     "  --json               Specify the output messages to be printed in JSON.\n"
+                                     "  --docs <path>        Write JSON documentation file.\n"
+                                     "  --defs <path>        Write JSON definition file.";
+
 Application::Application(const std::vector<std::string> &arguments) {
     std::vector<std::string> files;
     std::string path_documentation, path_definitions;
@@ -18,6 +30,13 @@ Application::Application(const std::vector<std::string> &arguments) {
     // Parse arguments
     for (auto it = arguments.begin(); it != arguments.end(); ++it) {
         const auto &arg = *it;
+
+        if (arg == "--help" || arg == "-h") {
+            std::cout << HELP_PAGE << std::endl;
+            should_run = false;
+            return;
+        }
+
         if (arg == "--json") {
             m_options.json = true;
             continue;
@@ -36,6 +55,18 @@ Application::Application(const std::vector<std::string> &arguments) {
                 m_options.max_search_threads = (*it == "max") ? max : std::min(max, std::stoi(*it));
             } catch (const std::exception &e) {
                 CANARD_LOG("Invalid number of threads");
+            }
+            continue;
+        }
+        if (arg == "--depth") {
+            if (++it == arguments.end()) {
+                CANARD_LOG("Depth missing");
+                continue;
+            }
+            try {
+                m_options.max_search_depth = std::max(0, std::stoi(*it));
+            } catch (const std::exception &e) {
+                CANARD_LOG("Invalid depth");
             }
             continue;
         }
@@ -68,12 +99,14 @@ Application::Application(const std::vector<std::string> &arguments) {
     // Write documentation
     if (m_options.documentation)
         write_documentation(path_documentation);
-    // Write documentation
+
+    // Write definitions
     if (!path_definitions.empty())
         write_definitions(path_definitions);
 }
 
 void Application::run() {
+    if (!should_run) return;
     // Create parser and keep parsing (until exit) via System.in
     Parser parser(std::cin, std::cout, m_session, m_options);
     parser.set_documentation(&m_documentation);

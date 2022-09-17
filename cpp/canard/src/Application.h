@@ -16,9 +16,12 @@ public:
 
 private:
 
+    static const char* HELP_PAGE;
+
     Session m_session;
     Parser::Options m_options = {};
     std::unordered_map<std::string, std::string> m_documentation;
+    bool should_run = true;
 
     bool parse_file(const std::string &);
     void write_documentation(const std::string &);

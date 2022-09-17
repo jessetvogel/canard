@@ -1,0 +1,53 @@
+-- import "/Users/jessevogel/Projects/canard/web/math/main.cnd"
+
+-- Open everything!
+open *
+
+-- Bugs above, usual tests below
+search (R : Ring);
+
+search (X : Scheme) (h : scheme.affine X);
+search (X : Scheme) (h : scheme.affine X) (q : scheme.quasi_compact X);
+
+search (P (X : Scheme) (h : scheme.affine X) : scheme.quasi_compact X);
+search (P (X : Scheme) (h : scheme.affine X) : scheme.quasi_separated X);
+search (P (X : Scheme) (h : scheme.affine X) : scheme.map.affine (id X) );
+search (P (X : Scheme) (h : scheme.affine X) : scheme.map.quasi_compact (id X) );
+search (P {X Y : Scheme} {f : Morphism X Y} (h : closed_immersion f) : locally_finite_type f) ;
+search (P {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (fProper : scheme.map.proper f) (gProper : scheme.map.proper g) : scheme.map.proper (comp g f));
+search (P {X Y Z: Scheme} {f : Morphism X Y} {g : Morphism Y Z} (fFinite : scheme.map.finite f) (gFinite : scheme.map.finite g) : scheme.map.proper (comp g f));
+
+search (P {A B : Prop} (h (a : A) : B) (x : A) : B);
+search (P {A B : Prop} (h (a : A) : B) (a1 : A) (a2 : A) : B);
+search (P {A B : Prop} (h (a : A) : B) (nb : not B) : not A);
+search (P (X: Scheme) (h : not (scheme.quasi_compact X)) : not (scheme.affine X));
+search (P {X Y : Scheme} {f : Morphism X Y} (h : not (universally_closed f)) : not (scheme.map.proper f));
+
+search (P {X Y: Scheme} {f : Morphism X Y} (h : not (scheme.map.unramified f)) : not (scheme.map.etale f));
+search (P {X Y: Scheme} {f : Morphism X Y} (h : scheme.map.etale f) : scheme.map.unramified f);
+
+search (P : locally_noetherian (affine_line (Spec QQ)));
+
+search (X : Scheme) (h1 : scheme.affine X) (h2 : scheme.quasi_compact X);
+search (X : Scheme) (h : scheme.integral X);
+search (R : Ring) (h : scheme.integral (Spec R));
+search (X Y : Scheme) (f : Morphism X Y);
+search (R : Ring) (M N : Module R) (f : Morphism M N);
+search (R : Ring) (M : Module R) (h1 : module.flat M) (h2 : not (module.free M));
+search (P {U V W : Scheme} {g : Morphism U V} {h : Morphism V W} (gClosedImm : closed_immersion g) (hClosedImm : closed_immersion h) : scheme.map.proper (comp h g));
+
+search (X Y : Scheme) (f : Morphism X Y) (h : not (zariski_cover f));
+search (h1 : not (scheme.map.formally_etale (ec_to_P1 QQ_field)));
+search (h2 : not (scheme.map.open_immersion (ec_to_P1 QQ_field)));
+search (h : not (scheme.map.open_immersion (mSpec QQ_to_QQ_sqrt2)));
+
+search (P (T_ S_ : Type) (F_ (t_ : T_) : S_) (h_ : functor F_) (X_ Y_ : T_) (f_ : Morphism X_ Y_) : Morphism (F_ X_) (F_ Y_));
+
+search (h : not (zariski_local scheme.connected));
+search {R : Ring} (A : Algebra R);
+
+search (X : Space) (h1 : compact X) (h2 : space.connected X) (h3 : hausdorff X) (h4 : not (metrizable X));
+search (X : Space) (h4 : not (metrizable X)) (h3 : hausdorff X) (h2 : space.connected X) (h1 : compact X);
+search (X : Space) (h1 : first_countable X) (h2 : separable X) (h3 : not (second_countable X));
+
+search (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z : Scheme);

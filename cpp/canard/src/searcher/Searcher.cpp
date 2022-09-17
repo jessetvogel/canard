@@ -39,6 +39,7 @@ bool Searcher::prove(const FunctionRef &f) {
 }
 
 void Searcher::search_loop() {
+    // TODO: can we get rid of `goto`'s ?
     while (m_searching) {
         // Take the first query from the first (non-empty) queue, i.e. the one with the lowest depth
         std::shared_ptr<Query> query = nullptr;
@@ -75,40 +76,64 @@ void Searcher::search_loop() {
         // Now we are going to look for reductions. Before pushing to the queue, we will store all reductions
         // in a list `reductions`. Then we will sort this list based on the number of telescope, which is
         // some form of optimization
+        const auto &h_type_base = query->goal().type().base();
         std::vector<std::shared_ptr<Query>> reductions;
 
         // First list to search through is the list of local variables of query
         for (const auto &local_layer: query->locals()) {
             for (const auto &thm: local_layer) {
-                if (search_helper(query, thm, reductions))
-                    goto end; // TODO: can we get rid of `goto` ?
+                switch (search_helper(query, thm, reductions)) {
+                    case SEARCH_CONTINUE:
+                        continue;
+                    case SEARCH_STOP:
+                        goto end_theorems;
+                    case SEARCH_DONE:
+                        goto end_while;
+                }
             }
         }
 
         // If the type base is an indeterminate of query, there is nothing better to do then to try all theorems
-        const auto &h_type_base = query->goal().type().base();
         if (query->telescope().contains(h_type_base)) {
             for (auto &thm: m_index.all_theorems()) {
-                if (search_helper(query, thm, reductions))
-                    goto end; // TODO: can we get rid of `goto` ?
+                switch (search_helper(query, thm, reductions)) {
+                    case SEARCH_CONTINUE:
+                        continue;
+                    case SEARCH_STOP:
+                        goto end_theorems;
+                    case SEARCH_DONE:
+                        goto end_while;
+                }
             }
         } else {
             // If the type base is known to the index, try the corresponding list of theorems
             auto theorems = m_index.theorems(h_type_base);
             if (theorems != nullptr) {
                 for (auto &thm: *theorems) {
-                    if (search_helper(query, thm, reductions))
-                        goto end;
+                    switch (search_helper(query, thm, reductions)) {
+                        case SEARCH_CONTINUE:
+                            continue;
+                        case SEARCH_STOP:
+                            goto end_theorems;
+                        case SEARCH_DONE:
+                            goto end_while;
+                    }
                 }
             }
             // Also try the general theorems
             for (auto &thm: m_index.generic_theorems()) {
-                if (search_helper(query, thm, reductions)) {
-                    m_searching = false;
-                    goto end;
+                switch (search_helper(query, thm, reductions)) {
+                    case SEARCH_CONTINUE:
+                        continue;
+                    case SEARCH_STOP:
+                        goto end_theorems;
+                    case SEARCH_DONE:
+                        goto end_while;
                 }
             }
         }
+
+        end_theorems:
 
         // Then add them to the queue with increasing order
         m_mutex.lock();
@@ -123,7 +148,7 @@ void Searcher::search_loop() {
         // Notify the other threads for updates
         m_thread_manager.send_update(true);
     }
-    end:
+    end_while:
 
     // Send a permanent update
     m_thread_manager.send_permanent_update(true);
@@ -131,36 +156,45 @@ void Searcher::search_loop() {
     m_searching = false;
 }
 
-bool Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, std::vector<std::shared_ptr<Query>> &reductions) {
+Searcher::SearchResult
+Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, std::vector<std::shared_ptr<Query>> &reductions) {
     // Shortcut: if not searching anymore, just return false and be done with it
     if (!m_searching)
-        return false;
+        return SEARCH_DONE;
 
     // If thm is excluded, return false
     if (thm == m_excluded_thm)
-        return false;
+        return SEARCH_CONTINUE;
 
     // Try reducing query using thm
     auto sub_query = Query::reduce(query, thm);
     if (sub_query == nullptr)
-        return false;
+        return SEARCH_CONTINUE;
 
     // If the sub_query is completely is_solved (i.e. no more telescope) we are done!
     if (sub_query->is_solved()) {
         m_mutex.lock();
-        if (m_searching)
+        if (m_searching) {
             m_result = sub_query->final_solutions();
+            m_searching = false;
+        }
         m_mutex.unlock();
-        return true;
+        return SEARCH_DONE;
     }
 
     // If the maximum depth was reached, omit this sub_query
     if (sub_query->depth() >= m_max_depth)
-        return false;
+        return SEARCH_CONTINUE;
+
+    // If this query strictly solves its parent, make it the only reduction
+    if (injects_into(*sub_query, *query)) {
+        reductions = {sub_query};
+        return SEARCH_STOP;
+    }
 
     // Add sub_query to queue
     reductions.push_back(std::move(sub_query));
-    return false;
+    return SEARCH_CONTINUE;
 }
 
 void Searcher::clear() {

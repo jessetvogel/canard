@@ -9,7 +9,7 @@ const std::unordered_set<std::string> &Lexer::keywords() {
     static const std::unordered_set<std::string> KEYWORDS(
             {
                     "let", "check", "search", "import", "namespace", "end", "open", "close", "structure",
-                    "exit", "inspect", "docs", "debug_search", "prove"
+                    "exit", "docs", "prove" //, "debug_search"
             });
     return KEYWORDS;
 }
@@ -216,7 +216,7 @@ Token Lexer::make_token() {
         std::string message = "unrecognized token '" + m_stream.str() + "'";
         m_stream.str(std::string());
         m_stream_length = 0;
-        throw LexerException(m_current_token.m_line, m_current_token.m_position, message);
+        throw LexerException(m_current_token.m_line, m_current_token.m_position, std::move(message));
     }
 
     Token token = m_current_token;

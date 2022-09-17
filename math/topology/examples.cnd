@@ -1,0 +1,1647 @@
+open topology.space
+
+namespace topology.space.examples
+
+-- The discrete topology on a two-point set $X = \{ 0, 1 \}$.
+let S000001 : Space
+let S000001_P000078 : finite S000001
+let S000001_P000129 : not (indiscrete S000001)
+let S000001_P000052 : discrete S000001
+let S000001_P000036 : not (connected S000001)
+-- let S000001_P000024 : locally_relatively_compact S000001
+-- The discrete topology on the natural numbers $X = \NN$.
+let S000002 : Space
+-- let S000002_P000019 : not (countably_compact S000002)
+let S000002_P000129 : not (indiscrete S000002)
+let S000002_P000052 : discrete S000002
+let S000002_P000036 : not (connected S000002)
+let S000002_P000022 : not (pseudocompact S000002)
+let S000002_P000057 : countable S000002
+-- let S000002_P000024 : locally_relatively_compact S000002
+-- The discrete topology on the real numbers $X = \RR$.
+let S000003 : Space
+-- let S000003_P000029 : not (countable_chain_condition S000003)
+let S000003_P000129 : not (indiscrete S000003)
+-- let S000003_P000017 : not (sigma_compact S000003)
+let S000003_P000052 : discrete S000003
+let S000003_P000036 : not (connected S000003)
+let S000003_P000022 : not (pseudocompact S000003)
+-- let S000003_P000024 : locally_relatively_compact S000003
+-- The indiscrete topology on a two-point set $X = \{ 0, 1 \}$.
+let S000004 : Space
+let S000004_P000078 : finite S000004
+let S000004_P000039 : hyperconnected S000004
+let S000004_P000129 : indiscrete S000004
+let S000004_P000056 : not (meager S000004)
+let S000004_P000027 : second_countable S000004
+let S000004_P000042 : locally_path_connected S000004
+let S000004_P000037 : path_connected S000004
+let S000004_P000040 : ultraconnected S000004
+let S000004_P000001 : not (kolmogorov S000004)
+-- let S000004_P000050 : zero_dimensional S000004
+-- let S000004_P000044 : not (biconnected S000004)
+let S000004_P000051 : not (scattered S000004)
+let S000005 : Space
+-- let S000005_P000019 : not (countably_compact S000005)
+let S000005_P000129 : not (indiscrete S000005)
+let S000005_P000056 : not (meager S000005)
+let S000005_P000027 : second_countable S000005
+let S000005_P000042 : locally_path_connected S000005
+let S000005_P000022 : not (pseudocompact S000005)
+let S000005_P000057 : countable S000005
+let S000005_P000011 : regular S000005
+let S000005_P000001 : not (kolmogorov S000005)
+-- let S000005_P000050 : zero_dimensional S000005
+-- let S000005_P000021 : weakly_countably_compact S000005
+let S000005_P000030 : paracompact S000005
+-- let S000005_P000024 : locally_relatively_compact S000005
+let S000005_P000051 : not (scattered S000005)
+let S000006 : Space
+let S000006_P000129 : not (indiscrete S000006)
+let S000006_P000001 : not (kolmogorov S000006)
+-- let S000006_P000021 : weakly_countably_compact S000006
+let S000006_P000014 : completely_normal S000006
+let S000007 : Space
+let S000007_P000078 : finite S000007
+let S000007_P000039 : hyperconnected S000007
+let S000007_P000129 : not (indiscrete S000007)
+let S000007_P000038 : not (arc_connected S000007)
+let S000007_P000056 : not (meager S000007)
+let S000007_P000027 : second_countable S000007
+let S000007_P000042 : locally_path_connected S000007
+let S000007_P000037 : path_connected S000007
+let S000007_P000026 : separable S000007
+let S000007_P000002 : not (frechet S000007)
+let S000007_P000016 : compact S000007
+let S000007_P000040 : not (ultraconnected S000007)
+let S000007_P000011 : not (regular S000007)
+let S000007_P000001 : kolmogorov S000007
+-- let S000007_P000045 : has_dispersion_point S000007
+let S000007_P000051 : scattered S000007
+-- let S000007_P000034 : not (fully_normal S000007)
+let S000008 : Space
+let S000008_P000039 : hyperconnected S000008
+let S000008_P000129 : not (indiscrete S000008)
+let S000008_P000038 : not (arc_connected S000008)
+-- let S000008_P000023 : weakly_locally_compact S000008
+-- let S000008_P000033 : not (countably_metacompact S000008)
+let S000008_P000056 : not (meager S000008)
+let S000008_P000027 : second_countable S000008
+let S000008_P000042 : locally_path_connected S000008
+let S000008_P000037 : path_connected S000008
+let S000008_P000026 : separable S000008
+let S000008_P000002 : not (frechet S000008)
+let S000008_P000016 : not (compact S000008)
+let S000008_P000057 : countable S000008
+let S000008_P000040 : not (ultraconnected S000008)
+let S000008_P000001 : kolmogorov S000008
+-- let S000008_P000021 : not (weakly_countably_compact S000008)
+-- let S000008_P000045 : has_dispersion_point S000008
+let S000008_P000030 : not (paracompact S000008)
+-- let S000008_P000024 : not (locally_relatively_compact S000008)
+let S000008_P000051 : scattered S000008
+-- let S000008_P000034 : not (fully_normal S000008)
+let S000009 : Space
+let S000009_P000039 : hyperconnected S000009
+let S000009_P000018 : not (lindelof S000009)
+let S000009_P000028 : first_countable S000009
+let S000009_P000129 : not (indiscrete S000009)
+let S000009_P000038 : not (arc_connected S000009)
+-- let S000009_P000023 : weakly_locally_compact S000009
+-- let S000009_P000033 : not (countably_metacompact S000009)
+let S000009_P000056 : not (meager S000009)
+let S000009_P000042 : locally_path_connected S000009
+let S000009_P000037 : path_connected S000009
+let S000009_P000026 : separable S000009
+let S000009_P000043 : not (locally_arc_connected S000009)
+let S000009_P000002 : not (frechet S000009)
+let S000009_P000016 : not (compact S000009)
+let S000009_P000040 : not (ultraconnected S000009)
+let S000009_P000001 : kolmogorov S000009
+-- let S000009_P000021 : not (weakly_countably_compact S000009)
+-- let S000009_P000045 : has_dispersion_point S000009
+-- let S000009_P000024 : not (locally_relatively_compact S000009)
+let S000009_P000051 : scattered S000009
+-- let S000009_P000034 : not (fully_normal S000009)
+let S000010 : Space
+let S000010_P000078 : finite S000010
+let S000010_P000039 : hyperconnected S000010
+let S000010_P000129 : not (indiscrete S000010)
+let S000010_P000038 : not (arc_connected S000010)
+let S000010_P000056 : not (meager S000010)
+let S000010_P000027 : second_countable S000010
+let S000010_P000042 : locally_path_connected S000010
+let S000010_P000026 : separable S000010
+let S000010_P000016 : compact S000010
+let S000010_P000057 : countable S000010
+let S000010_P000001 : kolmogorov S000010
+let S000010_P000014 : completely_normal S000010
+-- let S000010_P000045 : has_dispersion_point S000010
+let S000010_P000051 : scattered S000010
+-- let S000010_P000034 : fully_normal S000010
+let S000011 : Space
+let S000011_P000078 : finite S000011
+let S000011_P000039 : not (hyperconnected S000011)
+let S000011_P000129 : not (indiscrete S000011)
+let S000011_P000056 : not (meager S000011)
+let S000011_P000027 : second_countable S000011
+let S000011_P000042 : locally_path_connected S000011
+let S000011_P000002 : not (frechet S000011)
+let S000011_P000016 : compact S000011
+let S000011_P000040 : ultraconnected S000011
+let S000011_P000001 : kolmogorov S000011
+let S000011_P000014 : completely_normal S000011
+-- let S000011_P000045 : has_dispersion_point S000011
+let S000011_P000051 : scattered S000011
+-- let S000011_P000034 : fully_normal S000011
+let S000012 : Space
+let S000012_P000039 : not (hyperconnected S000012)
+let S000012_P000129 : not (indiscrete S000012)
+let S000012_P000056 : not (meager S000012)
+let S000012_P000027 : second_countable S000012
+let S000012_P000042 : locally_path_connected S000012
+let S000012_P000002 : not (frechet S000012)
+let S000012_P000016 : compact S000012
+let S000012_P000057 : countable S000012
+let S000012_P000040 : ultraconnected S000012
+let S000012_P000001 : kolmogorov S000012
+let S000012_P000014 : completely_normal S000012
+-- let S000012_P000045 : has_dispersion_point S000012
+let S000012_P000051 : scattered S000012
+-- let S000012_P000034 : fully_normal S000012
+let S000013 : Space
+-- let S000013_P000029 : not (countable_chain_condition S000013)
+let S000013_P000039 : not (hyperconnected S000013)
+let S000013_P000028 : first_countable S000013
+let S000013_P000129 : not (indiscrete S000013)
+let S000013_P000038 : not (arc_connected S000013)
+let S000013_P000056 : not (meager S000013)
+let S000013_P000042 : locally_path_connected S000013
+let S000013_P000026 : not (separable S000013)
+let S000013_P000002 : not (frechet S000013)
+let S000013_P000016 : compact S000013
+let S000013_P000040 : ultraconnected S000013
+let S000013_P000001 : kolmogorov S000013
+-- let S000013_P000060 : strongly_connected S000013
+-- let S000013_P000054 : not (sigma_locally_finite_base S000013)
+let S000013_P000014 : completely_normal S000013
+-- let S000013_P000045 : has_dispersion_point S000013
+let S000013_P000051 : scattered S000013
+-- let S000013_P000034 : fully_normal S000013
+let S000014 : Space
+-- let S000014_P000029 : not (countable_chain_condition S000014)
+-- let S000014_P000058 : not (smaller_than_the_continuum S000014)
+-- let S000014_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000014
+let S000014_P000028 : first_countable S000014
+let S000014_P000129 : not (indiscrete S000014)
+let S000014_P000056 : not (meager S000014)
+let S000014_P000013 : normal S000014
+let S000014_P000042 : locally_path_connected S000014
+let S000014_P000026 : not (separable S000014)
+let S000014_P000043 : not (locally_arc_connected S000014)
+let S000014_P000002 : not (frechet S000014)
+let S000014_P000036 : not (connected S000014)
+let S000014_P000016 : compact S000014
+let S000014_P000001 : kolmogorov S000014
+-- let S000014_P000054 : not (sigma_locally_finite_base S000014)
+let S000014_P000014 : completely_normal S000014
+let S000014_P000051 : scattered S000014
+-- let S000014_P000034 : fully_normal S000014
+let S000015 : Space
+let S000015_P000039 : hyperconnected S000015
+let S000015_P000129 : not (indiscrete S000015)
+let S000015_P000046 : totally_path_disconnected S000015
+let S000015_P000056 : meager S000015
+let S000015_P000027 : second_countable S000015
+let S000015_P000037 : not (path_connected S000015)
+let S000015_P000002 : frechet S000015
+let S000015_P000016 : compact S000015
+let S000015_P000057 : countable S000015
+-- let S000015_P000044 : not (biconnected S000015)
+let S000015_P000130 : locally_compact S000015
+let S000015_P000020 : sequentially_compact S000015
+-- let S000015_P000099 : not (us S000015)
+let S000016 : Space
+let S000016_P000039 : hyperconnected S000016
+-- let S000016_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000016
+let S000016_P000028 : not (first_countable S000016)
+let S000016_P000038 : arc_connected S000016
+let S000016_P000056 : not (meager S000016)
+let S000016_P000026 : separable S000016
+let S000016_P000043 : locally_arc_connected S000016
+let S000016_P000002 : frechet S000016
+let S000016_P000016 : compact S000016
+let S000016_P000057 : not (countable S000016)
+-- let S000016_P000015 : not (perfectly_normal S000016)
+-- let S000016_P000044 : not (biconnected S000016)
+let S000016_P000130 : locally_compact S000016
+-- let S000016_P000054 : not (sigma_locally_finite_base S000016)
+let S000016_P000020 : sequentially_compact S000016
+-- let S000016_P000099 : not (us S000016)
+let S000017 : Space
+-- let S000017_P000029 : countable_chain_condition S000017
+let S000017_P000039 : hyperconnected S000017
+-- let S000017_P000019 : not (countably_compact S000017)
+let S000017_P000018 : lindelof S000017
+let S000017_P000028 : not (first_countable S000017)
+let S000017_P000129 : not (indiscrete S000017)
+let S000017_P000046 : totally_path_disconnected S000017
+-- let S000017_P000017 : not (sigma_compact S000017)
+-- let S000017_P000033 : not (countably_metacompact S000017)
+let S000017_P000056 : not (meager S000017)
+let S000017_P000003 : not (hausdorff S000017)
+let S000017_P000037 : not (path_connected S000017)
+let S000017_P000026 : not (separable S000017)
+-- let S000017_P000103 : strongly_kc S000017
+let S000017_P000002 : frechet S000017
+-- let S000017_P000044 : not (biconnected S000017)
+-- let S000017_P000054 : not (sigma_locally_finite_base S000017)
+let S000018 : Space
+-- let S000018_P000029 : countable_chain_condition S000018
+let S000018_P000039 : hyperconnected S000018
+let S000018_P000018 : lindelof S000018
+let S000018_P000028 : not (first_countable S000018)
+let S000018_P000129 : not (indiscrete S000018)
+let S000018_P000046 : not (totally_path_disconnected S000018)
+-- let S000018_P000017 : not (sigma_compact S000018)
+-- let S000018_P000033 : not (countably_metacompact S000018)
+let S000018_P000056 : not (meager S000018)
+let S000018_P000013 : not (normal S000018)
+let S000018_P000042 : not (locally_path_connected S000018)
+let S000018_P000037 : not (path_connected S000018)
+let S000018_P000026 : not (separable S000018)
+let S000018_P000057 : not (countable S000018)
+let S000018_P000011 : not (regular S000018)
+let S000018_P000001 : not (kolmogorov S000018)
+-- let S000018_P000044 : not (biconnected S000018)
+-- let S000018_P000021 : weakly_countably_compact S000018
+-- let S000018_P000054 : not (sigma_locally_finite_base S000018)
+let S000018_P000051 : not (scattered S000018)
+let S000019 : Space
+let S000019_P000039 : hyperconnected S000019
+-- let S000019_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000019
+let S000019_P000028 : first_countable S000019
+let S000019_P000129 : not (indiscrete S000019)
+let S000019_P000038 : arc_connected S000019
+let S000019_P000056 : meager S000019
+let S000019_P000027 : second_countable S000019
+let S000019_P000003 : not (hausdorff S000019)
+let S000019_P000043 : locally_arc_connected S000019
+let S000019_P000002 : frechet S000019
+let S000019_P000016 : compact S000019
+-- let S000019_P000044 : not (biconnected S000019)
+let S000020 : Space
+let S000020_P000048 : totally_separated S000020
+let S000020_P000049 : not (extremally_disconnected S000020)
+let S000020_P000129 : not (indiscrete S000020)
+let S000020_P000027 : second_countable S000020
+let S000020_P000002 : frechet S000020
+let S000020_P000016 : compact S000020
+let S000020_P000057 : countable S000020
+-- let S000020_P000050 : zero_dimensional S000020
+let S000020_P000020 : sequentially_compact S000020
+let S000020_P000051 : scattered S000020
+let S000021 : Space
+let S000021_P000129 : not (indiscrete S000021)
+let S000021_P000038 : arc_connected S000021
+-- let S000021_P000017 : sigma_compact S000021
+-- let S000021_P000023 : not (weakly_locally_compact S000021)
+let S000021_P000056 : meager S000021
+let S000021_P000003 : hausdorff S000021
+let S000021_P000026 : separable S000021
+let S000021_P000012 : completely_regular S000021
+let S000021_P000043 : locally_arc_connected S000021
+let S000021_P000053 : not (metrizable S000021)
+-- let S000021_P000087 : groupable_topology S000021
+-- let S000021_P000065 : continuum_sized S000021
+let S000022 : Space
+-- let S000022_P000029 : not (countable_chain_condition S000022)
+let S000022_P000018 : lindelof S000022
+let S000022_P000049 : not (extremally_disconnected S000022)
+-- let S000022_P000008 : completely_normal_hausdorff S000022
+let S000022_P000028 : not (first_countable S000022)
+let S000022_P000129 : not (indiscrete S000022)
+-- let S000022_P000017 : not (sigma_compact S000022)
+let S000022_P000056 : not (meager S000022)
+let S000022_P000026 : not (separable S000022)
+let S000022_P000016 : not (compact S000022)
+let S000022_P000022 : not (pseudocompact S000022)
+-- let S000022_P000050 : zero_dimensional S000022
+-- let S000022_P000015 : not (perfectly_normal S000022)
+let S000022_P000030 : paracompact S000022
+let S000022_P000051 : scattered S000022
+let S000023 : Space
+let S000023_P000049 : not (extremally_disconnected S000023)
+let S000023_P000028 : not (first_countable S000023)
+let S000023_P000129 : not (indiscrete S000023)
+-- let S000023_P000023 : not (weakly_locally_compact S000023)
+let S000023_P000056 : not (meager S000023)
+let S000023_P000003 : hausdorff S000023
+let S000023_P000022 : not (pseudocompact S000023)
+let S000023_P000057 : countable S000023
+-- let S000023_P000050 : zero_dimensional S000023
+let S000023_P000030 : paracompact S000023
+let S000023_P000041 : not (locally_connected S000023)
+let S000023_P000051 : scattered S000023
+let S000024 : Space
+-- let S000024_P000029 : not (countable_chain_condition S000024)
+let S000024_P000028 : not (first_countable S000024)
+let S000024_P000129 : not (indiscrete S000024)
+let S000024_P000056 : not (meager S000024)
+let S000024_P000003 : not (hausdorff S000024)
+let S000024_P000002 : frechet S000024
+let S000024_P000047 : totally_disconnected S000024
+let S000024_P000016 : compact S000024
+-- let S000024_P000054 : not (sigma_locally_finite_base S000024)
+let S000024_P000051 : scattered S000024
+let S000025 : Space
+-- let S000025_P000019 : not (countably_compact S000025)
+let S000025_P000129 : not (indiscrete S000025)
+let S000025_P000038 : arc_connected S000025
+-- let S000025_P000023 : weakly_locally_compact S000025
+let S000025_P000056 : not (meager S000025)
+let S000025_P000027 : second_countable S000025
+let S000025_P000043 : locally_arc_connected S000025
+let S000025_P000053 : metrizable S000025
+let S000025_P000036 : connected S000025
+let S000025_P000022 : not (pseudocompact S000025)
+-- let S000025_P000133 : lots S000025
+-- let S000025_P000024 : locally_relatively_compact S000025
+let S000026 : Space
+let S000026_P000048 : totally_separated S000026
+-- let S000026_P000058 : not (smaller_than_the_continuum S000026)
+let S000026_P000129 : not (indiscrete S000026)
+let S000026_P000016 : compact S000026
+-- let S000026_P000050 : zero_dimensional S000026
+-- let S000026_P000055 : completely_metrizable S000026
+let S000026_P000051 : not (scattered S000026)
+let S000027 : Space
+let S000027_P000048 : totally_separated S000027
+let S000027_P000129 : not (indiscrete S000027)
+let S000027_P000056 : meager S000027
+let S000027_P000053 : metrizable S000027
+let S000027_P000022 : not (pseudocompact S000027)
+let S000027_P000057 : countable S000027
+-- let S000027_P000050 : zero_dimensional S000027
+let S000027_P000051 : not (scattered S000027)
+let S000028 : Space
+let S000028_P000048 : totally_separated S000028
+-- let S000028_P000058 : not (smaller_than_the_continuum S000028)
+let S000028_P000129 : not (indiscrete S000028)
+-- let S000028_P000017 : not (sigma_compact S000028)
+-- let S000028_P000023 : not (weakly_locally_compact S000028)
+let S000028_P000026 : separable S000028
+let S000028_P000053 : metrizable S000028
+let S000028_P000022 : not (pseudocompact S000028)
+-- let S000028_P000050 : zero_dimensional S000028
+-- let S000028_P000055 : completely_metrizable S000028
+let S000028_P000051 : not (scattered S000028)
+let S000029 : Space
+let S000029_P000028 : not (first_countable S000029)
+let S000029_P000129 : not (indiscrete S000029)
+let S000029_P000056 : meager S000029
+let S000029_P000003 : not (hausdorff S000029)
+let S000029_P000002 : frechet S000029
+let S000029_P000016 : compact S000029
+let S000029_P000057 : countable S000029
+-- let S000029_P000100 : kc S000029
+let S000029_P000130 : not (locally_compact S000029)
+-- let S000029_P000045 : has_dispersion_point S000029
+let S000029_P000020 : sequentially_compact S000029
+let S000029_P000041 : not (locally_connected S000029)
+let S000030 : Space
+let S000030_P000129 : not (indiscrete S000030)
+let S000030_P000038 : arc_connected S000030
+-- let S000030_P000017 : not (sigma_compact S000030)
+-- let S000030_P000023 : not (weakly_locally_compact S000030)
+let S000030_P000026 : separable S000030
+let S000030_P000043 : locally_arc_connected S000030
+let S000030_P000053 : metrizable S000030
+let S000030_P000022 : not (pseudocompact S000030)
+-- let S000030_P000044 : not (biconnected S000030)
+-- let S000030_P000055 : completely_metrizable S000030
+let S000032 : Space
+let S000032_P000129 : not (indiscrete S000032)
+let S000032_P000038 : arc_connected S000032
+let S000032_P000026 : separable S000032
+let S000032_P000043 : locally_arc_connected S000032
+let S000032_P000053 : metrizable S000032
+let S000032_P000016 : compact S000032
+-- let S000032_P000044 : not (biconnected S000032)
+let S000033 : Space
+let S000033_P000049 : not (extremally_disconnected S000033)
+let S000033_P000129 : not (indiscrete S000033)
+let S000033_P000027 : second_countable S000033
+let S000033_P000016 : not (compact S000033)
+-- let S000033_P000133 : lots S000033
+let S000033_P000057 : countable S000033
+-- let S000033_P000050 : zero_dimensional S000033
+-- let S000033_P000024 : locally_relatively_compact S000033
+let S000033_P000051 : scattered S000033
+let S000034 : Space
+let S000034_P000049 : not (extremally_disconnected S000034)
+let S000034_P000129 : not (indiscrete S000034)
+let S000034_P000027 : second_countable S000034
+let S000034_P000016 : compact S000034
+-- let S000034_P000133 : lots S000034
+let S000034_P000057 : countable S000034
+-- let S000034_P000050 : zero_dimensional S000034
+-- let S000034_P000055 : completely_metrizable S000034
+let S000034_P000051 : scattered S000034
+let S000035 : Space
+-- let S000035_P000029 : not (countable_chain_condition S000035)
+-- let S000035_P000019 : countably_compact S000035
+let S000035_P000049 : not (extremally_disconnected S000035)
+-- let S000035_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000035
+let S000035_P000028 : first_countable S000035
+let S000035_P000129 : not (indiscrete S000035)
+let S000035_P000026 : not (separable S000035)
+-- let S000035_P000133 : lots S000035
+-- let S000035_P000050 : zero_dimensional S000035
+-- let S000035_P000015 : not (perfectly_normal S000035)
+-- let S000035_P000093 : locally_countable S000035
+let S000035_P000031 : not (metacompact S000035)
+-- let S000035_P000024 : locally_relatively_compact S000035
+let S000035_P000051 : scattered S000035
+let S000036 : Space
+-- let S000036_P000029 : not (countable_chain_condition S000036)
+-- let S000036_P000019 : countably_compact S000036
+let S000036_P000049 : not (extremally_disconnected S000036)
+-- let S000036_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000036
+let S000036_P000028 : not (first_countable S000036)
+let S000036_P000129 : not (indiscrete S000036)
+-- let S000036_P000081 : not (countably_tight S000036)
+let S000036_P000026 : not (separable S000036)
+-- let S000036_P000103 : not (strongly_kc S000036)
+let S000036_P000016 : compact S000036
+-- let S000036_P000133 : lots S000036
+-- let S000036_P000050 : zero_dimensional S000036
+let S000036_P000020 : sequentially_compact S000036
+-- let S000036_P000024 : locally_relatively_compact S000036
+let S000036_P000051 : scattered S000036
+let S000038 : Space
+-- let S000038_P000029 : not (countable_chain_condition S000038)
+-- let S000038_P000019 : countably_compact S000038
+let S000038_P000018 : not (lindelof S000038)
+-- let S000038_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000038
+let S000038_P000028 : first_countable S000038
+let S000038_P000129 : not (indiscrete S000038)
+let S000038_P000038 : arc_connected S000038
+let S000038_P000056 : not (meager S000038)
+let S000038_P000043 : locally_arc_connected S000038
+-- let S000038_P000133 : lots S000038
+-- let S000038_P000024 : locally_relatively_compact S000038
+let S000039 : Space
+-- let S000039_P000029 : not (countable_chain_condition S000039)
+-- let S000039_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000039
+let S000039_P000028 : not (first_countable S000039)
+let S000039_P000129 : not (indiscrete S000039)
+let S000039_P000046 : not (totally_path_disconnected S000039)
+let S000039_P000037 : not (path_connected S000039)
+let S000039_P000036 : connected S000039
+let S000039_P000016 : compact S000039
+-- let S000039_P000133 : lots S000039
+let S000039_P000020 : sequentially_compact S000039
+let S000039_P000041 : locally_connected S000039
+let S000040 : Space
+-- let S000040_P000029 : not (countable_chain_condition S000040)
+-- let S000040_P000019 : countably_compact S000040
+let S000040_P000009 : completely_hausdorff S000040
+-- let S000040_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000040
+let S000040_P000129 : not (indiscrete S000040)
+let S000040_P000046 : not (totally_path_disconnected S000040)
+let S000040_P000056 : not (meager S000040)
+let S000040_P000003 : hausdorff S000040
+let S000040_P000037 : not (path_connected S000040)
+let S000040_P000026 : not (separable S000040)
+let S000040_P000036 : connected S000040
+let S000040_P000011 : not (regular S000040)
+-- let S000040_P000044 : not (biconnected S000040)
+-- let S000040_P000054 : not (sigma_locally_finite_base S000040)
+let S000040_P000020 : sequentially_compact S000040
+let S000040_P000004 : urysohn S000040
+let S000040_P000041 : not (locally_connected S000040)
+let S000041 : Space
+-- let S000041_P000029 : not (countable_chain_condition S000041)
+-- let S000041_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000041
+let S000041_P000028 : first_countable S000041
+let S000041_P000129 : not (indiscrete S000041)
+let S000041_P000046 : not (totally_path_disconnected S000041)
+let S000041_P000037 : not (path_connected S000041)
+let S000041_P000036 : connected S000041
+let S000041_P000016 : compact S000041
+-- let S000041_P000133 : lots S000041
+-- let S000041_P000015 : not (perfectly_normal S000041)
+-- let S000041_P000044 : not (biconnected S000041)
+let S000041_P000041 : locally_connected S000041
+let S000042 : Space
+let S000042_P000039 : hyperconnected S000042
+-- let S000042_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000042
+let S000042_P000129 : not (indiscrete S000042)
+let S000042_P000038 : arc_connected S000042
+-- let S000042_P000023 : weakly_locally_compact S000042
+-- let S000042_P000033 : not (countably_metacompact S000042)
+let S000042_P000056 : meager S000042
+let S000042_P000027 : second_countable S000042
+let S000042_P000043 : locally_arc_connected S000042
+let S000042_P000016 : not (compact S000042)
+let S000042_P000040 : ultraconnected S000042
+let S000042_P000001 : kolmogorov S000042
+-- let S000042_P000044 : not (biconnected S000042)
+-- let S000042_P000021 : weakly_countably_compact S000042
+let S000042_P000014 : completely_normal S000042
+-- let S000042_P000024 : not (locally_relatively_compact S000042)
+-- let S000042_P000034 : not (fully_normal S000042)
+let S000043 : Space
+let S000043_P000018 : lindelof S000043
+let S000043_P000049 : not (extremally_disconnected S000043)
+let S000043_P000028 : first_countable S000043
+let S000043_P000129 : not (indiscrete S000043)
+-- let S000043_P000017 : not (sigma_compact S000043)
+let S000043_P000027 : not (second_countable S000043)
+let S000043_P000003 : hausdorff S000043
+let S000043_P000026 : separable S000043
+-- let S000043_P000050 : zero_dimensional S000043
+let S000043_P000064 : baire S000043
+-- let S000043_P000015 : perfectly_normal S000043
+let S000043_P000014 : completely_normal S000043
+let S000043_P000030 : paracompact S000043
+let S000043_P000051 : not (scattered S000043)
+-- let S000043_P000065 : continuum_sized S000043
+let S000044 : Space
+let S000044_P000039 : hyperconnected S000044
+-- let S000044_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000044
+let S000044_P000129 : not (indiscrete S000044)
+let S000044_P000038 : arc_connected S000044
+-- let S000044_P000023 : weakly_locally_compact S000044
+-- let S000044_P000033 : not (countably_metacompact S000044)
+let S000044_P000056 : not (meager S000044)
+let S000044_P000027 : second_countable S000044
+let S000044_P000043 : locally_arc_connected S000044
+let S000044_P000011 : not (regular S000044)
+let S000044_P000001 : not (kolmogorov S000044)
+-- let S000044_P000044 : not (biconnected S000044)
+-- let S000044_P000021 : weakly_countably_compact S000044
+let S000044_P000014 : completely_normal S000044
+-- let S000044_P000024 : not (locally_relatively_compact S000044)
+-- let S000044_P000034 : not (fully_normal S000044)
+let S000045 : Space
+let S000045_P000039 : hyperconnected S000045
+-- let S000045_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000045
+let S000045_P000129 : not (indiscrete S000045)
+let S000045_P000038 : arc_connected S000045
+let S000045_P000056 : not (meager S000045)
+let S000045_P000027 : second_countable S000045
+let S000045_P000013 : not (normal S000045)
+let S000045_P000043 : locally_arc_connected S000045
+let S000045_P000002 : not (frechet S000045)
+let S000045_P000016 : compact S000045
+let S000045_P000001 : kolmogorov S000045
+-- let S000045_P000044 : not (biconnected S000045)
+let S000046 : Space
+let S000046_P000039 : hyperconnected S000046
+-- let S000046_P000019 : not (countably_compact S000046)
+-- let S000046_P000058 : not (smaller_than_the_continuum S000046)
+-- let S000046_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000046
+let S000046_P000129 : not (indiscrete S000046)
+let S000046_P000046 : not (totally_path_disconnected S000046)
+let S000046_P000056 : meager S000046
+let S000046_P000027 : second_countable S000046
+let S000046_P000013 : not (normal S000046)
+-- let S000046_P000032 : not (countably_paracompact S000046)
+-- let S000046_P000025 : sigma_locally_compact S000046
+let S000046_P000001 : not (kolmogorov S000046)
+-- let S000046_P000021 : weakly_countably_compact S000046
+let S000046_P000031 : metacompact S000046
+-- let S000046_P000024 : not (locally_relatively_compact S000046)
+let S000047 : Space
+let S000047_P000129 : not (indiscrete S000047)
+let S000047_P000056 : not (meager S000047)
+let S000047_P000027 : second_countable S000047
+let S000047_P000042 : locally_path_connected S000047
+let S000047_P000047 : not (totally_disconnected S000047)
+let S000047_P000016 : not (compact S000047)
+let S000047_P000022 : not (pseudocompact S000047)
+let S000047_P000057 : countable S000047
+-- let S000047_P000025 : sigma_locally_compact S000047
+let S000047_P000001 : kolmogorov S000047
+-- let S000047_P000021 : not (weakly_countably_compact S000047)
+let S000047_P000014 : completely_normal S000047
+let S000047_P000030 : paracompact S000047
+-- let S000047_P000024 : locally_relatively_compact S000047
+let S000047_P000051 : scattered S000047
+-- let S000047_P000034 : fully_normal S000047
+let S000048 : Space
+let S000048_P000039 : hyperconnected S000048
+let S000048_P000129 : not (indiscrete S000048)
+let S000048_P000056 : not (meager S000048)
+let S000048_P000027 : second_countable S000048
+let S000048_P000013 : not (normal S000048)
+let S000048_P000042 : locally_path_connected S000048
+let S000048_P000037 : path_connected S000048
+let S000048_P000002 : not (frechet S000048)
+let S000048_P000016 : compact S000048
+let S000048_P000057 : countable S000048
+let S000048_P000001 : kolmogorov S000048
+-- let S000048_P000044 : not (biconnected S000048)
+let S000048_P000051 : not (scattered S000048)
+let S000049 : Space
+let S000049_P000039 : not (hyperconnected S000049)
+-- let S000049_P000019 : not (countably_compact S000049)
+let S000049_P000129 : not (indiscrete S000049)
+-- let S000049_P000023 : weakly_locally_compact S000049
+-- let S000049_P000033 : not (countably_metacompact S000049)
+let S000049_P000056 : not (meager S000049)
+let S000049_P000027 : second_countable S000049
+let S000049_P000042 : locally_path_connected S000049
+let S000049_P000002 : not (frechet S000049)
+let S000049_P000057 : countable S000049
+let S000049_P000040 : ultraconnected S000049
+let S000049_P000001 : kolmogorov S000049
+-- let S000049_P000044 : not (biconnected S000049)
+-- let S000049_P000021 : weakly_countably_compact S000049
+let S000049_P000014 : not (completely_normal S000049)
+-- let S000049_P000024 : not (locally_relatively_compact S000049)
+let S000049_P000051 : scattered S000049
+-- let S000049_P000034 : not (fully_normal S000049)
+let S000050 : Space
+let S000050_P000129 : not (indiscrete S000050)
+let S000050_P000056 : meager S000050
+let S000050_P000053 : metrizable S000050
+let S000050_P000057 : countable S000050
+-- let S000050_P000050 : zero_dimensional S000050
+let S000050_P000051 : not (scattered S000050)
+let S000051 : Space
+let S000051_P000129 : not (indiscrete S000051)
+let S000051_P000046 : totally_path_disconnected S000051
+-- let S000051_P000023 : not (weakly_locally_compact S000051)
+let S000051_P000027 : second_countable S000051
+let S000051_P000053 : metrizable S000051
+-- let S000051_P000050 : zero_dimensional S000051
+-- let S000051_P000044 : not (biconnected S000051)
+let S000051_P000031 : metacompact S000051
+let S000051_P000041 : not (locally_connected S000051)
+let S000052 : Space
+let S000052_P000027 : second_countable S000052
+let S000052_P000003 : hausdorff S000052
+let S000052_P000057 : countable S000052
+-- let S000052_P000044 : not (biconnected S000052)
+let S000052_P000031 : metacompact S000052
+-- let S000052_P000060 : strongly_connected S000052
+let S000052_P000004 : not (urysohn S000052)
+let S000052_P000041 : not (locally_connected S000052)
+let S000052_P000010 : semiregular S000052
+let S000053 : Space
+let S000053_P000027 : second_countable S000053
+let S000053_P000003 : hausdorff S000053
+let S000053_P000057 : countable S000053
+-- let S000053_P000060 : strongly_connected S000053
+let S000053_P000004 : not (urysohn S000053)
+let S000053_P000041 : locally_connected S000053
+let S000054 : Space
+-- let S000054_P000019 : not (countably_compact S000054)
+-- let S000054_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000054
+let S000054_P000129 : not (indiscrete S000054)
+let S000054_P000038 : arc_connected S000054
+let S000054_P000056 : meager S000054
+let S000054_P000027 : second_countable S000054
+let S000054_P000043 : locally_arc_connected S000054
+let S000054_P000022 : not (pseudocompact S000054)
+let S000054_P000040 : not (ultraconnected S000054)
+let S000054_P000011 : regular S000054
+-- let S000054_P000050 : not (zero_dimensional S000054)
+-- let S000054_P000044 : not (biconnected S000054)
+-- let S000054_P000021 : weakly_countably_compact S000054
+let S000054_P000030 : paracompact S000054
+-- let S000054_P000024 : locally_relatively_compact S000054
+-- let S000054_P000034 : fully_normal S000054
+let S000055 : Space
+let S000055_P000018 : lindelof S000055
+let S000055_P000028 : not (first_countable S000055)
+let S000055_P000129 : not (indiscrete S000055)
+let S000055_P000046 : totally_path_disconnected S000055
+-- let S000055_P000017 : not (sigma_compact S000055)
+let S000055_P000026 : not (separable S000055)
+let S000055_P000036 : connected S000055
+let S000055_P000004 : urysohn S000055
+let S000055_P000010 : not (semiregular S000055)
+let S000056 : Space
+let S000056_P000009 : completely_hausdorff S000056
+let S000056_P000129 : not (indiscrete S000056)
+let S000056_P000046 : not (totally_path_disconnected S000056)
+-- let S000056_P000017 : sigma_compact S000056
+let S000056_P000056 : not (meager S000056)
+let S000056_P000027 : second_countable S000056
+let S000056_P000037 : not (path_connected S000056)
+let S000056_P000036 : connected S000056
+let S000056_P000022 : not (pseudocompact S000056)
+let S000056_P000011 : not (regular S000056)
+-- let S000056_P000044 : not (biconnected S000056)
+let S000056_P000031 : metacompact S000056
+let S000056_P000041 : not (locally_connected S000056)
+let S000056_P000010 : not (semiregular S000056)
+let S000057 : Space
+-- let S000057_P000019 : not (countably_compact S000057)
+-- let S000057_P000058 : not (smaller_than_the_continuum S000057)
+let S000057_P000018 : not (lindelof S000057)
+let S000057_P000049 : not (extremally_disconnected S000057)
+let S000057_P000028 : first_countable S000057
+let S000057_P000129 : not (indiscrete S000057)
+-- let S000057_P000033 : countably_metacompact S000057
+let S000057_P000013 : not (normal S000057)
+let S000057_P000003 : hausdorff S000057
+let S000057_P000026 : separable S000057
+let S000057_P000022 : not (pseudocompact S000057)
+-- let S000057_P000050 : zero_dimensional S000057
+-- let S000057_P000024 : locally_relatively_compact S000057
+let S000057_P000051 : scattered S000057
+let S000058 : Space
+let S000058_P000009 : completely_hausdorff S000058
+let S000058_P000129 : not (indiscrete S000058)
+let S000058_P000046 : totally_path_disconnected S000058
+-- let S000058_P000017 : not (sigma_compact S000058)
+let S000058_P000027 : second_countable S000058
+let S000058_P000036 : connected S000058
+let S000058_P000022 : not (pseudocompact S000058)
+let S000058_P000011 : not (regular S000058)
+-- let S000058_P000044 : not (biconnected S000058)
+let S000058_P000031 : metacompact S000058
+let S000058_P000004 : urysohn S000058
+let S000058_P000041 : not (locally_connected S000058)
+let S000058_P000010 : not (semiregular S000058)
+let S000059 : Space
+let S000059_P000009 : completely_hausdorff S000059
+let S000059_P000129 : not (indiscrete S000059)
+let S000059_P000046 : totally_path_disconnected S000059
+-- let S000059_P000017 : not (sigma_compact S000059)
+let S000059_P000027 : second_countable S000059
+let S000059_P000036 : connected S000059
+let S000059_P000022 : not (pseudocompact S000059)
+let S000059_P000011 : not (regular S000059)
+-- let S000059_P000044 : not (biconnected S000059)
+let S000059_P000031 : metacompact S000059
+let S000059_P000004 : urysohn S000059
+let S000059_P000041 : not (locally_connected S000059)
+let S000059_P000010 : not (semiregular S000059)
+let S000060 : Space
+let S000060_P000009 : completely_hausdorff S000060
+let S000060_P000018 : not (lindelof S000060)
+let S000060_P000028 : first_countable S000060
+let S000060_P000129 : not (indiscrete S000060)
+let S000060_P000046 : totally_path_disconnected S000060
+-- let S000060_P000033 : not (countably_metacompact S000060)
+let S000060_P000027 : not (second_countable S000060)
+let S000060_P000026 : separable S000060
+let S000060_P000036 : connected S000060
+let S000060_P000022 : not (pseudocompact S000060)
+let S000060_P000011 : not (regular S000060)
+-- let S000060_P000044 : not (biconnected S000060)
+let S000060_P000004 : urysohn S000060
+let S000060_P000041 : not (locally_connected S000060)
+let S000060_P000010 : not (semiregular S000060)
+let S000061 : Space
+let S000061_P000009 : completely_hausdorff S000061
+let S000061_P000129 : not (indiscrete S000061)
+let S000061_P000046 : totally_path_disconnected S000061
+-- let S000061_P000017 : not (sigma_compact S000061)
+-- let S000061_P000033 : not (countably_metacompact S000061)
+let S000061_P000027 : second_countable S000061
+let S000061_P000036 : connected S000061
+let S000061_P000022 : not (pseudocompact S000061)
+let S000061_P000011 : not (regular S000061)
+-- let S000061_P000044 : not (biconnected S000061)
+let S000061_P000004 : urysohn S000061
+let S000061_P000041 : not (locally_connected S000061)
+let S000061_P000010 : not (semiregular S000061)
+let S000062 : Space
+-- let S000062_P000058 : not (smaller_than_the_continuum S000062)
+let S000062_P000009 : completely_hausdorff S000062
+-- let S000062_P000008 : completely_normal_hausdorff S000062
+let S000062_P000129 : not (indiscrete S000062)
+-- let S000062_P000017 : not (sigma_compact S000062)
+-- let S000062_P000023 : not (weakly_locally_compact S000062)
+let S000062_P000056 : not (meager S000062)
+let S000062_P000027 : second_countable S000062
+let S000062_P000003 : hausdorff S000062
+let S000062_P000053 : metrizable S000062
+let S000062_P000036 : not (connected S000062)
+let S000062_P000022 : not (pseudocompact S000062)
+-- let S000062_P000050 : zero_dimensional S000062
+let S000062_P000041 : not (locally_connected S000062)
+let S000063 : Space
+-- let S000063_P000058 : not (smaller_than_the_continuum S000063)
+let S000063_P000129 : not (indiscrete S000063)
+-- let S000063_P000023 : not (weakly_locally_compact S000063)
+let S000063_P000056 : not (meager S000063)
+let S000063_P000036 : not (connected S000063)
+let S000063_P000022 : not (pseudocompact S000063)
+let S000063_P000041 : not (locally_connected S000063)
+let S000063_P000051 : not (scattered S000063)
+let S000064 : Space
+let S000064_P000048 : not (totally_separated S000064)
+-- let S000064_P000058 : not (smaller_than_the_continuum S000064)
+let S000064_P000009 : completely_hausdorff S000064
+let S000064_P000018 : not (lindelof S000064)
+let S000064_P000028 : first_countable S000064
+let S000064_P000129 : not (indiscrete S000064)
+-- let S000064_P000033 : countably_metacompact S000064
+let S000064_P000026 : separable S000064
+let S000064_P000022 : not (pseudocompact S000064)
+-- let S000064_P000032 : not (countably_paracompact S000064)
+let S000064_P000011 : not (regular S000064)
+let S000064_P000004 : urysohn S000064
+let S000064_P000051 : scattered S000064
+let S000065 : Space
+let S000065_P000039 : not (hyperconnected S000065)
+-- let S000065_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000065
+let S000065_P000129 : not (indiscrete S000065)
+let S000065_P000038 : not (arc_connected S000065)
+let S000065_P000056 : not (meager S000065)
+let S000065_P000027 : second_countable S000065
+let S000065_P000003 : not (hausdorff S000065)
+let S000065_P000037 : path_connected S000065
+let S000065_P000043 : locally_arc_connected S000065
+let S000065_P000002 : frechet S000065
+let S000065_P000016 : compact S000065
+-- let S000065_P000044 : not (biconnected S000065)
+let S000066 : Space
+let S000066_P000129 : not (indiscrete S000066)
+let S000066_P000038 : arc_connected S000066
+-- let S000066_P000017 : sigma_compact S000066
+let S000066_P000056 : not (meager S000066)
+let S000066_P000027 : second_countable S000066
+let S000066_P000003 : hausdorff S000066
+let S000066_P000043 : locally_arc_connected S000066
+let S000066_P000022 : not (pseudocompact S000066)
+-- let S000066_P000044 : not (biconnected S000066)
+let S000066_P000031 : metacompact S000066
+let S000066_P000004 : not (urysohn S000066)
+let S000066_P000010 : semiregular S000066
+let S000067 : Space
+let S000067_P000129 : not (indiscrete S000067)
+let S000067_P000056 : meager S000067
+let S000067_P000027 : second_countable S000067
+let S000067_P000003 : hausdorff S000067
+let S000067_P000037 : not (path_connected S000067)
+let S000067_P000036 : connected S000067
+let S000067_P000022 : pseudocompact S000067
+let S000067_P000057 : countable S000067
+-- let S000067_P000044 : not (biconnected S000067)
+let S000067_P000031 : metacompact S000067
+let S000067_P000004 : not (urysohn S000067)
+let S000067_P000041 : not (locally_connected S000067)
+let S000067_P000010 : not (semiregular S000067)
+let S000068 : Space
+-- let S000068_P000019 : not (countably_compact S000068)
+let S000068_P000009 : completely_hausdorff S000068
+let S000068_P000018 : not (lindelof S000068)
+let S000068_P000028 : first_countable S000068
+let S000068_P000129 : not (indiscrete S000068)
+let S000068_P000038 : arc_connected S000068
+-- let S000068_P000017 : not (sigma_compact S000068)
+-- let S000068_P000033 : countably_metacompact S000068
+let S000068_P000026 : separable S000068
+let S000068_P000043 : locally_arc_connected S000068
+let S000068_P000036 : connected S000068
+let S000068_P000022 : not (pseudocompact S000068)
+-- let S000068_P000032 : not (countably_paracompact S000068)
+-- let S000068_P000044 : not (biconnected S000068)
+let S000068_P000031 : not (metacompact S000068)
+let S000068_P000004 : urysohn S000068
+let S000068_P000010 : not (semiregular S000068)
+let S000069 : Space
+-- let S000069_P000019 : not (countably_compact S000069)
+let S000069_P000009 : completely_hausdorff S000069
+let S000069_P000018 : lindelof S000069
+let S000069_P000028 : first_countable S000069
+let S000069_P000129 : not (indiscrete S000069)
+let S000069_P000038 : arc_connected S000069
+-- let S000069_P000017 : not (sigma_compact S000069)
+let S000069_P000027 : not (second_countable S000069)
+let S000069_P000026 : separable S000069
+let S000069_P000043 : locally_arc_connected S000069
+let S000069_P000036 : connected S000069
+let S000069_P000022 : not (pseudocompact S000069)
+-- let S000069_P000044 : not (biconnected S000069)
+let S000069_P000031 : not (metacompact S000069)
+let S000069_P000004 : urysohn S000069
+let S000069_P000010 : not (semiregular S000069)
+let S000070 : Space
+let S000070_P000009 : completely_hausdorff S000070
+let S000070_P000018 : not (lindelof S000070)
+let S000070_P000028 : first_countable S000070
+let S000070_P000129 : not (indiscrete S000070)
+let S000070_P000038 : arc_connected S000070
+-- let S000070_P000033 : countably_metacompact S000070
+let S000070_P000027 : not (second_countable S000070)
+let S000070_P000026 : separable S000070
+let S000070_P000043 : locally_arc_connected S000070
+let S000070_P000022 : not (pseudocompact S000070)
+-- let S000070_P000032 : not (countably_paracompact S000070)
+let S000070_P000011 : not (regular S000070)
+-- let S000070_P000044 : not (biconnected S000070)
+let S000070_P000004 : urysohn S000070
+let S000070_P000010 : not (semiregular S000070)
+let S000071 : Space
+let S000071_P000048 : totally_separated S000071
+let S000071_P000009 : completely_hausdorff S000071
+let S000071_P000049 : not (extremally_disconnected S000071)
+let S000071_P000129 : not (indiscrete S000071)
+let S000071_P000056 : not (meager S000071)
+let S000071_P000027 : second_countable S000071
+let S000071_P000022 : not (pseudocompact S000071)
+let S000071_P000057 : countable S000071
+let S000071_P000031 : metacompact S000071
+let S000071_P000005 : not (regular_hausdorff S000071)
+let S000071_P000004 : urysohn S000071
+let S000071_P000010 : not (semiregular S000071)
+let S000071_P000051 : scattered S000071
+let S000072 : Space
+let S000072_P000009 : not (completely_hausdorff S000072)
+let S000072_P000129 : not (indiscrete S000072)
+let S000072_P000056 : meager S000072
+let S000072_P000027 : second_countable S000072
+let S000072_P000047 : totally_disconnected S000072
+let S000072_P000022 : not (pseudocompact S000072)
+let S000072_P000057 : countable S000072
+let S000072_P000011 : not (regular S000072)
+let S000072_P000031 : metacompact S000072
+let S000072_P000004 : urysohn S000072
+let S000072_P000010 : semiregular S000072
+let S000072_P000051 : not (scattered S000072)
+let S000073 : Space
+let S000073_P000129 : not (indiscrete S000073)
+let S000073_P000038 : arc_connected S000073
+-- let S000073_P000017 : sigma_compact S000073
+let S000073_P000056 : not (meager S000073)
+let S000073_P000027 : second_countable S000073
+let S000073_P000003 : hausdorff S000073
+let S000073_P000043 : locally_arc_connected S000073
+let S000073_P000022 : not (pseudocompact S000073)
+-- let S000073_P000044 : not (biconnected S000073)
+let S000073_P000031 : metacompact S000073
+let S000073_P000020 : not (sequentially_compact S000073)
+let S000073_P000004 : not (urysohn S000073)
+let S000073_P000010 : semiregular S000073
+let S000074 : Space
+let S000074_P000028 : first_countable S000074
+let S000074_P000129 : not (indiscrete S000074)
+let S000074_P000038 : arc_connected S000074
+-- let S000074_P000023 : not (weakly_locally_compact S000074)
+-- let S000074_P000132 : g_delta_space S000074
+-- let S000074_P000033 : countably_metacompact S000074
+let S000074_P000056 : not (meager S000074)
+let S000074_P000013 : not (normal S000074)
+let S000074_P000026 : separable S000074
+let S000074_P000012 : completely_regular S000074
+let S000074_P000043 : locally_arc_connected S000074
+let S000074_P000036 : connected S000074
+let S000074_P000022 : not (pseudocompact S000074)
+-- let S000074_P000032 : not (countably_paracompact S000074)
+-- let S000074_P000044 : not (biconnected S000074)
+let S000074_P000004 : urysohn S000074
+let S000075 : Space
+let S000075_P000129 : not (indiscrete S000075)
+let S000075_P000038 : arc_connected S000075
+-- let S000075_P000023 : not (weakly_locally_compact S000075)
+let S000075_P000056 : not (meager S000075)
+let S000075_P000027 : second_countable S000075
+let S000075_P000043 : locally_arc_connected S000075
+-- let S000075_P000044 : not (biconnected S000075)
+let S000075_P000005 : regular_hausdorff S000075
+let S000076 : Space
+let S000076_P000018 : not (lindelof S000076)
+let S000076_P000049 : not (extremally_disconnected S000076)
+-- let S000076_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000076
+let S000076_P000028 : first_countable S000076
+let S000076_P000129 : not (indiscrete S000076)
+-- let S000076_P000132 : g_delta_space S000076
+let S000076_P000013 : not (normal S000076)
+let S000076_P000003 : hausdorff S000076
+let S000076_P000026 : separable S000076
+-- let S000076_P000050 : zero_dimensional S000076
+let S000076_P000014 : not (completely_normal S000076)
+let S000077 : Space
+let S000077_P000129 : not (indiscrete S000077)
+let S000077_P000013 : not (normal S000077)
+let S000077_P000011 : regular S000077
+let S000077_P000031 : metacompact S000077
+let S000078 : Space
+let S000078_P000049 : not (extremally_disconnected S000078)
+let S000078_P000129 : not (indiscrete S000078)
+let S000078_P000003 : hausdorff S000078
+let S000078_P000026 : not (separable S000078)
+let S000078_P000016 : compact S000078
+-- let S000078_P000050 : zero_dimensional S000078
+let S000078_P000014 : not (completely_normal S000078)
+let S000078_P000051 : scattered S000078
+let S000079 : Space
+-- let S000079_P000029 : not (countable_chain_condition S000079)
+let S000079_P000048 : totally_separated S000079
+let S000079_P000049 : not (extremally_disconnected S000079)
+-- let S000079_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000079
+let S000079_P000028 : not (first_countable S000079)
+let S000079_P000129 : not (indiscrete S000079)
+-- let S000079_P000033 : countably_metacompact S000079
+let S000079_P000013 : not (normal S000079)
+let S000079_P000022 : pseudocompact S000079
+-- let S000079_P000032 : not (countably_paracompact S000079)
+let S000079_P000006 : tychonoff S000079
+-- let S000079_P000050 : zero_dimensional S000079
+-- let S000079_P000021 : not (weakly_countably_compact S000079)
+let S000079_P000031 : not (metacompact S000079)
+-- let S000079_P000024 : locally_relatively_compact S000079
+let S000079_P000051 : scattered S000079
+let S000081 : Space
+-- let S000081_P000029 : not (countable_chain_condition S000081)
+-- let S000081_P000019 : not (countably_compact S000081)
+-- let S000081_P000058 : not (smaller_than_the_continuum S000081)
+let S000081_P000009 : completely_hausdorff S000081
+let S000081_P000018 : not (lindelof S000081)
+-- let S000081_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000081
+let S000081_P000028 : not (first_countable S000081)
+let S000081_P000129 : not (indiscrete S000081)
+let S000081_P000046 : not (totally_path_disconnected S000081)
+let S000081_P000056 : not (meager S000081)
+let S000081_P000036 : not (connected S000081)
+let S000081_P000006 : not (tychonoff S000081)
+let S000081_P000011 : not (regular S000081)
+let S000081_P000031 : not (metacompact S000081)
+let S000081_P000041 : not (locally_connected S000081)
+let S000081_P000010 : semiregular S000081
+let S000087 : Space
+let S000087_P000129 : not (indiscrete S000087)
+let S000087_P000013 : not (normal S000087)
+-- let S000087_P000032 : not (countably_paracompact S000087)
+let S000087_P000011 : regular S000087
+-- let S000087_P000021 : not (weakly_countably_compact S000087)
+let S000087_P000031 : metacompact S000087
+let S000087_P000004 : urysohn S000087
+let S000088 : Space
+let S000088_P000129 : not (indiscrete S000088)
+let S000088_P000013 : not (normal S000088)
+let S000088_P000016 : not (compact S000088)
+let S000088_P000022 : pseudocompact S000088
+let S000088_P000011 : regular S000088
+let S000089 : Space
+-- let S000089_P000029 : not (countable_chain_condition S000089)
+let S000089_P000048 : totally_separated S000089
+let S000089_P000009 : completely_hausdorff S000089
+let S000089_P000049 : not (extremally_disconnected S000089)
+-- let S000089_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000089
+let S000089_P000028 : not (first_countable S000089)
+let S000089_P000129 : not (indiscrete S000089)
+let S000089_P000006 : not (tychonoff S000089)
+-- let S000089_P000050 : not (zero_dimensional S000089)
+-- let S000089_P000021 : not (weakly_countably_compact S000089)
+let S000089_P000005 : regular_hausdorff S000089
+let S000089_P000051 : scattered S000089
+let S000090 : Space
+-- let S000090_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000090
+let S000090_P000129 : not (indiscrete S000090)
+let S000090_P000013 : not (normal S000090)
+let S000090_P000016 : not (compact S000090)
+let S000090_P000040 : not (ultraconnected S000090)
+-- let S000090_P000060 : strongly_connected S000090
+let S000090_P000005 : regular_hausdorff S000090
+let S000091 : Space
+-- let S000091_P000029 : not (countable_chain_condition S000091)
+-- let S000091_P000058 : not (smaller_than_the_continuum S000091)
+let S000091_P000049 : not (extremally_disconnected S000091)
+-- let S000091_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000091
+let S000091_P000028 : not (first_countable S000091)
+let S000091_P000129 : not (indiscrete S000091)
+let S000091_P000007 : not (normal_hausdorff S000091)
+let S000091_P000022 : not (pseudocompact S000091)
+-- let S000091_P000032 : not (countably_paracompact S000091)
+let S000091_P000006 : tychonoff S000091
+-- let S000091_P000050 : zero_dimensional S000091
+let S000091_P000031 : metacompact S000091
+-- let S000091_P000024 : locally_relatively_compact S000091
+let S000091_P000051 : scattered S000091
+let S000092 : Space
+let S000092_P000129 : not (indiscrete S000092)
+let S000092_P000013 : not (normal S000092)
+let S000092_P000011 : regular S000092
+let S000093 : Space
+let S000093_P000049 : not (extremally_disconnected S000093)
+let S000093_P000027 : not (second_countable S000093)
+let S000093_P000026 : separable S000093
+let S000093_P000016 : compact S000093
+-- let S000093_P000133 : lots S000093
+-- let S000093_P000050 : zero_dimensional S000093
+let S000093_P000051 : not (scattered S000093)
+-- let S000093_P000065 : continuum_sized S000093
+let S000094 : Space
+let S000094_P000048 : totally_separated S000094
+-- let S000094_P000058 : not (smaller_than_the_continuum S000094)
+let S000094_P000018 : lindelof S000094
+let S000094_P000049 : not (extremally_disconnected S000094)
+let S000094_P000028 : first_countable S000094
+let S000094_P000129 : not (indiscrete S000094)
+-- let S000094_P000017 : not (sigma_compact S000094)
+let S000094_P000027 : not (second_countable S000094)
+let S000094_P000026 : separable S000094
+let S000094_P000011 : not (regular S000094)
+let S000094_P000031 : metacompact S000094
+let S000094_P000010 : not (semiregular S000094)
+let S000094_P000051 : not (scattered S000094)
+let S000095 : Space
+-- let S000095_P000029 : not (countable_chain_condition S000095)
+-- let S000095_P000058 : not (smaller_than_the_continuum S000095)
+-- let S000095_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000095
+let S000095_P000028 : first_countable S000095
+let S000095_P000129 : not (indiscrete S000095)
+let S000095_P000046 : not (totally_path_disconnected S000095)
+let S000095_P000027 : not (second_countable S000095)
+let S000095_P000003 : hausdorff S000095
+let S000095_P000026 : not (separable S000095)
+let S000095_P000036 : not (connected S000095)
+let S000095_P000016 : compact S000095
+-- let S000095_P000015 : not (perfectly_normal S000095)
+let S000095_P000014 : completely_normal S000095
+let S000095_P000020 : sequentially_compact S000095
+let S000095_P000041 : not (locally_connected S000095)
+-- let S000095_P000065 : continuum_sized S000095
+let S000096 : Space
+let S000096_P000049 : not (extremally_disconnected S000096)
+let S000096_P000028 : not (first_countable S000096)
+let S000096_P000129 : not (indiscrete S000096)
+-- let S000096_P000023 : not (weakly_locally_compact S000096)
+let S000096_P000056 : not (meager S000096)
+let S000096_P000002 : frechet S000096
+let S000096_P000057 : countable S000096
+-- let S000096_P000050 : zero_dimensional S000096
+let S000096_P000030 : paracompact S000096
+let S000096_P000051 : scattered S000096
+let S000097 : Space
+let S000097_P000028 : not (first_countable S000097)
+let S000097_P000129 : not (indiscrete S000097)
+let S000097_P000056 : not (meager S000097)
+let S000097_P000003 : not (hausdorff S000097)
+let S000097_P000047 : totally_disconnected S000097
+let S000097_P000016 : compact S000097
+let S000097_P000057 : countable S000097
+let S000097_P000020 : sequentially_compact S000097
+let S000097_P000051 : scattered S000097
+let S000098 : Space
+let S000098_P000129 : not (indiscrete S000098)
+let S000098_P000056 : not (meager S000098)
+let S000098_P000027 : second_countable S000098
+let S000098_P000003 : hausdorff S000098
+let S000098_P000036 : not (connected S000098)
+let S000098_P000022 : pseudocompact S000098
+let S000098_P000057 : countable S000098
+-- let S000098_P000044 : not (biconnected S000098)
+let S000098_P000031 : metacompact S000098
+let S000098_P000004 : not (urysohn S000098)
+let S000098_P000041 : not (locally_connected S000098)
+let S000098_P000010 : semiregular S000098
+let S000099 : Space
+-- let S000099_P000029 : not (countable_chain_condition S000099)
+-- let S000099_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000099
+let S000099_P000028 : not (first_countable S000099)
+let S000099_P000129 : not (indiscrete S000099)
+let S000099_P000038 : arc_connected S000099
+let S000099_P000007 : normal_hausdorff S000099
+let S000099_P000016 : compact S000099
+-- let S000099_P000044 : not (biconnected S000099)
+let S000099_P000014 : not (completely_normal S000099)
+let S000099_P000020 : sequentially_compact S000099
+let S000099_P000041 : not (locally_connected S000099)
+let S000101 : Space
+let S000101_P000028 : not (first_countable S000101)
+let S000101_P000129 : not (indiscrete S000101)
+-- let S000101_P000017 : not (sigma_compact S000101)
+-- let S000101_P000023 : not (weakly_locally_compact S000101)
+let S000101_P000013 : not (normal S000101)
+let S000101_P000026 : separable S000101
+let S000101_P000006 : tychonoff S000101
+-- let S000101_P000050 : zero_dimensional S000101
+-- let S000101_P000044 : not (biconnected S000101)
+let S000101_P000051 : not (scattered S000101)
+let S000102 : Space
+-- let S000102_P000029 : not (countable_chain_condition S000102)
+-- let S000102_P000019 : not (countably_compact S000102)
+-- let S000102_P000058 : not (smaller_than_the_continuum S000102)
+let S000102_P000009 : completely_hausdorff S000102
+let S000102_P000018 : not (lindelof S000102)
+let S000102_P000049 : not (extremally_disconnected S000102)
+-- let S000102_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000102
+let S000102_P000028 : first_countable S000102
+let S000102_P000129 : not (indiscrete S000102)
+-- let S000102_P000023 : not (weakly_locally_compact S000102)
+let S000102_P000056 : not (meager S000102)
+let S000102_P000003 : hausdorff S000102
+let S000102_P000026 : not (separable S000102)
+let S000102_P000036 : not (connected S000102)
+let S000102_P000022 : not (pseudocompact S000102)
+-- let S000102_P000050 : zero_dimensional S000102
+-- let S000102_P000015 : perfectly_normal S000102
+let S000102_P000014 : completely_normal S000102
+let S000102_P000030 : paracompact S000102
+let S000102_P000041 : not (locally_connected S000102)
+let S000102_P000051 : not (scattered S000102)
+-- let S000102_P000065 : continuum_sized S000102
+-- let S000102_P000034 : fully_normal S000102
+let S000103 : Space
+-- let S000103_P000058 : not (smaller_than_the_continuum S000103)
+let S000103_P000049 : not (extremally_disconnected S000103)
+-- let S000103_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000103
+let S000103_P000028 : not (first_countable S000103)
+let S000103_P000129 : not (indiscrete S000103)
+let S000103_P000056 : not (meager S000103)
+let S000103_P000026 : separable S000103
+let S000103_P000036 : connected S000103
+let S000103_P000016 : compact S000103
+let S000103_P000006 : tychonoff S000103
+let S000103_P000014 : not (completely_normal S000103)
+let S000103_P000020 : not (sequentially_compact S000103)
+let S000103_P000051 : not (scattered S000103)
+let S000104 : Space
+-- let S000104_P000029 : not (countable_chain_condition S000104)
+-- let S000104_P000019 : countably_compact S000104
+-- let S000104_P000058 : not (smaller_than_the_continuum S000104)
+-- let S000104_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000104
+let S000104_P000028 : not (first_countable S000104)
+let S000104_P000129 : not (indiscrete S000104)
+-- let S000104_P000023 : weakly_locally_compact S000104
+let S000104_P000056 : not (meager S000104)
+let S000104_P000013 : not (normal S000104)
+let S000104_P000036 : not (connected S000104)
+let S000104_P000016 : not (compact S000104)
+let S000104_P000006 : tychonoff S000104
+let S000104_P000041 : not (locally_connected S000104)
+let S000105 : Space
+-- let S000105_P000058 : not (smaller_than_the_continuum S000105)
+let S000105_P000049 : not (extremally_disconnected S000105)
+-- let S000105_P000008 : not (completely_normal_hausdorff S000105)
+let S000105_P000028 : first_countable S000105
+let S000105_P000129 : not (indiscrete S000105)
+let S000105_P000038 : arc_connected S000105
+let S000105_P000027 : not (second_countable S000105)
+let S000105_P000026 : separable S000105
+let S000105_P000016 : compact S000105
+-- let S000105_P000015 : not (perfectly_normal S000105)
+let S000105_P000051 : not (scattered S000105)
+let S000106 : Space
+let S000106_P000129 : not (indiscrete S000106)
+let S000106_P000038 : arc_connected S000106
+-- let S000106_P000017 : not (sigma_compact S000106)
+-- let S000106_P000023 : not (weakly_locally_compact S000106)
+let S000106_P000026 : separable S000106
+let S000106_P000043 : locally_arc_connected S000106
+let S000106_P000053 : metrizable S000106
+-- let S000106_P000055 : completely_metrizable S000106
+let S000107 : Space
+-- let S000107_P000029 : not (countable_chain_condition S000107)
+let S000107_P000018 : not (lindelof S000107)
+-- let S000107_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000107
+-- let S000107_P000008 : not (completely_normal_hausdorff S000107)
+let S000107_P000028 : not (first_countable S000107)
+let S000107_P000129 : not (indiscrete S000107)
+-- let S000107_P000017 : not (sigma_compact S000107)
+-- let S000107_P000023 : not (weakly_locally_compact S000107)
+let S000107_P000026 : not (separable S000107)
+let S000107_P000036 : not (connected S000107)
+let S000107_P000022 : not (pseudocompact S000107)
+let S000107_P000006 : tychonoff S000107
+let S000108 : Space
+-- let S000108_P000058 : not (smaller_than_the_continuum S000108)
+let S000108_P000049 : extremally_disconnected S000108
+-- let S000108_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000108
+-- let S000108_P000008 : not (completely_normal_hausdorff S000108)
+let S000108_P000028 : not (first_countable S000108)
+let S000108_P000129 : not (indiscrete S000108)
+let S000108_P000026 : separable S000108
+let S000108_P000016 : compact S000108
+-- let S000108_P000050 : zero_dimensional S000108
+let S000108_P000020 : not (sequentially_compact S000108)
+let S000108_P000051 : not (scattered S000108)
+let S000109 : Space
+-- let S000109_P000019 : countably_compact S000109
+let S000109_P000018 : not (lindelof S000109)
+let S000109_P000129 : not (indiscrete S000109)
+let S000109_P000056 : not (meager S000109)
+let S000109_P000026 : separable S000109
+let S000109_P000006 : tychonoff S000109
+let S000110 : Space
+-- let S000110_P000019 : not (countably_compact S000110)
+let S000110_P000018 : not (lindelof S000110)
+let S000110_P000049 : extremally_disconnected S000110
+let S000110_P000028 : not (first_countable S000110)
+let S000110_P000129 : not (indiscrete S000110)
+let S000110_P000003 : hausdorff S000110
+let S000110_P000026 : separable S000110
+let S000110_P000022 : pseudocompact S000110
+let S000110_P000011 : not (regular S000110)
+let S000110_P000051 : scattered S000110
+let S000111 : Space
+let S000111_P000049 : extremally_disconnected S000111
+let S000111_P000028 : not (first_countable S000111)
+let S000111_P000129 : not (indiscrete S000111)
+-- let S000111_P000023 : not (weakly_locally_compact S000111)
+let S000111_P000056 : not (meager S000111)
+let S000111_P000052 : not (discrete S000111)
+let S000111_P000003 : hausdorff S000111
+let S000111_P000016 : not (compact S000111)
+let S000111_P000022 : not (pseudocompact S000111)
+-- let S000111_P000032 : countably_paracompact S000111
+let S000111_P000057 : countable S000111
+-- let S000111_P000050 : zero_dimensional S000111
+let S000111_P000031 : metacompact S000111
+let S000111_P000051 : scattered S000111
+let S000112 : Space
+-- let S000112_P000058 : not (smaller_than_the_continuum S000112)
+let S000112_P000129 : not (indiscrete S000112)
+let S000112_P000046 : not (totally_path_disconnected S000112)
+-- let S000112_P000017 : sigma_compact S000112
+-- let S000112_P000023 : not (weakly_locally_compact S000112)
+let S000112_P000053 : metrizable S000112
+let S000112_P000036 : not (connected S000112)
+let S000112_P000022 : not (pseudocompact S000112)
+-- let S000112_P000044 : not (biconnected S000112)
+-- let S000112_P000055 : completely_metrizable S000112
+let S000112_P000041 : not (locally_connected S000112)
+let S000113 : Space
+let S000113_P000129 : not (indiscrete S000113)
+let S000113_P000046 : not (totally_path_disconnected S000113)
+-- let S000113_P000017 : sigma_compact S000113
+-- let S000113_P000023 : not (weakly_locally_compact S000113)
+let S000113_P000056 : not (meager S000113)
+let S000113_P000027 : second_countable S000113
+let S000113_P000037 : not (path_connected S000113)
+let S000113_P000053 : metrizable S000113
+let S000113_P000036 : connected S000113
+-- let S000113_P000044 : not (biconnected S000113)
+let S000113_P000041 : not (locally_connected S000113)
+let S000114 : Space
+let S000114_P000129 : not (indiscrete S000114)
+let S000114_P000046 : not (totally_path_disconnected S000114)
+let S000114_P000037 : not (path_connected S000114)
+let S000114_P000053 : metrizable S000114
+let S000114_P000036 : connected S000114
+let S000114_P000016 : compact S000114
+-- let S000114_P000044 : not (biconnected S000114)
+let S000114_P000041 : not (locally_connected S000114)
+let S000115 : Space
+let S000115_P000129 : not (indiscrete S000115)
+let S000115_P000038 : arc_connected S000115
+let S000115_P000053 : metrizable S000115
+let S000115_P000016 : compact S000115
+-- let S000115_P000044 : not (biconnected S000115)
+let S000115_P000041 : not (locally_connected S000115)
+let S000116 : Space
+let S000116_P000129 : not (indiscrete S000116)
+let S000116_P000046 : not (totally_path_disconnected S000116)
+-- let S000116_P000017 : sigma_compact S000116
+let S000116_P000037 : not (path_connected S000116)
+let S000116_P000053 : metrizable S000116
+let S000116_P000036 : connected S000116
+-- let S000116_P000044 : not (biconnected S000116)
+-- let S000116_P000021 : not (weakly_countably_compact S000116)
+-- let S000116_P000024 : locally_relatively_compact S000116
+let S000116_P000041 : not (locally_connected S000116)
+let S000117 : Space
+let S000117_P000129 : not (indiscrete S000117)
+let S000117_P000038 : arc_connected S000117
+let S000117_P000053 : metrizable S000117
+let S000117_P000036 : connected S000117
+let S000117_P000016 : compact S000117
+-- let S000117_P000044 : not (biconnected S000117)
+let S000117_P000041 : not (locally_connected S000117)
+let S000118 : Space
+let S000118_P000129 : not (indiscrete S000118)
+let S000118_P000056 : meager S000118
+let S000118_P000037 : path_connected S000118
+let S000118_P000002 : not (frechet S000118)
+let S000118_P000016 : compact S000118
+let S000118_P000057 : countable S000118
+let S000118_P000040 : ultraconnected S000118
+let S000118_P000001 : kolmogorov S000118
+-- let S000118_P000044 : not (biconnected S000118)
+let S000118_P000014 : completely_normal S000118
+let S000118_P000041 : not (locally_connected S000118)
+let S000119 : Space
+let S000119_P000129 : not (indiscrete S000119)
+let S000119_P000046 : not (totally_path_disconnected S000119)
+-- let S000119_P000023 : weakly_locally_compact S000119
+let S000119_P000027 : second_countable S000119
+let S000119_P000037 : not (path_connected S000119)
+let S000119_P000053 : metrizable S000119
+let S000119_P000036 : connected S000119
+let S000119_P000016 : not (compact S000119)
+-- let S000119_P000044 : not (biconnected S000119)
+-- let S000119_P000024 : locally_relatively_compact S000119
+let S000119_P000041 : not (locally_connected S000119)
+let S000120 : Space
+let S000120_P000129 : not (indiscrete S000120)
+let S000120_P000046 : not (totally_path_disconnected S000120)
+let S000120_P000027 : second_countable S000120
+let S000120_P000037 : not (path_connected S000120)
+let S000120_P000053 : metrizable S000120
+let S000120_P000036 : connected S000120
+let S000120_P000022 : not (pseudocompact S000120)
+-- let S000120_P000044 : not (biconnected S000120)
+-- let S000120_P000024 : locally_relatively_compact S000120
+let S000120_P000041 : not (locally_connected S000120)
+let S000121 : Space
+let S000121_P000129 : not (indiscrete S000121)
+let S000121_P000036 : connected S000121
+let S000122 : Space
+let S000122_P000129 : not (indiscrete S000122)
+let S000122_P000003 : hausdorff S000122
+let S000122_P000036 : connected S000122
+let S000122_P000057 : countable S000122
+let S000123 : Space
+let S000123_P000129 : not (indiscrete S000123)
+let S000123_P000056 : meager S000123
+let S000123_P000027 : second_countable S000123
+let S000123_P000036 : connected S000123
+let S000123_P000057 : countable S000123
+-- let S000123_P000045 : has_dispersion_point S000123
+let S000123_P000004 : urysohn S000123
+let S000123_P000041 : not (locally_connected S000123)
+let S000123_P000010 : not (semiregular S000123)
+let S000124 : Space
+let S000124_P000048 : totally_separated S000124
+let S000124_P000049 : not (extremally_disconnected S000124)
+let S000124_P000129 : not (indiscrete S000124)
+let S000124_P000056 : meager S000124
+let S000124_P000027 : second_countable S000124
+let S000124_P000057 : countable S000124
+let S000124_P000005 : not (regular_hausdorff S000124)
+let S000124_P000051 : not (scattered S000124)
+let S000125 : Space
+-- let S000125_P000058 : not (smaller_than_the_continuum S000125)
+let S000125_P000129 : not (indiscrete S000125)
+-- let S000125_P000023 : not (weakly_locally_compact S000125)
+let S000125_P000027 : second_countable S000125
+let S000125_P000037 : not (path_connected S000125)
+let S000125_P000053 : metrizable S000125
+let S000125_P000036 : connected S000125
+let S000125_P000022 : not (pseudocompact S000125)
+-- let S000125_P000045 : has_dispersion_point S000125
+let S000125_P000041 : not (locally_connected S000125)
+let S000126 : Space
+let S000126_P000048 : not (totally_separated S000126)
+let S000126_P000027 : second_countable S000126
+let S000126_P000053 : metrizable S000126
+let S000126_P000047 : totally_disconnected S000126
+let S000126_P000016 : not (compact S000126)
+let S000126_P000051 : not (scattered S000126)
+-- let S000126_P000065 : continuum_sized S000126
+let S000127 : Space
+let S000127_P000129 : not (indiscrete S000127)
+let S000127_P000046 : totally_path_disconnected S000127
+let S000127_P000053 : metrizable S000127
+let S000127_P000036 : connected S000127
+let S000127_P000016 : compact S000127
+let S000128 : Space
+-- let S000128_P000029 : countable_chain_condition S000128
+-- let S000128_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000128
+let S000128_P000129 : not (indiscrete S000128)
+let S000128_P000053 : metrizable S000128
+-- let S000128_P000044 : biconnected S000128
+let S000129 : Space
+let S000129_P000129 : not (indiscrete S000129)
+let S000129_P000038 : arc_connected S000129
+-- let S000129_P000023 : not (weakly_locally_compact S000129)
+let S000129_P000053 : metrizable S000129
+let S000130 : Space
+let S000130_P000009 : completely_hausdorff S000130
+let S000130_P000129 : not (indiscrete S000130)
+let S000130_P000036 : connected S000130
+let S000130_P000010 : not (semiregular S000130)
+let S000132 : Space
+let S000132_P000048 : totally_separated S000132
+-- let S000132_P000058 : not (smaller_than_the_continuum S000132)
+let S000132_P000129 : not (indiscrete S000132)
+-- let S000132_P000017 : not (sigma_compact S000132)
+-- let S000132_P000023 : not (weakly_locally_compact S000132)
+let S000132_P000026 : separable S000132
+let S000132_P000053 : metrizable S000132
+let S000132_P000051 : not (scattered S000132)
+let S000133 : Space
+-- let S000133_P000029 : not (countable_chain_condition S000133)
+-- let S000133_P000058 : not (smaller_than_the_continuum S000133)
+let S000133_P000049 : not (extremally_disconnected S000133)
+-- let S000133_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000133
+let S000133_P000129 : not (indiscrete S000133)
+-- let S000133_P000023 : not (weakly_locally_compact S000133)
+let S000133_P000026 : not (separable S000133)
+let S000133_P000053 : metrizable S000133
+-- let S000133_P000050 : zero_dimensional S000133
+-- let S000133_P000055 : completely_metrizable S000133
+let S000133_P000051 : scattered S000133
+-- let S000133_P000065 : continuum_sized S000133
+let S000134 : Space
+-- let S000134_P000029 : not (countable_chain_condition S000134)
+-- let S000134_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000134
+let S000134_P000129 : not (indiscrete S000134)
+let S000134_P000038 : arc_connected S000134
+-- let S000134_P000023 : not (weakly_locally_compact S000134)
+let S000134_P000026 : not (separable S000134)
+let S000134_P000043 : locally_arc_connected S000134
+let S000134_P000053 : metrizable S000134
+-- let S000134_P000044 : not (biconnected S000134)
+-- let S000134_P000055 : completely_metrizable S000134
+let S000135 : Space
+-- let S000135_P000029 : not (countable_chain_condition S000135)
+let S000135_P000018 : not (lindelof S000135)
+-- let S000135_P000059 : smaller_or_same_as_the_power_set_of_the_continuum S000135
+-- let S000135_P000008 : completely_normal_hausdorff S000135
+let S000135_P000028 : not (first_countable S000135)
+let S000135_P000129 : not (indiscrete S000135)
+let S000135_P000038 : arc_connected S000135
+-- let S000135_P000023 : not (weakly_locally_compact S000135)
+let S000135_P000056 : not (meager S000135)
+let S000135_P000026 : not (separable S000135)
+let S000135_P000043 : locally_arc_connected S000135
+-- let S000135_P000044 : not (biconnected S000135)
+let S000135_P000030 : paracompact S000135
+-- let S000135_P000034 : fully_normal S000135
+let S000136 : Space
+let S000136_P000018 : not (lindelof S000136)
+-- let S000136_P000059 : not (smaller_or_same_as_the_power_set_of_the_continuum S000136)
+let S000136_P000129 : not (indiscrete S000136)
+let S000136_P000007 : normal_hausdorff S000136
+let S000136_P000056 : not (meager S000136)
+let S000136_P000003 : hausdorff S000136
+-- let S000136_P000015 : not (perfectly_normal S000136)
+let S000136_P000031 : not (metacompact S000136)
+let S000136_P000030 : not (paracompact S000136)
+-- let S000136_P000088 : not (collectionwise_normal S000136)
+let S000137 : Space
+-- let S000137_P000059 : not (smaller_or_same_as_the_power_set_of_the_continuum S000137)
+let S000137_P000129 : not (indiscrete S000137)
+let S000137_P000007 : normal_hausdorff S000137
+-- let S000137_P000032 : countably_paracompact S000137
+-- let S000137_P000015 : not (perfectly_normal S000137)
+let S000137_P000031 : metacompact S000137
+let S000137_P000030 : not (paracompact S000137)
+-- let S000137_P000088 : not (collectionwise_normal S000137)
+let S000138 : Space
+let S000138_P000129 : not (indiscrete S000138)
+let S000138_P000007 : normal_hausdorff S000138
+let S000147 : Space
+-- let S000147_P000069 : not (strategic_menger S000147)
+let S000147_P000129 : not (indiscrete S000147)
+let S000147_P000066 : menger S000147
+let S000147_P000053 : metrizable S000147
+let S000154 : Space
+-- let S000154_P000029 : not (countable_chain_condition S000154)
+let S000154_P000048 : totally_separated S000154
+let S000154_P000049 : not (extremally_disconnected S000154)
+-- let S000154_P000008 : completely_normal_hausdorff S000154
+let S000154_P000028 : not (first_countable S000154)
+let S000154_P000129 : not (indiscrete S000154)
+let S000154_P000026 : not (separable S000154)
+let S000154_P000002 : frechet S000154
+let S000154_P000016 : compact S000154
+let S000154_P000080 : frechet_urysohn S000154
+-- let S000154_P000050 : zero_dimensional S000154
+-- let S000154_P000015 : not (perfectly_normal S000154)
+let S000154_P000020 : sequentially_compact S000154
+let S000154_P000051 : scattered S000154
+let S000156 : Space
+let S000156_P000129 : not (indiscrete S000156)
+let S000156_P000080 : not (frechet_urysohn S000156)
+let S000156_P000057 : countable S000156
+let S000158 : Space
+let S000158_P000129 : not (indiscrete S000158)
+let S000158_P000038 : arc_connected S000158
+let S000158_P000053 : metrizable S000158
+let S000158_P000016 : compact S000158
+-- let S000158_P000133 : lots S000158
+let S000161 : Space
+let S000161_P000129 : not (indiscrete S000161)
+let S000162 : Space
+-- let S000162_P000125 : not (has_distinct_points S000162)
+let S000163 : Space
+-- let S000163_P000125 : not (has_distinct_points S000163)
+let S000170 : Space
+let S000170_P000027 : second_countable S000170
+let S000170_P000003 : hausdorff S000170
+let S000170_P000036 : connected S000170
+let S000170_P000016 : compact S000170
+-- let S000170_P000086 : homogenous S000170
+let S000171 : Space
+let S000171_P000018 : lindelof S000171
+let S000171_P000028 : first_countable S000171
+let S000171_P000003 : hausdorff S000171
+let S000171_P000051 : scattered S000171
+-- let S000171_P000065 : continuum_sized S000171
+let S001103 : Space
+let S001103_P000028 : not (first_countable S001103)
+let S001103_P000129 : not (indiscrete S001103)
+-- let S001103_P000017 : not (sigma_compact S001103)
+-- let S001103_P000023 : not (weakly_locally_compact S001103)
+let S001103_P000013 : not (normal S001103)
+let S001103_P000026 : not (separable S001103)
+let S001103_P000006 : tychonoff S001103
+-- let S001103_P000050 : zero_dimensional S001103
+-- let S001103_P000044 : not (biconnected S001103)
+let S001103_P000051 : not (scattered S001103)
+
+end topology.space.examples
