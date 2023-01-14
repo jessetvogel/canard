@@ -39,8 +39,8 @@ private:
     bool m_running = false;
 
     // Namespace related fields
-    Namespace *m_current_namespace;
-    std::unordered_set<Namespace *> m_open_namespaces;
+    Context *m_current_namespace;
+    std::unordered_set<Context *> m_open_namespaces;
     std::unique_ptr<std::unordered_set<std::string>> m_imported_files;
 
     // Other fields
@@ -77,13 +77,14 @@ private:
 
     std::string parse_path();
     std::vector<std::string> parse_list_identifiers();
+    std::vector<std::string> parse_list_paths();
     std::vector<FunctionRef> parse_functions(Context &, const Telescope &);
     Telescope parse_parameters(Context &);
     Telescope parse_fields(Context &context, const Telescope &);
     FunctionRef parse_expression(Context &, const Telescope &, Context * = nullptr, const std::string * = nullptr);
     FunctionRef parse_term(Context &);
-    Namespace *parse_absolute_namespace();
-    std::unordered_set<Namespace *> parse_namespace_collection();
+    Context *parse_absolute_namespace();
+    std::unordered_set<Context *> parse_namespace_collection();
     int parse_preference();
 
     // Util
@@ -104,4 +105,3 @@ struct ParserException : public std::exception {
     explicit ParserException(Token token, std::string message) : m_token(std::move(token)),
                                                                  m_message(std::move(message)) {};
 };
-

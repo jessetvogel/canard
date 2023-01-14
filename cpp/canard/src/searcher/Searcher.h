@@ -6,11 +6,12 @@
 
 #include "Query.h"
 #include "ThreadManager.h"
-#include "../data/Namespace.h"
 #include "Index.h"
+#include "../data/Context.h"
 #include <queue>
 #include <mutex>
 #include <set>
+#include <atomic>
 
 struct QueryEntry {
 
@@ -27,7 +28,7 @@ struct QueryEntry {
 class Searcher {
 public:
 
-    Searcher(const std::unordered_set<Namespace *> &, int max_depth, int max_threads = 1);
+    Searcher(const std::unordered_set<Context *> &, int max_depth, int max_threads = 1);
 
     bool search(const Telescope &);
     bool prove(const FunctionRef &);

@@ -6,6 +6,7 @@
 #include "Matcher.h"
 #include <utility>
 #include <memory>
+#include <algorithm>
 
 const FunctionRef &FunctionRef::null() {
     static FunctionRef null = nullptr;

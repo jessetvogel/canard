@@ -5,7 +5,6 @@
 #pragma once
 
 #include "Query.h"
-#include "../data/Namespace.h"
 #include <queue>
 #include <mutex>
 

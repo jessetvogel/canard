@@ -22,10 +22,10 @@ Matcher::Matcher(Matcher *parent, const std::vector<FunctionRef> &indeterminates
                                                                                     m_indeterminates(indeterminates) {}
 
 bool Matcher::put_solution(const FunctionRef &f, const FunctionRef &g) {
-    // Case f = g: we are not going to map f -> f (causes infinite loops), but we will return true nonetheless
+    // Case f = g: we are not going to functions f -> f (causes infinite loops), but we will return true nonetheless
     if (f == g) return true;
 
-    // Case g -> h: we map f -> h as well
+    // Case g -> h: we functions f -> h as well
     const auto &h = get_solution(g);
     if (h != nullptr) return put_solution(f, h);
 
@@ -43,8 +43,8 @@ bool Matcher::put_solution(const FunctionRef &f, const FunctionRef &g) {
         bool bool_g = it_g != m_indeterminates.end();
         bool bool_k = it_k != m_indeterminates.end();
 
-        // If both g and k are indeterminates, we want to map from 'right to left'
-        // Otherwise, if any of g and k are indeterminates, map in the only possible way
+        // If both g and k are indeterminates, we want to functions from 'right to left'
+        // Otherwise, if any of g and k are indeterminates, functions in the only possible way
         if (bool_g && bool_k)
             return (it_g > it_k) ? put_solution(g, k) : put_solution(k, g);
         if (bool_g)
@@ -128,7 +128,7 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
 
     // At this point, f and g agree up to their signature, i.e. their parameters and types match
 
-    // If f (resp. g) is an indeterminate base function, map f -> g (resp. g -> f).
+    // If f (resp. g) is an indeterminate base function, functions f -> g (resp. g -> f).
     // Also treat the case where f or g is an indeterminate of some parent
     if (f->is_base() || g->is_base()) {
         for (Matcher *m = this; m != nullptr; m = m->m_parent) {
@@ -138,7 +138,7 @@ bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
             bool bool_f = (it_f != m->m_indeterminates.end());
             bool bool_g = (it_g != m->m_indeterminates.end());
 
-            // If both f and g are indeterminates, we preferably map 'from right to left' / 'from new to old' in the list of telescope
+            // If both f and g are indeterminates, we preferably functions 'from right to left' / 'from new to old' in the list of telescope
             // to have some consistency and control over what will happen in ambiguous cases
             // If only one of them is an indeterminate, do the logical mapping
             if (bool_f && bool_g)

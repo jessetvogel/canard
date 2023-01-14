@@ -173,10 +173,10 @@ void Application::write_documentation(const std::string &file) {
     output << "}" << std::endl;
 }
 
-void write_definitions_namespace(std::ofstream &stream, const Namespace &space) {
+void write_definitions_namespace(std::ofstream &stream, const Context &space) {
     Formatter formatter;
     formatter.show_namespaces(true);
-    for (const auto &entry: space.context().map()) {
+    for (const auto &entry: space.functions()) {
         const auto &f = entry.second;
         auto str = formatter.format_definition(f);
         if (!f->is_base()) {
@@ -186,7 +186,7 @@ void write_definitions_namespace(std::ofstream &stream, const Namespace &space) 
         stream << "\"" << (space.full_name().empty() ? entry.first : space.full_name() + '.' + entry.first)
                << "\":\"" << Message::json_escape(str) << "\",";
     }
-    for (const auto &entry: space.children())
+    for (const auto &entry: space.subspaces())
         write_definitions_namespace(stream, *entry.second);
 }
 

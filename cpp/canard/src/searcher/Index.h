@@ -4,13 +4,14 @@
 
 #pragma once
 
-#include "../data/Namespace.h"
+#include "../data/Context.h"
+#include <unordered_set>
 #include <vector>
 
 class Index {
 public:
 
-    explicit Index(const std::unordered_set<Namespace *> &);
+    explicit Index(const std::unordered_set<Context *> &);
 
     const std::vector<FunctionRef> &all_theorems() const { return m_all_theorems; }
     const std::vector<FunctionRef> &generic_theorems() const { return m_generic_theorems; }
@@ -22,5 +23,3 @@ private:
     std::unordered_map<FunctionRef, std::vector<FunctionRef>> m_index;
 
 };
-
-

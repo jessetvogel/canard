@@ -345,7 +345,7 @@ std::vector<FunctionRef> Query::final_solutions() const {
         chain.push_back(query);
     const Query &initial_query = *(chain.back()->parent());
 
-    /* The idea is as follows: starting at the back, `matcher` will map from Query ..., 4, 3, 2, 1 to the solution,
+    /* The idea is as follows: starting at the back, `matcher` will functions from Query ..., 4, 3, 2, 1 to the solution,
        at each step using the previous matcher
 
         Query 1 -> Query 2 -> Query 3 -> Query 4
@@ -390,7 +390,7 @@ std::vector<FunctionRef> Query::final_solutions() const {
                 }
             }
 
-            // Now the next matcher should map f to f_solution
+            // Now the next matcher should functions f to f_solution
             next_matcher->assert_matches(f, f_solution);
         }
         // Add to chain of matchers

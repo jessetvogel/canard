@@ -4,13 +4,12 @@
 
 #pragma once
 
-#include "Namespace.h"
-#include "../core/Function.h"
+#include "Context.h"
 
 class Session {
 private:
 
-    std::unique_ptr<Namespace> m_global_namespace;
+    std::unique_ptr<Context> m_global_namespace;
 
 public:
 
@@ -19,6 +18,6 @@ public:
     FunctionRef TYPE = nullptr;
     FunctionRef PROP = nullptr;
 
-    Namespace &global_namespace() { return *m_global_namespace; };
+    Context &global_namespace() { return *m_global_namespace; };
 
 };

@@ -3,7 +3,6 @@
 //
 
 #include "Formatter.h"
-#include "../data/Namespace.h"
 #include <algorithm>
 
 const char *Formatter::INDENT = "  ";
@@ -70,7 +69,7 @@ void Formatter::write_identifier(const FunctionRef &f) {
         return;
     }
     if (m_flag_namespaces && f->space()) {
-        const std::string &path = ((Namespace *) f->space())->full_name();
+        const std::string &path = ((Context *) f->space())->full_name();
         if (!path.empty())
             ss << path << '.';
     }

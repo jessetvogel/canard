@@ -3,6 +3,7 @@
 //
 
 #include "Index.h"
+#include "../core/macros.h"
 #include <algorithm>
 
 struct TheoremEntry {
@@ -23,15 +24,15 @@ std::vector<FunctionRef> sort_and_convert(std::vector<TheoremEntry> &input) {
     return output;
 }
 
-Index::Index(const std::unordered_set<Namespace *> &spaces) {
+Index::Index(const std::unordered_set<Context *> &spaces) {
     std::vector<TheoremEntry> all_theorems, generic_theorems;
     std::unordered_map<FunctionRef, std::vector<TheoremEntry>> index;
 
     // Make a list of lists of all functions that can be used during the search
     // We do this in advance so that we don't constantly create new arraylists
     for (const auto space: spaces) {
-        all_theorems.reserve(all_theorems.size() + space->context().map().size());
-        for (const auto &entry: space->context().map()) {
+        all_theorems.reserve(all_theorems.size() + space->functions().size());
+        for (const auto &entry: space->functions()) {
             const auto &thm = entry.second;
             const auto &thm_type_base = thm.type().base();
             const int preference = space->get_preference(thm);

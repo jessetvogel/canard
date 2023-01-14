@@ -7,7 +7,7 @@
 #include "../parser/Formatter.h"
 #include <algorithm>
 
-Searcher::Searcher(const std::unordered_set<Namespace *> &spaces,
+Searcher::Searcher(const std::unordered_set<Context *> &spaces,
                    const int max_depth,
                    const int max_threads) : m_max_depth(max_depth),
                                             m_index(spaces),
@@ -187,10 +187,11 @@ Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, s
         return SEARCH_CONTINUE;
 
     // If this query strictly solves its parent, make it the only reduction
-    if (injects_into(*sub_query, *query)) {
-        reductions = {sub_query};
-        return SEARCH_STOP;
-    }
+    // TODO: can use once injects_into is fixed!
+//    if (injects_into(*sub_query, *query)) {
+//        reductions = {sub_query};
+//        return SEARCH_STOP;
+//    }
 
     // Add sub_query to queue
     reductions.push_back(std::move(sub_query));
@@ -248,8 +249,10 @@ bool Searcher::check_checkpoints(const std::shared_ptr<Query> &query) {
 }
 
 bool Searcher::injects_into(const Query &p, const Query &q) const {
+    // TODO: depths should be taken into account!
+    //  e.g. `(R : Ring) with depth 1` injects into `(R : Ring) with depth 0` but not vice versa!
     // TODO: optimize this method ! Maybe its fine if its not 100% accurate
-    // Goal is to map (injectively) all my indeterminates to other.telescope, but all other.locals to my locals
+    // Goal is to functions (injectively) all my indeterminates to other.telescope, but all other.locals to my locals
     // That is, we are checking if this query searches for less with more information.
 
     // Probably start at the end, work way towards the beginning
@@ -259,13 +262,13 @@ bool Searcher::injects_into(const Query &p, const Query &q) const {
     // 1. let f = telescope[-1]
     // 2. for each g in other.telescope:
     //   2.1. Create sub_matcher with f -> g. If fail, continue with next g
-    //   2.2. If succeeded, see what telescope are mapped, and update the lists of which to map and which are still allowed from other
+    //   2.2. If succeeded, see what telescope are mapped, and update the lists of which to functions and which are still allowed from other
     //   2.3. Continue recursively to the next (not yet mapped (also not induced mapped)) indeterminate (from the end, remember)
 
     // At any point, we need:
     // - current matcher (possibly null)
     // - telescope yet to be mapped
-    // - allowed other.telescope to map to
+    // - allowed other.telescope to functions to
 
 //        System.out.println("Does [" + this + "] inject into [" + other + "] ? ");
 
@@ -288,7 +291,7 @@ bool Searcher::injects_into_helper(Matcher *matcher, std::vector<FunctionRef> un
     if (n == 0)
         return true;
 
-    // Starting at the back, try to map some unmapped Function to some allowed Function
+    // Starting at the back, try to functions some unmapped Function to some allowed Function
     auto &f = unmapped.back();
 
     // If f is contained in allowed as well, we will assume that should be the assignment!
