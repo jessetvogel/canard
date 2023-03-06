@@ -30,14 +30,14 @@ public:
 
     Searcher(const std::unordered_set<Context *> &, int max_depth, int max_threads = 1);
 
-    bool search(const Telescope &);
+    bool search(const Telescope &, int max_results = 1);
     bool prove(const FunctionRef &);
     void clear();
 
     Index &index() { return m_index; }
-    const std::vector<FunctionRef> &result() const { return m_result; }
+    const std::vector<std::vector<FunctionRef>> &results() const { return m_results; }
 
-    int counter() const { return m_counter; }
+    int query_counter() const { return m_query_counter; }
 
 private:
 
@@ -49,12 +49,14 @@ private:
 
     const int m_max_depth;
     std::atomic<bool> m_searching;
-    int m_counter = 0;
+    int m_max_results = 0;
+    int m_result_counter = 0;
+    int m_query_counter = 0;
 
     ThreadManager m_thread_manager;
     std::mutex m_mutex;
     std::priority_queue<QueryEntry, std::vector<QueryEntry>> m_queue;
-    std::vector<FunctionRef> m_result;
+    std::vector<std::vector<FunctionRef>> m_results;
     FunctionRef m_excluded_thm; // used for `prove()`
     Index m_index;
 

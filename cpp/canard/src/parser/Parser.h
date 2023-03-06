@@ -92,7 +92,7 @@ private:
 
     // Output methods
     void output(const std::string &);
-    void output_search_results(const Telescope &, const std::vector<FunctionRef> &);
+    void output_search_results(const Telescope &, const std::vector<std::vector<FunctionRef>> &);
     void error(const std::string &);
     std::string format_specialization_exception(SpecializationException &) const;
 };

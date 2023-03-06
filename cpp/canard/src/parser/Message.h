@@ -19,6 +19,6 @@ public:
 
     static std::string create(MessageStatus, const std::string &);
     static std::string create(MessageStatus, const std::vector<std::string> &);
-    static std::string create(MessageStatus, const std::vector<std::string> &, const std::vector<std::string> &);
+    static std::string create(MessageStatus, const std::vector<std::string> &, const std::vector<std::vector<std::string>> &);
 
 };

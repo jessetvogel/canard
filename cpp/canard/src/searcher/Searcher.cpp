@@ -14,19 +14,23 @@ Searcher::Searcher(const std::unordered_set<Context *> &spaces,
                                             m_thread_manager(max_threads),
                                             m_searching(false) {}
 
-bool Searcher::search(const Telescope &telescope) {
+bool Searcher::search(const Telescope &telescope, int max_results) {
     // Clear searcher
     clear();
     // Place initial query
     m_queue.push({std::make_shared<Query>(telescope), {}});
     // Reset counter
-    m_counter = 1;
+    m_query_counter = 1;
+    // Set max_results
+    m_max_results = max_results;
+    if (max_results == 0)
+        return true;
     // Create a pool of threads
     m_searching = true;
     m_thread_manager.start(&Searcher::search_loop, this);
     // Wait for all threads to end, and return
     m_thread_manager.join_all();
-    return !m_result.empty();
+    return !m_results.empty();
 }
 
 bool Searcher::prove(const FunctionRef &f) {
@@ -141,7 +145,7 @@ void Searcher::search_loop() {
         for (auto &r: reductions) {
             m_queue.push({std::move(r), order});
             ++order.back();
-            ++m_counter;
+            ++m_query_counter;
         }
         m_mutex.unlock();
 
@@ -163,7 +167,7 @@ Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, s
         return SEARCH_DONE;
 
     // If thm is excluded, return false
-    if (m_excluded_thm != nullptr && thm.depends_on({ m_excluded_thm }))
+    if (m_excluded_thm != nullptr && thm.depends_on({m_excluded_thm}))
         return SEARCH_CONTINUE;
 
     // Try reducing query using thm
@@ -171,15 +175,17 @@ Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, s
     if (sub_query == nullptr)
         return SEARCH_CONTINUE;
 
-    // If the sub_query is completely is_solved (i.e. no more telescope) we are done!
+    // If the sub_query is completely is_solved (i.e. no more telescope) we have a new result!
+    // Append it to the vector of results, and continue if we want more results, and be done otherwise
     if (sub_query->is_solved()) {
         m_mutex.lock();
         if (m_searching) {
-            m_result = sub_query->final_solutions();
-            m_searching = false;
+            m_results.push_back(sub_query->final_solutions());
+            if (++m_result_counter == m_max_results)
+                m_searching = false;
         }
         m_mutex.unlock();
-        return SEARCH_DONE;
+        return (m_searching ? SEARCH_CONTINUE : SEARCH_DONE);
     }
 
     // If the maximum depth was reached, omit this sub_query
@@ -200,8 +206,9 @@ Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, s
 
 void Searcher::clear() {
     m_queue = {};
-    m_result.clear();
-    m_counter = 0;
+    m_results.clear();
+    m_query_counter = 0;
+    m_result_counter = 0;
 }
 
 bool Searcher::check_reasonable(const std::shared_ptr<Query> &q, const std::shared_ptr<Query> &p) {

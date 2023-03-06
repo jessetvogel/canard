@@ -28,7 +28,7 @@ public:
     int complexity() const { return m_complexity; };
 
     bool is_solved() const { return goal() == nullptr; }
-    std::vector<FunctionRef> final_solutions() const;
+    std::vector<FunctionRef> final_solutions() const; // TODO: maybe rename this to `backtrack_solutions` or `compute_solutions` or something
 
     const Query *checkpoint() const { return m_checkpoint; }
     int distance_to_checkpoint() const;

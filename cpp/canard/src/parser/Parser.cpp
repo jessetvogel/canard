@@ -429,10 +429,14 @@ void Parser::parse_check() {
 
 void Parser::parse_search() {
     /*
-        search LIST_OF_PARAMETERS
+        search INT? LIST_OF_PARAMETERS
      */
 
     consume(KEYWORD, "search");
+
+    // Parse maximum number of results, with default of 1
+    // Also, a maximum of 10 for time/memory/cpu safety
+    const int max_results = (found(NUMBER) ? std::max(0, std::min(10, stoi(consume().m_data))) : 1);
 
     // Parse telescope
     Context sub_context(*m_current_namespace);
@@ -442,28 +446,38 @@ void Parser::parse_search() {
     // Setup searcher
     setup_searcher();
 
-    // Do a search, and store the results in an unordered_map by name
-    std::unordered_map<std::string, FunctionRef> results;
+    // Do a search, and store the solutions in a vector of unordered_map's by name
+    std::vector<std::unordered_map<std::string, FunctionRef>> solutions(max_results);
     bool success = true;
     int query_counter = 0;
+    size_t actual_results = max_results; // keep track of how many results are actually obtained (take minimum over all groups)
     auto start_time = std::chrono::system_clock::now();
     for (auto it = groups.begin(); success && it != groups.end(); ++it) {
-        if (success &= m_searcher->search(*it)) {
-            const auto &result = m_searcher->result();
-            for (int i = 0; i < it->size(); ++i)
-                results[it->functions()[i]->name()] = result[i];
+        if (success &= m_searcher->search(*it, max_results)) {
+            const auto &searcher_results = m_searcher->results();
+            actual_results = std::min(actual_results, searcher_results.size());
+            for (int i = 0; i < actual_results; ++i) {
+                auto &solution = solutions[i];
+                const auto &searcher_result = searcher_results[i];
+                for (int j = 0; j < it->size(); ++j)
+                    solution.emplace(it->functions()[j]->name(), searcher_result[j]);
+            }
         }
-        query_counter += m_searcher->counter();
+        query_counter += m_searcher->query_counter();
     }
     auto end_time = std::chrono::system_clock::now();
 
     // Print results in appropriate format
     if (success) {
-        std::vector<FunctionRef> solutions;
-        solutions.reserve(telescope.size());
-        for (const auto &f: telescope.functions())
-            solutions.push_back(results[f->name()]);
-        output_search_results(telescope, solutions);
+        std::vector<std::vector<FunctionRef>> results(actual_results);
+        for (int i = 0; i < actual_results; ++i) {
+            auto &solution = solutions[i];
+            auto &result = results[i];
+            result.reserve(telescope.size());
+            for (const auto &f: telescope.functions())
+                result.push_back(solution[f->name()]);
+        }
+        output_search_results(telescope, results);
     } else {
         if (m_options.json)
             output(Message::create(SUCCESS, std::vector<std::string>()));
@@ -501,7 +515,7 @@ void Parser::parse_prove() {
 
     // Print results in appropriate format
     if (success) {
-        output_search_results(Telescope({f}), m_searcher->result());
+        output_search_results(Telescope({f}), m_searcher->results());
     } else {
         if (m_options.json)
             output(Message::create(SUCCESS, std::vector<std::string>()));
@@ -614,7 +628,7 @@ void Parser::parse_debug_search() {
 
     // Print results
     auto result = searcher.query().final_solutions();
-    output_search_results(telescope, result);
+    output_search_results(telescope, {result});
 }
 
 std::string Parser::parse_path() {
@@ -1054,31 +1068,37 @@ void Parser::output(const std::string &message) {
     m_ostream << message << std::endl;
 }
 
-void Parser::output_search_results(const Telescope &telescope, const std::vector<FunctionRef> &result) {
+void Parser::output_search_results(const Telescope &telescope, const std::vector<std::vector<FunctionRef>> &results) {
+    // Format keys and values
     Formatter formatter;
     formatter.show_namespaces(m_options.show_namespaces);
     const auto n = telescope.functions().size();
-    std::vector<std::string> keys, values;
+    std::vector<std::string> keys;
     keys.reserve(n);
-    values.reserve(n);
+    std::vector<std::vector<std::string>> values(results.size());
     for (int i = 0; i < n; ++i) {
         const auto &f = telescope.functions()[i];
         if (!f->implicit()) {
             keys.push_back(f->name());
-            values.push_back(formatter.format_expression(result[i]));
+            for (int j = 0; j < results.size(); ++j)
+                values[j].push_back(formatter.format_expression(results[j][i]));
         }
     }
+    // Output depending on format
     if (m_options.json) {
         output(Message::create(SUCCESS, keys, values));
     } else {
         std::stringstream ss;
-        ss << "🔎 ";
         const auto m = keys.size();
-        bool first = true;
-        for (int i = 0; i < m; ++i) {
-            if (!first) ss << ", ";
-            first = false;
-            ss << keys[i] << " = " << values[i];
+        for (int j = 0; j < results.size(); ++j) {
+            if (j != 0)
+                ss << '\n';
+            ss << "🔎 ";
+            for (int i = 0; i < m; ++i) {
+                if (i != 0)
+                    ss << ", ";
+                ss << keys[i] << " = " << values[j][i];
+            }
         }
         output(ss.str());
     }

@@ -50,16 +50,23 @@ std::string Message::create(MessageStatus status, const std::vector<std::string>
     return ss.str();
 }
 
-std::string Message::create(MessageStatus status, const std::vector<std::string> &keys, const std::vector<std::string> &values) {
+std::string Message::create(MessageStatus status, const std::vector<std::string> &keys, const std::vector<std::vector<std::string>> &values) {
     std::ostringstream ss;
     size_t n = keys.size();
-    ss << R"({"status":")" << status_strings[status] << R"(","data":[{)";
+    ss << R"({"status":")" << status_strings[status] << R"(","data":[)";
     bool first = true;
-    for (int i = 0; i < n; ++i) {
-        if (!first) ss << ',';
+    for (const auto &value: values) {
+        if (!first)
+            ss << ',';
         first = false;
-        ss << '"' << json_escape(keys[i]) << "\":\"" << json_escape(values[i]) << '"';
+        ss << '{';
+        for (int i = 0; i < n; ++i) {
+            if (i != 0)
+                ss << ',';
+            ss << '"' << json_escape(keys[i]) << "\":\"" << json_escape(value[i]) << '"';
+        }
+        ss << '}';
     }
-    ss << "}]}";
+    ss << "]}";
     return ss.str();
 }
