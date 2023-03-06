@@ -163,7 +163,7 @@ Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, s
         return SEARCH_DONE;
 
     // If thm is excluded, return false
-    if (thm == m_excluded_thm)
+    if (m_excluded_thm != nullptr && thm.depends_on({ m_excluded_thm }))
         return SEARCH_CONTINUE;
 
     // Try reducing query using thm
