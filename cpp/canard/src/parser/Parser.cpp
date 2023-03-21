@@ -19,12 +19,35 @@ Parser::Parser(std::istream &istream, std::ostream &ostream, Session &session, O
     m_imported_files = std::unique_ptr<std::unordered_set<std::string>>(new std::unordered_set<std::string>());
 }
 
+std::string to_path(const Context &space, const std::string &name) {
+    return space.name().empty() ? name : space.full_name() + '.' + name;
+}
+
+void ltrim(std::string &s) { // trim from start (in place)
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+void rtrim(std::string &s) { // trim from end (in place)
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+void trim(std::string &s) { // trim from both ends (in place)
+    ltrim(s);
+    rtrim(s);
+}
+
 void Parser::next_token() {
-    // We want to remember comments for documentation
-    if (m_current_token.m_type == COMMENT)
-        m_last_comment_token = std::move(m_current_token);
-    else if (m_current_token.m_type != NEWLINE) // remember comments only after newlines
-        m_last_comment_token.m_type = NONE;
+    // Remember comments containing documentation (i.e. comments starting with '-')
+    if (m_options.documentation && m_current_token.m_type == COMMENT && m_current_token.m_data.rfind('-', 0) == 0) {
+        m_documentation_token = std::move(m_current_token);
+        m_documentation_token.m_data.erase(0, 1); // removes the first '-'
+        trim(m_documentation_token.m_data); // removes leading and trailing whitespace
+    } else if (m_current_token.m_type != NEWLINE) // documentation persists only through newlines
+        m_documentation_token.m_type = NONE;
 
     m_current_token = m_lexer.get_token();
 
@@ -77,27 +100,6 @@ Token Parser::consume(TokenType type, const std::string &data) {
            << " but found " << Lexer::to_string(m_current_token.m_type) << " " << m_current_token.m_data;
         throw ParserException(m_current_token, ss.str());
     }
-}
-
-std::string to_path(const Context &space, const std::string &name) {
-    return space.name().empty() ? name : space.full_name() + '.' + name;
-}
-
-void ltrim(std::string &s) { // trim from start (in place)
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }));
-}
-
-void rtrim(std::string &s) { // trim from end (in place)
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }).base(), s.end());
-}
-
-void trim(std::string &s) { // trim from both ends (in place)
-    ltrim(s);
-    rtrim(s);
 }
 
 bool Parser::parse() {
@@ -308,9 +310,9 @@ void Parser::parse_definition() {
 
     consume(KEYWORD, "let");
 
-    bool has_doc = (m_documentation != nullptr && m_last_comment_token.m_type == COMMENT);
-    std::string doc;
-    if (has_doc) doc = m_last_comment_token.m_data;
+    bool has_doc = (m_documentation != nullptr && m_documentation_token.m_type == COMMENT);
+    // Note: we must copy the doc string here already, as once the let-statement is fully parsed, the parser may have encountered another doc string.
+    const std::string doc = has_doc ? m_documentation_token.m_data : std::string();
 
     // Optionally parse preference
     int preference = (found(SEPARATOR, "[")) ? parse_preference() : DEFAULT_PREFERENCE;
@@ -326,7 +328,6 @@ void Parser::parse_definition() {
         // Store documentation
         if (has_doc) {
             auto path = to_path(*m_current_namespace, f->name());
-            trim(m_last_comment_token.m_data);
             m_documentation->emplace(std::move(path), doc);
         }
     }
@@ -365,9 +366,8 @@ void Parser::parse_structure() {
 
     Token t_structure = consume(KEYWORD, "structure");
 
-    bool has_doc = (m_documentation != nullptr && m_last_comment_token.m_type == COMMENT);
-    std::string doc;
-    if (has_doc) doc = m_last_comment_token.m_data;
+    bool has_doc = (m_documentation != nullptr && m_documentation_token.m_type == COMMENT);
+    const std::string doc = has_doc ? m_documentation_token.m_data : std::string();
 
     auto identifier = consume(IDENTIFIER).m_data;
 
@@ -400,8 +400,7 @@ void Parser::parse_structure() {
     // Store documentation
     if (has_doc) {
         auto path = to_path(*m_current_namespace, identifier);
-        trim(m_last_comment_token.m_data);
-        m_documentation->emplace(std::move(path), std::move(doc));
+        m_documentation->emplace(std::move(path), doc);
     }
 }
 

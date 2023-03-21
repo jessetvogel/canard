@@ -169,7 +169,8 @@ void Application::write_documentation(const std::string &file) {
         if (!entry.second.empty())
             output << "\"" << entry.first << "\":\"" << Message::json_escape(entry.second) << "\",";
     }
-    output.seekp(-1, std::ios_base::cur);
+    if(!m_documentation.empty())
+        output.seekp(-1, std::ios_base::cur);
     output << "}" << std::endl;
 }
 

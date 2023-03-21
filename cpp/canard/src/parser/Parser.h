@@ -46,7 +46,7 @@ private:
     // Other fields
     Session &m_session;
     std::unordered_map<std::string, std::string> *m_documentation = nullptr;
-    Token m_last_comment_token = {NONE, std::string(), 0, 0};
+    Token m_documentation_token = {NONE, std::string(), 0, 0};
     Options m_options;
 
     // Searcher
