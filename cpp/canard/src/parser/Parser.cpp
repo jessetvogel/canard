@@ -178,10 +178,10 @@ bool Parser::parse_statement() {
         return true;
     }
 
-    if (found(KEYWORD, "debug_search")) {
-        parse_debug_search();
-        return true;
-    }
+//    if (found(KEYWORD, "debug_search")) {
+//        parse_debug_search();
+//        return true;
+//    }
 
     // Every statement below this point invalidates the searcher
     m_searcher = nullptr;
