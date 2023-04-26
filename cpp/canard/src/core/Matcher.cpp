@@ -102,7 +102,8 @@ bool Matcher::is_indeterminate(const FunctionRef &f) {
 }
 
 bool Matcher::matches(const FunctionRef &f, const FunctionRef &g) {
-    // TODO: at some point, implement that two proofs of the same proposition should match. But if one of them is an indeterminate, the solution must be stored still!
+    // TODO: at some point, implement that two proofs of the same proposition should match.
+    //  But if one of them is an indeterminate, the solution must be stored still!
 
     // If f equals g, there is obviously a match, and nothing more to do
     if (f == g) return true;
@@ -273,6 +274,7 @@ FunctionRef Matcher::clone(const Telescope &parameters, const FunctionRef &f) {
                  ? Function::make(parameters + cloned_parameters, sub_matcher.convert(f.type()))
                  : Function::make(parameters + cloned_parameters, sub_matcher.convert(f.type()),
                                   sub_matcher.convert(f.base()), sub_matcher.convert(f->arguments()));
+
     clone->set_name(f->name());
     clone->set_implicit(f->implicit());
 //    if (f->constructor())

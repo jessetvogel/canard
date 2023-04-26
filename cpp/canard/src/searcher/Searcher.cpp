@@ -67,7 +67,7 @@ void Searcher::search_loop() {
                 break;
         }
 
-        // Normalize the query before reducing: sort_and_convert parameters of telescope to local variables
+        // Normalize the query before reducing: convert parameters of telescope to local variables
         query = Query::normalize(query);
 
         // Check for redundancies

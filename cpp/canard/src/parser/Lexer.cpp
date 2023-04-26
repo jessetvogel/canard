@@ -9,7 +9,7 @@ const std::unordered_set<std::string> &Lexer::keywords() {
     static const std::unordered_set<std::string> KEYWORDS(
             {
                     "let", "check", "search", "import", "namespace", "end", "open", "close", "structure",
-                    "exit", "docs", "prove" //, "debug_search"
+                    "exit", "docs", "prove", "debug_search"
             });
     return KEYWORDS;
 }

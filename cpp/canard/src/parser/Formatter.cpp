@@ -51,7 +51,7 @@ std::string Formatter::format_query_tree(const Query &query) {
     std::reverse(chain.begin(), chain.end());
     for (const auto q: chain) {
         for (const auto &entry: q->solutions()) {
-            ss << "solved for ";
+            ss << "Solved for ";
             write_definition(entry.first);
             ss << " with ";
             write_definition(entry.second);
@@ -195,20 +195,24 @@ void Formatter::write_matcher(const Matcher &matcher) {
 void Formatter::write_query(const Query &query) {
     ss << "{\n";
     const auto &locals = query.locals();
+    if (!locals.empty())
+        ss << INDENT << "Local variables:\n";
     for (int i = 0; i < locals.size(); ++i) {
-        ss << "Locals @ " << i << ": ";
         for (const auto &f: locals[i]) {
+            ss << INDENT << INDENT;
             write_definition(f);
-            ss << ", ";
+            ss << " [ctx_depth = " << i << "]\n";
         }
         ss << "\n";
     }
     const auto n = query.telescope().size();
+    if (n > 0)
+        ss << INDENT << "Goals:\n";
     for (int i = 0; i < n; ++i) {
-        ss << INDENT;
+        ss << INDENT << INDENT;
         write_definition(query.telescope().functions()[i]);
-        ss << "; depth = " << query.depths()[i];
-        ss << "; context_depth = " << query.locals_depths()[i] << "\n";
+        ss << " [depth = " << query.depths()[i];
+        ss << ", ctx_depth = " << query.locals_depths()[i] << "]\n";
     }
     ss << "}";
 }

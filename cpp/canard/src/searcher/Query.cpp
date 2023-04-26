@@ -4,7 +4,6 @@
 
 #include "Query.h"
 #include "../core/macros.h"
-#include "../parser/Formatter.h"
 #include <utility>
 #include <sstream>
 #include <algorithm>
@@ -336,7 +335,7 @@ std::vector<FunctionRef> Query::final_solutions() const {
     CANARD_ASSERT(is_solved(), "cannot call final_solutions on unsolved query");
 
 //    Formatter formatter;
-//    CANARD_LOG(formatter.to_string_tree(*this));
+//    CANARD_DEBUG(formatter.format_query_tree(*this));
 
     // Create chain of queries, starting at the bottom, all the way up to the top
     // Note: we include every query which contains a parent, so the initial query will not be included
@@ -375,22 +374,34 @@ std::vector<FunctionRef> Query::final_solutions() const {
             const auto &f = entry.first;
             auto f_solution = entry.second;
 
-            // First sort_and_convert the solution along the previous matcher
-            if (i > 0)
+            // First convert/clone the solution along the previous matcher
+            if (i > 0) {
                 f_solution = matchers.back()->convert(f_solution);
 
+                // If the converted `f_solution` has a signature depending on some indeterminate of a previous matcher, then this means `f_solution`
+                // is (some cloned version of a) parameter, and hence it must be cloned instead of converted. (HOPEFULLY ALL GOES WELL...)
+                for (const auto &m: matchers) {
+                    if (f_solution.signature_depends_on(m->indeterminates())) {
+                        f_solution = matchers.back()->clone(f_solution);
+                        break;
+                    }
+                }
+            }
+
             // Case f = h and h has parameters, we must reintroduce the parameters again
-            // TODO: should these parameters be cloned again, or are they safe to use ?
             if (f == h && !h->parameters().empty()) {
                 try {
-                    f_solution = f_solution.specialize(h->parameters(), {});
+                    // Note: the parameters of h have become local variables in the subquery. Therefore, they could have been solved for
+                    // which means we need to convert them along the matcher before we can use them as parameters again.
+                    auto h_parameters_converted = Telescope(matchers.back()->convert(h->parameters().functions()));
+                    f_solution = f_solution.specialize(h_parameters_converted, {});
                 }
                 catch (SpecializationException &e) {
                     CANARD_ASSERT(false, e.m_message);
                 }
             }
 
-            // Now the next matcher should functions f to f_solution
+            // Now the next matcher should match f to f_solution
             next_matcher->assert_matches(f, f_solution);
         }
         // Add to chain of matchers

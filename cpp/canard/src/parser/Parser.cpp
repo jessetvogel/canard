@@ -178,10 +178,10 @@ bool Parser::parse_statement() {
         return true;
     }
 
-//    if (found(KEYWORD, "debug_search")) {
-//        parse_debug_search();
-//        return true;
-//    }
+    if (found(KEYWORD, "debug_search")) {
+        parse_debug_search();
+        return true;
+    }
 
     // Every statement below this point invalidates the searcher
     m_searcher = nullptr;
@@ -596,7 +596,7 @@ void Parser::parse_debug_search() {
     Formatter formatter;
     formatter.show_namespaces(m_options.show_namespaces);
     while (!searcher.query().is_solved()) {
-        output("current query:\n" + formatter.format_query(searcher.query()));
+        output("Current query: " + formatter.format_query(searcher.query()));
 
         Context current_context(*m_current_namespace);
         for (const auto &local_layer: searcher.query().locals()) {

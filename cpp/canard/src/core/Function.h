@@ -72,7 +72,7 @@ protected:
 
 private:
 
-    std::string m_name;
+    std::string m_name = std::string();
     FunctionRef m_type = nullptr;
     FunctionRef m_base = nullptr;
     Telescope m_parameters;
