@@ -168,20 +168,17 @@ bool Parser::parse_statement() {
         return true;
     }
 
-//    if (found(KEYWORD, "inspect")) {
-//        parse_inspect();
-//        return true;
-//    }
-
     if (found(KEYWORD, "docs")) {
         parse_docs();
         return true;
     }
 
-//    if (found(KEYWORD, "debug_search")) {
-//        parse_debug_search();
-//        return true;
-//    }
+#ifdef DEBUG
+    if (found(KEYWORD, "debug_search")) {
+        parse_debug_search();
+        return true;
+    }
+#endif
 
     // Every statement below this point invalidates the searcher
     m_searcher = nullptr;
@@ -528,30 +525,6 @@ void Parser::parse_prove() {
 
     CANARD_LOG("Search took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms");
 }
-
-//void Parser::parse_inspect() {
-//    /*
-//        inspect NAMESPACE
-//    */
-//
-//    consume(KEYWORD, "inspect");
-//
-//    auto space = parse_absolute_namespace();
-//
-//    // Construct list of identifiers
-//    Formatter formatter;
-//    formatter.show_namespaces(m_options.show_namespaces);
-//    std::vector<std::string> identifiers;
-//    for (auto &entry: space->context().functions())
-//        identifiers.push_back(entry.first);
-//
-//    // Output
-//    if (m_options.json)
-//        output(Message::create(SUCCESS, identifiers));
-//    else
-//        for (auto &identifier: identifiers)
-//            output(identifier);
-//}
 
 void Parser::parse_docs() {
     /*

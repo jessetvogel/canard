@@ -4,6 +4,7 @@
 
 #include "Query.h"
 #include "../core/macros.h"
+#include "../parser/Formatter.h"
 #include <utility>
 #include <sstream>
 #include <algorithm>
@@ -334,9 +335,6 @@ std::vector<FunctionRef> Query::final_solutions() const {
     // This can only be done if this query is solved
     CANARD_ASSERT(is_solved(), "cannot call final_solutions on unsolved query");
 
-//    Formatter formatter;
-//    CANARD_DEBUG(formatter.format_query_tree(*this));
-
     // Create chain of queries, starting at the bottom, all the way up to the top
     // Note: we include every query which contains a parent, so the initial query will not be included
     std::vector<const Query *> chain;
@@ -377,7 +375,6 @@ std::vector<FunctionRef> Query::final_solutions() const {
             // First convert/clone the solution along the previous matcher
             if (i > 0) {
                 f_solution = matchers.back()->convert(f_solution);
-
                 // If the converted `f_solution` has a signature depending on some indeterminate of a previous matcher, then this means `f_solution`
                 // is (some cloned version of a) parameter, and hence it must be cloned instead of converted. (HOPEFULLY ALL GOES WELL...)
                 for (const auto &m: matchers) {
@@ -451,8 +448,8 @@ int Query::compute_complexity() const {
 int Query::compute_depth() const {
     return max(m_depths);
 }
+
 bool Query::set_checkpoint(const Query &other) {
-//    CANARD_ASSERT(m_checkpoint == nullptr, "checkpoint already set");
     if (m_checkpoint == nullptr) {
         m_checkpoint = &other;
         return true;

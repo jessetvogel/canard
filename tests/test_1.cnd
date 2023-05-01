@@ -1,0 +1,10 @@
+let Object : Type
+let P Q (X : Object) : Prop
+let R : Prop
+
+let thm (X : Object) (h (p1 : P X) : R X) : Q X
+
+let A : Object
+let R_of_PA (p2 : P A) : R
+
+search (Y : Object) (q : Q Y);

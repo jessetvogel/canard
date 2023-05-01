@@ -1,0 +1,17 @@
+-- The point is here to not use overly many queries. That is, do not get distracted by all the possibilities of solving the goals.
+
+let Color Fruit Flower Jacket Book : Type
+
+let color_of_fruit (F : Fruit) : Color
+let color_of_flower (F : Flower) : Color
+let color_of_jacket (J : Jacket) : Color
+let color_of_book (B : Book) : Color
+
+let apple banana mango : Fruit
+let rose lily tulip : Flower
+let coat denim bomber : Jacket
+let harry lord gatsby : Book
+
+let red : Color
+
+search (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z : Color);

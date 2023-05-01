@@ -61,11 +61,10 @@ private:
     Index m_index;
 
     void search_loop();
-    SearchResult search_helper(std::shared_ptr<Query> &, const FunctionRef &, std::vector<std::shared_ptr<Query>> &);
+    SearchResult search_helper(const std::shared_ptr<Query> &, const FunctionRef &, std::vector<std::shared_ptr<Query>> &);
     bool check_reasonable(const std::shared_ptr<Query> &q, const std::shared_ptr<Query> &p);
     bool check_checkpoints(const std::shared_ptr<Query> &);
 
-    bool injects_into(const Query &, const Query &) const;
-    bool injects_into_helper(Matcher *, std::vector<FunctionRef>, std::vector<FunctionRef>) const;
+    bool is_easier_than(const Query &, const Query &);
 
 };

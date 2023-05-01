@@ -1,0 +1,14 @@
+-- Nested λ's
+
+let Object : Type
+
+let P Q R S (X : Object) : Prop
+
+let thm_P {X : Object} (h (p : P X) : Q X) : P X
+let thm_Q {X : Object} (h (p : P X) : R X) : Q X
+let thm_R {X : Object} (h (p : P X) : S X) : R X
+
+let A : Object
+let SA_of_PA (p : P A) : S A
+
+search (X : Object) (p : P X)

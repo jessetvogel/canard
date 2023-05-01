@@ -1,0 +1,15 @@
+let Ring : Type
+let Morphism (R S : Ring) : Type
+
+structure Algebra (R : Ring) := {
+    ring : Ring,
+    map : Morphism R ring
+}
+
+
+let QQ : Ring
+let A : Algebra QQ
+
+check A
+check A.ring
+check A.map

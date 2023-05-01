@@ -1,0 +1,2 @@
+search (P {A B : Prop} (h (a : A) : B) (x : A) : B);
+search (P {A B : Prop} (h (a : A) : B) (a1 : A) (a2 : A) : B);

@@ -1,0 +1,4 @@
+let not (P : Prop) : Prop
+let modus_tollens {P Q : Prop} (i (p : P) : Q) (nq : not Q) : not P
+
+search (P {A B : Prop} (h (a : A) : B) (nb : not B) : not A);

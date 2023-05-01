@@ -1,0 +1,40 @@
+-- This test was written for buggy checkpoint-code..
+
+-- Basic definitions
+let Scheme : Type
+let Morphism (X Y : Scheme) : Type
+
+let not (P : Prop) : Prop
+let modus_tollens {P Q : Prop} (pq (p : P) : Q) (nq : not Q) : not P
+
+-- Properties
+let scheme.affine (X : Scheme) : Prop
+let morphism.affine {X Y : Scheme} (f : Morphism X Y) : Prop
+let morphism.quasi_finite {X Y : Scheme} (f : Morphism X Y) : Prop
+let morphism.finite {X Y : Scheme} (f : Morphism X Y) : Prop
+
+-- Schemes & morphisms
+let AA_1_QQ : Scheme
+namespace AA_1_QQ
+let affine : scheme.affine AA_1_QQ
+end AA_1_QQ
+
+let Spec_QQ : Scheme
+namespace Spec_QQ
+let affine : scheme.affine Spec_QQ
+end Spec_QQ
+
+--- The natural morphism from [ex:AA_1_QQ] to [ex:Spec_QQ].
+let AA_1_QQ_to_Spec_QQ : Morphism AA_1_QQ Spec_QQ
+namespace AA_1_QQ_to_Spec_QQ
+let quasi_finite : not (morphism.quasi_finite AA_1_QQ_to_Spec_QQ)
+end AA_1_QQ_to_Spec_QQ
+
+-- Theorems
+let af_of_fn {X Y : Scheme} {f : Morphism X Y} (h : morphism.finite f) : morphism.affine f
+let qf_of_fn {X Y : Scheme} {f : Morphism X Y} (h : morphism.finite f) : morphism.quasi_finite f
+let af_of_src_af_trg_af {X Y : Scheme} (f : Morphism X Y) (h1 : scheme.affine X) (h2: scheme.affine Y) : morphism.affine f
+
+-- Search
+open *;
+search (X Y : Scheme) (f : Morphism X Y) (h1 : morphism.affine f) (h2 : not (morphism.finite f));

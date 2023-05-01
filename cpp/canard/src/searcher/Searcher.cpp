@@ -73,6 +73,7 @@ void Searcher::search_loop() {
         // Check for redundancies
         if (!check_reasonable(query, query->parent()))
             continue;
+
         // Check for checkpoints
         if (!check_checkpoints(query))
             continue;
@@ -161,7 +162,7 @@ void Searcher::search_loop() {
 }
 
 Searcher::SearchResult
-Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, std::vector<std::shared_ptr<Query>> &reductions) {
+Searcher::search_helper(const std::shared_ptr<Query> &query, const FunctionRef &thm, std::vector<std::shared_ptr<Query>> &reductions) {
     // Shortcut: if not searching anymore, just return false and be done with it
     if (!m_searching)
         return SEARCH_DONE;
@@ -192,12 +193,12 @@ Searcher::search_helper(std::shared_ptr<Query> &query, const FunctionRef &thm, s
     if (sub_query->depth() >= m_max_depth)
         return SEARCH_CONTINUE;
 
-    // If this query strictly solves its parent, make it the only reduction
-    // TODO: can use once injects_into is fixed!
-//    if (injects_into(*sub_query, *query)) {
-//        reductions = {sub_query};
-//        return SEARCH_STOP;
-//    }
+    // If `sub_query` is easier than its parent, make it the only reduction
+    // Only do this if we are searching for a single solution
+    if (m_max_results == 1 && is_easier_than(*sub_query, *query)) {
+        reductions = {sub_query};
+        return SEARCH_STOP;
+    }
 
     // Add sub_query to queue
     reductions.push_back(std::move(sub_query));
@@ -212,11 +213,10 @@ void Searcher::clear() {
 }
 
 bool Searcher::check_reasonable(const std::shared_ptr<Query> &q, const std::shared_ptr<Query> &p) {
-    // A query q is stupid with respect to a parent p if p (or one of its parents) injects into q.
-    // This means that q is strictly more difficult to solve than p.
+    // A query q is reasonable w.r.t. p if p (nor any of its parents) is not easier than q.
     if (p == nullptr) return true;
-//    if (p->checkpoint()) return true; // TODO: only need to check up to the nearest checkpoint !
-    if (injects_into(*p, *q)) return false;
+    if (p->checkpoint()) return true; // TODO: only need to check up to the nearest checkpoint !
+    if (is_easier_than(*p, *q)) return false;
     return check_reasonable(q, p->parent());
 }
 
@@ -240,7 +240,7 @@ bool Searcher::check_checkpoints(const std::shared_ptr<Query> &query) {
         }
     }
 
-    // When query injects into one of its parents, set the checkpoint of that parent to the query.
+    // When query is easier than one of its parents, set the checkpoint of that parent to the query.
     // We want the oldest parent which is still younger or equal to the last checkpoint (to eliminate as many queries as possible)
     Query *parents[distance_to_checkpoint];
     Query *p = query.get();
@@ -248,102 +248,54 @@ bool Searcher::check_checkpoints(const std::shared_ptr<Query> &query) {
         parents[i] = (p = p->parent().get());
     for (int i = distance_to_checkpoint - 1; i >= 0; --i) {
         Query &parent = *parents[i];
-        if (!parent.checkpoint() && injects_into(*query, parent) && parent.set_checkpoint(*query)) // TODO: multithreading can cause problems
+        if (!parent.checkpoint() && is_easier_than(*query, parent) && parent.set_checkpoint(*query)) // TODO: multithreading can cause problems?
             break;
     }
 
     return true;
 }
 
-bool Searcher::injects_into(const Query &p, const Query &q) const {
-    // TODO: depths should be taken into account!
-    //  e.g. `(R : Ring) with depth 1` injects into `(R : Ring) with depth 0` but not vice versa!
-    // TODO: optimize this method ! Maybe its fine if its not 100% accurate
-    // Goal is to functions (injectively) all my indeterminates to other.telescope, but all other.locals to my locals
-    // That is, we are checking if this query searches for less with more information.
-
-    // Probably start at the end, work way towards the beginning
-    // Method should be recursive
-    // Can we just use Matchers ?
-
-    // 1. let f = telescope[-1]
-    // 2. for each g in other.telescope:
-    //   2.1. Create sub_matcher with f -> g. If fail, continue with next g
-    //   2.2. If succeeded, see what telescope are mapped, and update the lists of which to functions and which are still allowed from other
-    //   2.3. Continue recursively to the next (not yet mapped (also not induced mapped)) indeterminate (from the end, remember)
-
-    // At any point, we need:
-    // - current matcher (possibly null)
-    // - telescope yet to be mapped
-    // - allowed other.telescope to functions to
-
-//        System.out.println("Does [" + this + "] inject into [" + other + "] ? ");
-
-    // Shortcut: if this is 'bigger' than other, it won't work
-    if (p.telescope().size() > q.telescope().size())
-        return false;
-
-    return injects_into_helper(nullptr, p.telescope().functions(), q.telescope().functions());
-
-    // TODO: actually, we would probably also need to check for the local variables..
+bool contains_in_order(const std::vector<FunctionRef> &v, const std::vector<FunctionRef> &w) {
+    auto it_w = w.begin();
+    for (auto it_v = v.begin(); it_v != v.end(); ++it_v) {
+        while (true) {
+            if (it_w == w.end())
+                return false;
+            if (*it_w == *it_v) {
+                ++it_w;
+                break;
+            }
+            ++it_w;
+        }
+    }
+    return true;
 }
 
-bool Searcher::injects_into_helper(Matcher *matcher, std::vector<FunctionRef> unmapped, std::vector<FunctionRef> allowed) const {
-    // Shortcut: if not searching anymore, just return false and be done with it
+bool Searcher::is_easier_than(const Query &p, const Query &q) {
     if (!m_searching)
         return false;
 
-    // Base case
-    const size_t n = unmapped.size();
-    if (n == 0)
-        return true;
+    const auto &p_variables = p.telescope().functions();
+    const auto &q_variables = q.telescope().functions();
 
-    // Starting at the back, try to functions some unmapped Function to some allowed Function
-    auto &f = unmapped.back();
+    if (p_variables.size() > q_variables.size()) // If p has more questions than q, return false
+        return false;
 
-    // If f is contained in allowed as well, we will assume that should be the assignment!
-    // TODO: note: this is not efficient, filter out all duplicates in the beginning!
-    auto it_f = std::find(allowed.begin(), allowed.end(), f);
-    if (it_f != allowed.end()) {
-        allowed.erase(it_f);
-        unmapped.pop_back();
-        return injects_into_helper(matcher, std::move(unmapped), std::move(allowed));
+    const auto &p_locals = p.locals();
+    const auto &q_locals = q.locals();
+
+    if (q_locals.size() > p_locals.size()) // If q has more local variables than p (i.e. more information), return false
+        return false;
+
+    // If p has a question that q does not have, return false
+    if (!contains_in_order(p_variables, q_variables))
+        return false;
+
+    // If q has a local variable that p does not have, return false
+    for (auto it_p = p_locals.begin(), it_q = q_locals.begin(); it_p < p_locals.end(); ++it_p, ++it_q) {
+        if (!contains_in_order(*it_q, *it_p))
+            return false;
     }
 
-    // Again starting at the back, find some allowed Function g to match our f
-    const size_t m = allowed.size();
-    for (int j = (int) m - 1; j >= 0; j--) {
-        auto &g = allowed[j];
-        bool valid_candidate = true;
-
-        Matcher sub_matcher = (matcher == nullptr) ? Matcher(unmapped) : Matcher(matcher, unmapped);
-        if (!sub_matcher.matches(f, g))
-            continue;
-
-        // Create new unmapped and allowed lists, by removing those which are mapped and to which they are mapped
-        std::vector<FunctionRef> new_unmapped, new_allowed = allowed;
-        for (auto &h: unmapped) {
-            const auto &k = sub_matcher.get_solution(h);
-            if (k == nullptr) {
-                if (h == f)
-                    return false; // TODO: it may happen that g -> f, so that matches returns true, but k == nullptr.
-
-                // Add those which are not yet mapped
-                new_unmapped.push_back(h);
-            } else {
-                // If h -> k, remove k from allowed lists
-                // If list does not contain k, there was some invalid mapping anyway, so we continue
-                auto it_k = std::find(new_allowed.begin(), new_allowed.end(), k);
-                if (it_k == new_allowed.end()) {
-                    valid_candidate = false;
-                    break;
-                }
-                new_allowed.erase(it_k);
-            }
-        }
-        // Now simply recursively find a match for the next unmapped
-        if (valid_candidate && injects_into_helper(&sub_matcher, std::move(new_unmapped), std::move(new_allowed)))
-            return true;
-    }
-    return false;
+    return true;
 }
